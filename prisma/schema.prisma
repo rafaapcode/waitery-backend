@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+  WAITER
+  OWNER
+}
+
+enum OrderStatus {
+  WAITING
+  IN_PRODUCTION
+  DONE
+}
+
+model User {
+  id         String   @id @default(ulid())
+  email      String   @unique
+  cpf        String   @unique
+  name       String?
+  password   String
+  role       Role     @default(ADMIN)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  orgs  UserOrg[]
+  Order Order[]
+}
+
+model UserOrg {
+  org    Organization @relation(fields: [org_id], references: [id])
+  org_id String
+
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String
+
+  @@id([org_id, user_id])
+}
+
+model Category {
+  id     String @id @default(ulid())
+  org_id String
+  name   String
+  icon   String
+
+  org Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id])
+}
+
+model Ingredient {
+  id   String @id @default(ulid())
+  name String
+  icon String
+
+  @@index([name])
+}
+
+model Order {
+  id          String      @id @default(ulid())
+  user_id     String
+  org_id      String
+  status      OrderStatus @default(WAITING)
+  total_price Int
+  quantity    Int
+  table       String
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @default(now())
+  deleted_at  DateTime    @default(now())
+
+  org      Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  user     User?          @relation(fields: [user_id], references: [id])
+  products ProductOrder[]
+
+  @@index([user_id, org_id])
+}
+
+model ProductOrder {
+  org_id String
+
+  order    Order  @relation(fields: [order_id], references: [id])
+  order_id String
+
+  product    Product @relation(fields: [product_id], references: [id])
+  product_id String
+
+  @@id([order_id, product_id])
+}
+
+model Organization {
+  id            String @id @default(ulid())
+  owner_id      String
+  name          String
+  image_url     String
+  email         String
+  description   String
+  location_code String
+  open_hour     Int
+  close_hour    Int
+  cep           String
+  city          String
+  neighborhood  String
+  street        String
+  lat           Float
+  long          Float
+
+  users    UserOrg[]
+  Order    Order[]
+  Category Category[]
+  Product  Product[]
+
+  @@index([owner_id, cep, name])
+}
+
+model Product {
+  id               String  @id @default(ulid())
+  org_id           String
+  name             String
+  image_url        String
+  description      String
+  price            Float
+  category_id      String
+  discounted_price Float
+  discount         Boolean
+  ingredients      Json
+
+  org    Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  orders ProductOrder[]
+
+  @@index([org_id, name])
+}
