@@ -51,7 +51,7 @@ jobs:
           echo "NODE_ENV=test" >> $GITHUB_ENV
 
       - name: Run database migrations
-        run: npx prisma migrate:dev
+        run: npx prisma migrate dev
 
       - name: Run tests and generate coverage
         run: npm run test
