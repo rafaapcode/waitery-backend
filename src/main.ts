@@ -5,8 +5,8 @@ import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
-import { env } from 'process';
 import { AppModule } from './app.module';
+import { env } from './shared/config/env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,11 +17,15 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  app.enableCors({
-    origin: env.CORS_ORIGIN,
-    methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
-  });
-  app.use(helmet());
+
+  if (env.NODE_ENV === 'PROD') {
+    app.use(helmet());
+    app.enableCors({
+      origin: 'http://localhost:3000',
+      methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
+    });
+  }
+
   await app.listen(env.PORT ?? 3000);
 }
 bootstrap();

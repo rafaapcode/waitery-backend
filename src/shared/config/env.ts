@@ -24,27 +24,19 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
-  CORS_ORIGIN: string;
+  DATABASE_URL: string;
 
   @IsString()
   @IsNotEmpty()
-  DATABASE_URL: string;
-
-  // @IsString()
-  // @IsNotEmpty()
-  // @IsUrl({
-  //   protocols: ['http', 'https'],
-  //   require_protocol: true,
-  // })
-  // IMAGE_URL: string;
+  NODE_ENV: string;
 }
 
 export const env = plainToInstance(Env, {
   JWT_SECRET: process.env.JWT_SECRET,
   REFRESH_JWT_SECRET: process.env.REFRESH_JWT_SECRET,
   PORT: process.env.PORT,
-  CORS_ORIGIN: process.env.CORS_ORIGIN,
   DATABASE_URL: process.env.DATABASE_URL,
+  NODE_ENV: process.env.NODE_ENV ?? 'DEV',
 });
 
 const errors = validateSync(env);
