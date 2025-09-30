@@ -1,4 +1,4 @@
-// import { Ingredient } from 'src/core/domain/entities/ingredient'; // Use this entitie
+import { Ingredient } from 'src/core/domain/entities/ingredient';
 
 export interface IIngredientContract {
   create: (
@@ -17,38 +17,20 @@ export interface IIngredientContract {
 }
 
 export namespace IIngredientContract {
-  export type CreateParams = {
-    name: string;
-    icon: string;
-  };
-  export type CreateOutput = { name: string; icon: string };
+  export type CreateParams = Ingredient;
+  export type CreateOutput = Ingredient;
 
   export type UpdateParams = {
     id: string;
-    ingredient: Partial<{
-      name: string;
-      icon: string;
-    }>;
+    ingredient: Ingredient;
   };
-  export type UpdateOutput = Partial<{
-    id: string;
-    name: string;
-    icon: string;
-  }>;
+  export type UpdateOutput = Ingredient | null;
 
   export type DeleteParams = string;
   export type DeleteOutput = void;
 
   export type GetIngredientParams = string;
-  export type GetIngredientOutput = {
-    id: string;
-    name: string;
-    icon: string;
-  };
+  export type GetIngredientOutput = Ingredient | null;
 
-  export type GetAllIngredientsOutput = {
-    id: string;
-    name: string;
-    icon: string;
-  }[];
+  export type GetAllIngredientsOutput = Ingredient[] | null;
 }

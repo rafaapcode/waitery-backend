@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { UserModule } from './modules/user/user.module';
 import { env } from './shared/config/env';
+import { IngredientModule } from './modules/ingredient/ingredient.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { env } from './shared/config/env';
     AuthModule,
     UserModule,
     OrganizationModule,
+    IngredientModule,
   ],
   controllers: [AppController],
   providers: [
