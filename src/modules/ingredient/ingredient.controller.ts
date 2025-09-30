@@ -7,39 +7,55 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
-import { IngredientService } from './ingredient.service';
+import { CreateIngredientUseCase } from './usecases/CreateIngredientUseCase';
+import { DeleteIngredientUseCase } from './usecases/DeleteIngredientUseCase';
+import { GetAllIngredientUseCase } from './usecases/GetAllIngredientUseCase';
+import { GetIngredientUseCase } from './usecases/GetIngredientUseCase';
+import { UpdateIngredientUseCase } from './usecases/UpdateIngredientUseCase';
 
+@ApiTags('Ingredients')
 @Controller('ingredient')
 export class IngredientController {
-  constructor(private readonly ingredientService: IngredientService) {}
+  constructor(
+    private readonly createIngredientUseCase: CreateIngredientUseCase,
+    private readonly deleteIngredientUseCase: DeleteIngredientUseCase,
+    private readonly updateIngredientUseCase: UpdateIngredientUseCase,
+    private readonly getIngredientUseCase: GetIngredientUseCase,
+    private readonly getAllIngredientUseCase: GetAllIngredientUseCase,
+  ) {}
 
   @Post()
-  create(@Body() createIngredientDto: CreateIngredientDto) {
-    return this.ingredientService.create(createIngredientDto);
+  create(@Body() data: CreateIngredientDto) {
+    return this.createIngredientUseCase.execute(data);
   }
 
   @Get()
-  findAll() {
-    return this.ingredientService.findAll();
+  getAll() {
+    return this.getAllIngredientUseCase.execute();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ingredientService.findOne(+id);
+  getOne(@Param('id', ParseULIDPipe) id: string) {
+    return this.getIngredientUseCase.execute(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
-    @Body() updateIngredientDto: UpdateIngredientDto,
+    @Param('id', ParseULIDPipe) id: string,
+    @Body() data: UpdateIngredientDto,
   ) {
-    return this.ingredientService.update(+id, updateIngredientDto);
+    return this.updateIngredientUseCase.execute({
+      id,
+      data,
+    });
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ingredientService.remove(+id);
+  delete(@Param('id', ParseULIDPipe) id: string) {
+    return this.deleteIngredientUseCase.execute(id);
   }
 }

@@ -24,7 +24,7 @@ export namespace IIngredientContract {
     id: string;
     ingredient: Ingredient;
   };
-  export type UpdateOutput = Ingredient | null;
+  export type UpdateOutput = Ingredient;
 
   export type DeleteParams = string;
   export type DeleteOutput = void;
@@ -32,5 +32,5 @@ export namespace IIngredientContract {
   export type GetIngredientParams = string;
   export type GetIngredientOutput = Ingredient | null;
 
-  export type GetAllIngredientsOutput = Ingredient[] | null;
+  export type GetAllIngredientsOutput = Ingredient[];
 }
