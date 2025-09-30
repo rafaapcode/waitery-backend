@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AuthGuard } from './common/guards/auth-guard.guard';
 import { HashService } from './hash.service';
@@ -11,6 +12,7 @@ import { env } from './shared/config/env';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     JwtModule.register({
       global: true,
       secret: env.JWT_SECRET,
@@ -25,6 +27,10 @@ import { env } from './shared/config/env';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
     },
     HashService,
   ],

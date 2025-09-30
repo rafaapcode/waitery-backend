@@ -1,3 +1,5 @@
+import './instrument';
+
 import 'dotenv/config';
 
 import { ValidationPipe } from '@nestjs/common';
