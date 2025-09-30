@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
+import { ExceptionFilterWithSentry } from './common/filters/exception.filter';
 import { AuthGuard } from './common/guards/auth-guard.guard';
 import { HashService } from './hash.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -30,7 +31,7 @@ import { env } from './shared/config/env';
     },
     {
       provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
+      useClass: ExceptionFilterWithSentry,
     },
     HashService,
   ],
