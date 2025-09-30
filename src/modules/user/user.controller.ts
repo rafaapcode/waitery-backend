@@ -11,6 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
@@ -28,6 +29,7 @@ import { GetUserUseCase } from './usecases/GetUserUseCase';
 import { UpdateMeUseCase } from './usecases/UpdateMeUseCase';
 import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
 
+@ApiBearerAuth()
 @Controller('user')
 export class UserController {
   constructor(

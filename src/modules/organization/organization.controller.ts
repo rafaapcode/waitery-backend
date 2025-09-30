@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
@@ -22,6 +23,7 @@ import { GetAllOrganizationUseCase } from './usecases/GetAllOrganizationUseCase'
 import { GetOrganizationUseCase } from './usecases/GetOrganizationUseCase';
 import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase';
 
+@ApiBearerAuth()
 @Controller('organization')
 export class OrganizationController {
   constructor(
