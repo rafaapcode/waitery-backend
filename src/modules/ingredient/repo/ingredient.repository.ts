@@ -36,6 +36,18 @@ export class IngredientRepository {
     return ingredient;
   }
 
+  async getByName(
+    name: IIngredientContract.GetIngredientsByNameParams,
+  ): Promise<Ingredient | null> {
+    const ingredient = await this.prisma.ingredient.findUnique({
+      where: {
+        name,
+      },
+    });
+
+    return ingredient;
+  }
+
   async update(data: IIngredientContract.UpdateParams): Promise<Ingredient> {
     const ingredientUpdated = await this.prisma.ingredient.update({
       where: {

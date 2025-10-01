@@ -20,6 +20,7 @@ describe('Ingredient Service', () => {
             getById: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
+            getByName: jest.fn(),
           },
         },
       ],
@@ -175,5 +176,40 @@ describe('Ingredient Service', () => {
     expect(ing[0]).toBeUndefined();
     expect(ing.length).toBe(0);
     expect(ingredientRepo.getAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('Should return an ingredient entity getting by the name', async () => {
+    // Arrange
+    jest.spyOn(ingredientRepo, 'getByName').mockResolvedValue({
+      icon: '🍪',
+      name: 'Ing 1',
+      id: '123131131',
+    });
+
+    // Act
+    const ing = await ingredientService.getByName('Ing 1');
+
+    // Assert
+    expect(ing).toBeInstanceOf(Ingredient);
+    expect(ing).toEqual({
+      icon: '🍪',
+      name: 'Ing 1',
+      id: '123131131',
+    });
+    expect(ingredientRepo.getByName).toHaveBeenCalledTimes(1);
+    expect(ingredientRepo.getByName).toHaveBeenCalledWith('Ing 1');
+  });
+
+  it('Should return null if the ingredient not exists filtering by the name', async () => {
+    // Arrange
+    jest.spyOn(ingredientRepo, 'getByName').mockResolvedValue(null);
+
+    // Act
+    const ing = await ingredientService.getByName('Ing 2');
+
+    // Assert
+    expect(ing).toBeNull();
+    expect(ingredientRepo.getByName).toHaveBeenCalledTimes(1);
+    expect(ingredientRepo.getByName).toHaveBeenCalledWith('Ing 2');
   });
 });
