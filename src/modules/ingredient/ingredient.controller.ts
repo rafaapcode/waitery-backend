@@ -3,12 +3,16 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
+import { UserRole } from 'src/core/domain/entities/user';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { CreateIngredientUseCase } from './usecases/CreateIngredientUseCase';
@@ -28,22 +32,29 @@ export class IngredientController {
     private readonly getAllIngredientUseCase: GetAllIngredientUseCase,
   ) {}
 
+  @Roles(UserRole.ADMIN, UserRole.OWNER)
   @Post()
   create(@Body() data: CreateIngredientDto) {
     return this.createIngredientUseCase.execute(data);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.OWNER)
   @Get()
+  @HttpCode(HttpStatus.OK)
   getAll() {
     return this.getAllIngredientUseCase.execute();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.OWNER)
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   getOne(@Param('id', ParseULIDPipe) id: string) {
     return this.getIngredientUseCase.execute(id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.OWNER)
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('id', ParseULIDPipe) id: string,
     @Body() data: UpdateIngredientDto,
@@ -54,7 +65,9 @@ export class IngredientController {
     });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.OWNER)
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id', ParseULIDPipe) id: string) {
     return this.deleteIngredientUseCase.execute(id);
   }
