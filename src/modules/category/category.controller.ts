@@ -3,44 +3,60 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
-import { CategoryService } from './category.service';
+import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateCategoryUseCase } from './usecases/CreateCategoryUseCase';
+import { DeleteCategoryUseCase } from './usecases/DeleteCategoryUseCase';
+import { GetAllCategoryUseCase } from './usecases/GetAllCategoryUseCase';
+import { GetByIdCategoryUseCase } from './usecases/GetByIdCategoryUseCase';
+import { UpdateCategoryUseCase } from './usecases/UpdateCategoryUseCase';
 
 @Controller('category')
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(
+    private readonly createCategoryUseCase: CreateCategoryUseCase,
+    private readonly deleteCategoryUseCase: DeleteCategoryUseCase,
+    private readonly updateCategoryUseCase: UpdateCategoryUseCase,
+    private readonly getByIdCategoryUseCase: GetByIdCategoryUseCase,
+    private readonly getAllCategoryUseCase: GetAllCategoryUseCase,
+  ) {}
 
-  @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    throw new NotFoundException();
+  @Post(':org_id')
+  create(
+    @Param('org_id', ParseULIDPipe) org_id: string,
+    @Body() data: CreateCategoryDto,
+  ) {
+    return this.createCategoryUseCase.execute({
+      org_id,
+      data,
+    });
   }
 
-  @Get()
-  findAll() {
-    throw new NotFoundException();
+  @Get('/all/:org_id')
+  getAllCategories(@Param('org_id', ParseULIDPipe) org_id: string) {
+    return this.getAllCategoryUseCase.execute(org_id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    throw new NotFoundException();
+  getById(@Param('id', ParseULIDPipe) id: string) {
+    return this.getByIdCategoryUseCase.execute(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Param('id', ParseULIDPipe) id: string,
+    @Body() data: UpdateCategoryDto,
   ) {
-    throw new NotFoundException();
+    return this.updateCategoryUseCase.execute(id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    throw new NotFoundException();
+  delete(@Param('id', ParseULIDPipe) id: string) {
+    return this.deleteCategoryUseCase.execute(id);
   }
 }

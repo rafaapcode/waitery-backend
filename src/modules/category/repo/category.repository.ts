@@ -43,10 +43,12 @@ export class CategoryRepository {
   }
 
   async getByName(
-    name: ICategoryContract.GetCategoriesByNameParams,
+    data: ICategoryContract.GetCategoriesByNameParams,
   ): Promise<Category | null> {
     const updated_category = await this.prismaService.category.findFirst({
-      where: { name },
+      where: {
+        AND: [{ name: data.name }, { org_id: data.org_id }],
+      },
     });
 
     return updated_category;

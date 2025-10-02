@@ -34,5 +34,11 @@ import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase'
       useClass: UserService,
     },
   ],
+  exports: [
+    {
+      provide: IORGANIZATION_CONTRACT,
+      useClass: OrganizationService,
+    },
+  ],
 })
 export class OrganizationModule {}

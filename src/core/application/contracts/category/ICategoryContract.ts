@@ -46,6 +46,9 @@ export namespace ICategoryContract {
   export type GetAllCategoriesOfOrgParams = string;
   export type GetAllCategoriesOfOrgOutput = Category[];
 
-  export type GetCategoriesByNameParams = string;
+  export type GetCategoriesByNameParams = {
+    name: string;
+    org_id: string;
+  };
   export type GetCategoriesByNameOutput = Category | null;
 }

@@ -14,7 +14,6 @@ export class CategoryService implements ICategoryContract {
 
     return createCategoryEntity(newCat);
   }
-
   async update(
     data: ICategoryContract.UpdateParams,
   ): Promise<ICategoryContract.UpdateOutput> {
@@ -22,13 +21,11 @@ export class CategoryService implements ICategoryContract {
 
     return createCategoryEntity(updatecategory);
   }
-
   async delete(
     data: ICategoryContract.DeleteParams,
   ): Promise<ICategoryContract.DeleteOutput> {
     await this.categoryRepo.delete(data);
   }
-
   async getCategory(
     data: ICategoryContract.GetCategoryParams,
   ): Promise<ICategoryContract.GetCategoryOutput> {
