@@ -51,7 +51,8 @@ model Category {
   name   String
   icon   String
 
-  org Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  org     Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  Product Product[]
 
   @@index([org_id])
 }
@@ -132,8 +133,9 @@ model Product {
   discount         Boolean
   ingredients      Json
 
-  org    Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
-  orders ProductOrder[]
+  org      Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  orders   ProductOrder[]
+  category Category       @relation(fields: [category_id], references: [id])
 
   @@index([org_id, name])
 }

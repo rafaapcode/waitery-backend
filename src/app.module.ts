@@ -11,6 +11,7 @@ import { OrganizationModule } from './modules/organization/organization.module';
 import { UserModule } from './modules/user/user.module';
 import { env } from './shared/config/env';
 import { IngredientModule } from './modules/ingredient/ingredient.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { IngredientModule } from './modules/ingredient/ingredient.module';
     UserModule,
     OrganizationModule,
     IngredientModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -63,12 +62,5 @@ export class IngredientController {
       id,
       data,
     });
-  }
-
-  @Roles(UserRole.ADMIN, UserRole.OWNER)
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id', ParseULIDPipe) id: string) {
-    return this.deleteIngredientUseCase.execute(id);
   }
 }
