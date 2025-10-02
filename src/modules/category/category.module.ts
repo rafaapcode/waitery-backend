@@ -7,6 +7,9 @@ import { CategoryService } from './category.service';
 import { CategoryRepository } from './repo/category.repository';
 import { CreateCategoryUseCase } from './usecases/CreateCategoryUseCase';
 import { DeleteCategoryUseCase } from './usecases/DeleteCategoryUseCase';
+import { GetAllCategoryUseCase } from './usecases/GetAllCategoryUseCase';
+import { GetByIdCategoryUseCase } from './usecases/GetByIdCategoryUseCase';
+import { UpdateCategoryUseCase } from './usecases/UpdateCategoryUseCase';
 
 @Module({
   imports: [DatabaseModule, OrganizationModule],
@@ -15,6 +18,9 @@ import { DeleteCategoryUseCase } from './usecases/DeleteCategoryUseCase';
     CategoryRepository,
     CreateCategoryUseCase,
     DeleteCategoryUseCase,
+    UpdateCategoryUseCase,
+    GetByIdCategoryUseCase,
+    GetAllCategoryUseCase,
     {
       provide: ICATEGORY_CONTRACT,
       useClass: CategoryService,
