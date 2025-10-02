@@ -173,12 +173,18 @@ describe('Category Service', () => {
     });
 
     // Act
-    const cat = await categoryService.getCategoryByName('Massas');
+    const cat = await categoryService.getCategoryByName({
+      name: 'Massas',
+      org_id: 'org_id12312313',
+    });
 
     // Assert
     expect(cat).toBeInstanceOf(Category);
     expect(categoryRepo.getByName).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getByName).toHaveBeenCalledWith('Massas');
+    expect(categoryRepo.getByName).toHaveBeenCalledWith({
+      name: 'Massas',
+      org_id: 'org_id12312313',
+    });
   });
 
   it('Should return null if category does not exits, filtering by name', async () => {
@@ -186,11 +192,17 @@ describe('Category Service', () => {
     jest.spyOn(categoryRepo, 'getByName').mockResolvedValue(null);
 
     // Act
-    const cat = await categoryService.getCategoryByName('Massas');
+    const cat = await categoryService.getCategoryByName({
+      name: 'Massas',
+      org_id: 'org_id12312313',
+    });
 
     // Assert
     expect(cat).toBeNull();
     expect(categoryRepo.getByName).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getByName).toHaveBeenCalledWith('Massas');
+    expect(categoryRepo.getByName).toHaveBeenCalledWith({
+      name: 'Massas',
+      org_id: 'org_id12312313',
+    });
   });
 });
