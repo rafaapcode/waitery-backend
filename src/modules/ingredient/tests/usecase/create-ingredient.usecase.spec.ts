@@ -38,7 +38,13 @@ describe('Create Ingredient UseCase', () => {
   afterAll(async () => {
     await prismaService.ingredient.delete({
       where: {
-        name: 'Ing 1',
+        name: 'ing 1',
+      },
+    });
+
+    await prismaService.ingredient.delete({
+      where: {
+        name: 'ing 2',
       },
     });
   });
@@ -76,5 +82,30 @@ describe('Create Ingredient UseCase', () => {
     await expect(createIngredientUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );
+  });
+
+  it('Should normalize the name to lowercase when create a new ingredient', async () => {
+    // Arrage
+    const data: IIngredientContract.CreateParams = {
+      icon: '🥗',
+      name: 'Ing 2',
+    };
+    jest.spyOn(ingredientService, 'create');
+    jest.spyOn(ingredientService, 'getByName');
+
+    // Act
+    const ing = await createIngredientUseCase.execute(data);
+
+    // Assert
+    expect(ing).toBeInstanceOf(Ingredient);
+    expect(ing.id).toBeDefined();
+    expect(ingredientService.create).toHaveBeenCalledTimes(1);
+    expect(ingredientService.getByName).toHaveBeenCalledTimes(1);
+    expect(ingredientService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'ing 2',
+      }),
+    );
+    expect(ingredientService.getByName).toHaveBeenCalledWith('ing 2');
   });
 });

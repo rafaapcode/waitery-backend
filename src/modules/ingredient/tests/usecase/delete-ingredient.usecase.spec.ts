@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -11,6 +12,7 @@ describe('Delete Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
+  let ing_id: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,6 +33,14 @@ describe('Delete Ingredient UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     ingredientService = module.get<IngredientService>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
+
+    const { id } = await prismaService.ingredient.create({
+      data: {
+        icon: '🥗',
+        name: 'ing 1',
+      },
+    });
+    ing_id = id;
   });
 
   it('Should all services be defined', () => {
@@ -38,5 +48,30 @@ describe('Delete Ingredient UseCase', () => {
     expect(ingredientService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
+    expect(ing_id).toBeDefined();
+  });
+
+  it('Should delete a ingredient by id', async () => {
+    // Arrange
+    jest.spyOn(ingredientService, 'delete');
+
+    // Act
+    await deleteIngredientUseCase.execute(ing_id);
+
+    const ing = await prismaService.ingredient.findUnique({
+      where: { id: ing_id },
+    });
+
+    // Assert
+    expect(ing).toBeNull();
+    expect(ingredientService.delete).toHaveBeenCalledTimes(1);
+    expect(ingredientService.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it('Should throw a NotFoundError if the ingredient does not exists', async () => {
+    // Assert
+    await expect(deleteIngredientUseCase.execute('ing_id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

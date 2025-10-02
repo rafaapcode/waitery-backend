@@ -40,7 +40,6 @@ export class IngredientService implements IIngredientContract {
 
     return ings.map((ing) => new Ingredient(ing));
   }
-
   async getByName(
     name: IIngredientContract.GetIngredientsByNameParams,
   ): Promise<IIngredientContract.GetIngredientsByNameOutput> {

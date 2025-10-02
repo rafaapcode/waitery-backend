@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { Ingredient } from 'src/core/domain/entities/ingredient';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
@@ -14,7 +14,11 @@ export class GetIngredientUseCase implements IGetIngredientUseCase {
     private readonly ingContract: IIngredientContract,
   ) {}
 
-  execute(id: string): Promise<Ingredient> {
-    throw new Error('Method not implemented.');
+  async execute(id: string): Promise<Ingredient> {
+    const ing = await this.ingContract.get(id);
+
+    if (!ing) throw new NotFoundException('Ingredient not found');
+
+    return new Ingredient(ing);
   }
 }

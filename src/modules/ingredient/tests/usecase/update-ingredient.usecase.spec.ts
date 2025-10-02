@@ -1,5 +1,7 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
+import { Ingredient } from 'src/core/domain/entities/ingredient';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { IngredientService } from '../../ingredient.service';
@@ -11,6 +13,7 @@ describe('Create Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
+  let ing_id: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,20 +34,89 @@ describe('Create Ingredient UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     ingredientService = module.get<IngredientService>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
+
+    const { id } = await prismaService.ingredient.create({
+      data: {
+        icon: '🥗',
+        name: 'ing 1',
+      },
+    });
+    ing_id = id;
   });
 
-  // afterAll(async () => {
-  //   await prismaService.user.delete({
-  //     where: {
-  //       email: 'teste@gmail.com',
-  //     },
-  //   });
-  // });
+  afterAll(async () => {
+    await prismaService.ingredient.delete({
+      where: {
+        name: 'ing 3',
+      },
+    });
+  });
 
   it('Should all services be defined', () => {
     expect(updateIngredientUseCase).toBeDefined();
     expect(ingredientService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
+    expect(ing_id).toBeDefined();
+  });
+
+  it('Should update a ingredient', async () => {
+    // Arrange
+    const old_ing = await prismaService.ingredient.findUnique({
+      where: { id: ing_id },
+    });
+
+    // Act
+    const ing_updated = await updateIngredientUseCase.execute({
+      id: ing_id,
+      data: {
+        icon: '🍪',
+        name: 'Ing 2',
+      },
+    });
+
+    // Assert
+    expect(ing_updated).toBeInstanceOf(Ingredient);
+    expect(ing_updated.name).not.toBe(old_ing?.name);
+    expect(ing_updated.icon).not.toBe(old_ing?.icon);
+  });
+
+  it('Should throw an NotFoundException if the ingredient not exists', async () => {
+    // Assert
+    await expect(
+      updateIngredientUseCase.execute({
+        id: 'ing_id',
+        data: {
+          icon: '🍪',
+          name: 'Ing 2',
+        },
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should normalize the ingredient name to lowerCase', async () => {
+    // Arrange
+    const old_ing = await prismaService.ingredient.findUnique({
+      where: { id: ing_id },
+    });
+    jest.spyOn(ingredientService, 'update');
+
+    // Act
+    const ing_updated = await updateIngredientUseCase.execute({
+      id: ing_id,
+      data: {
+        icon: '🍪',
+        name: 'Ing 3',
+      },
+    });
+
+    // Assert
+    expect(ing_updated).toBeInstanceOf(Ingredient);
+    expect(ing_updated.name).not.toBe(old_ing?.name);
+    expect(ingredientService.update).toHaveBeenCalledTimes(1);
+    expect(ingredientService.update).toHaveBeenCalledWith({
+      id: ing_id,
+      ingredient: { icon: '🍪', name: 'ing 3' },
+    });
   });
 });

@@ -16,11 +16,14 @@ export class CreateIngredientUseCase implements ICreateIngredientUseCase {
   ) {}
 
   async execute(data: CreateIngredientDto): Promise<Ingredient> {
-    const ingExists = await this.ingContract.getByName(data.name);
+    const ingExists = await this.ingContract.getByName(data.name.toLowerCase());
 
     if (ingExists) throw new ConflictException('Ingredient alredy exists');
 
-    const ing = await this.ingContract.create(data);
+    const ing = await this.ingContract.create({
+      ...data,
+      name: data.name.toLowerCase(),
+    });
 
     return ing;
   }

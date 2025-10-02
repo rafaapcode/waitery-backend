@@ -25,7 +25,10 @@ export namespace IIngredientContract {
 
   export type UpdateParams = {
     id: string;
-    ingredient: Ingredient;
+    ingredient: {
+      name?: string;
+      icon?: string;
+    };
   };
   export type UpdateOutput = Ingredient;
 
