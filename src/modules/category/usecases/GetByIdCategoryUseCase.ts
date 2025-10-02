@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { Category } from 'src/core/domain/entities/category';
 import { ICATEGORY_CONTRACT } from 'src/shared/constants';
@@ -13,7 +13,11 @@ export class GetByIdCategoryUseCase implements IGetByIdCategoryUseCase {
     @Inject(ICATEGORY_CONTRACT)
     private readonly catContract: ICategoryContract,
   ) {}
-  execute(id: string): Promise<Category> {
-    throw new Error('Method not implemented.');
+  async execute(id: string): Promise<Category> {
+    const cat = await this.catContract.getCategory(id);
+
+    if (!cat) throw new NotFoundException('Category not found');
+
+    return cat;
   }
 }
