@@ -19,6 +19,7 @@ enum OrderStatus {
   WAITING
   IN_PRODUCTION
   DONE
+  CANCELED
 }
 
 model User {
@@ -74,14 +75,13 @@ model Order {
   quantity    Int
   table       String
   created_at  DateTime    @default(now())
-  updated_at  DateTime    @default(now())
-  deleted_at  DateTime    @default(now())
+  deleted_at  DateTime?
 
   org      Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
   user     User?          @relation(fields: [user_id], references: [id])
   products ProductOrder[]
 
-  @@index([user_id, org_id])
+  @@index([user_id, org_id, created_at, status])
 }
 
 model ProductOrder {

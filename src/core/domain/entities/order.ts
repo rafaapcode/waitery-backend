@@ -4,6 +4,7 @@ export enum OrderStatus {
   WAITING = 'WAITING',
   IN_PRODUCTION = 'IN_PRODUCTION',
   DONE = 'DONE',
+  CANCELED = 'CANCELED',
 }
 
 export class Order {
