@@ -12,6 +12,7 @@ import { UserModule } from './modules/user/user.module';
 import { env } from './shared/config/env';
 import { IngredientModule } from './modules/ingredient/ingredient.module';
 import { CategoryModule } from './modules/category/category.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CategoryModule } from './modules/category/category.module';
     OrganizationModule,
     IngredientModule,
     CategoryModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
