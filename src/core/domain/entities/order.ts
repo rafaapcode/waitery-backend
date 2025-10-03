@@ -8,11 +8,11 @@ export enum OrderStatus {
 }
 
 export class Order {
-  readonly id?: string;
+  id?: string;
   readonly org_id: string;
   readonly user_id: string;
   readonly status: OrderStatus;
-  readonly deleted_at: Date;
+  readonly deleted_at?: Date;
   readonly created_at: Date;
   readonly total_price: number;
   readonly quantity: number;
@@ -25,7 +25,7 @@ export class Order {
     this.user_id = data.user_id;
     this.status = data.status;
     this.deleted_at = data.deleted_at;
-    this.created_at = data.created_at;
+    this.created_at = data.created_at ?? new Date();
     this.total_price = data.total_price;
     this.quantity = data.quantity;
     this.table = data.table;
@@ -39,8 +39,8 @@ namespace Order {
     org_id: string;
     user_id: string;
     status: OrderStatus;
-    deleted_at: Date;
-    created_at: Date;
+    deleted_at?: Date;
+    created_at?: Date;
     total_price: number;
     quantity: number;
     table: string;
