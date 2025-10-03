@@ -3,11 +3,15 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
+import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
+import { UserRole } from 'src/core/domain/entities/user';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CreateCategoryUseCase } from './usecases/CreateCategoryUseCase';
@@ -26,6 +30,7 @@ export class CategoryController {
     private readonly getAllCategoryUseCase: GetAllCategoryUseCase,
   ) {}
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post(':org_id')
   create(
     @Param('org_id', ParseULIDPipe) org_id: string,
@@ -38,16 +43,20 @@ export class CategoryController {
   }
 
   @Get('/all/:org_id')
+  @HttpCode(HttpStatus.OK)
   getAllCategories(@Param('org_id', ParseULIDPipe) org_id: string) {
     return this.getAllCategoryUseCase.execute(org_id);
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   getById(@Param('id', ParseULIDPipe) id: string) {
     return this.getByIdCategoryUseCase.execute(id);
   }
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('id', ParseULIDPipe) id: string,
     @Body() data: UpdateCategoryDto,
@@ -55,7 +64,9 @@ export class CategoryController {
     return this.updateCategoryUseCase.execute(id, data);
   }
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   delete(@Param('id', ParseULIDPipe) id: string) {
     return this.deleteCategoryUseCase.execute(id);
   }
