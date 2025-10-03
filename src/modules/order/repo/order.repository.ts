@@ -1,8 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { Order } from 'generated/prisma';
+import { $Enums, Order } from 'generated/prisma';
+import { JsonValue } from 'generated/prisma/runtime/library';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+
+type GetOrderReturn = {
+  products: ({
+    product: {
+      category: {
+        name: string;
+        id: string;
+        org_id: string;
+        icon: string;
+      };
+    } & {
+      name: string;
+      id: string;
+      org_id: string;
+      image_url: string;
+      description: string;
+      price: number;
+      category_id: string;
+      discounted_price: number;
+      discount: boolean;
+      ingredients: JsonValue;
+    };
+  } & {
+    org_id: string;
+    order_id: string;
+    product_id: string;
+  })[];
+} & {
+  id: string;
+  user_id: string;
+  org_id: string;
+  status: $Enums.OrderStatus;
+  total_price: number;
+  quantity: number;
+  table: string;
+  created_at: Date;
+  deleted_at: Date | null;
+};
 
 @Injectable()
 export class OrderRepository {
@@ -50,13 +89,21 @@ export class OrderRepository {
     });
   }
 
-  async getOrder(order_id: string): Promise<Order | null> {
+  async getOrder(order_id: string): Promise<GetOrderReturn | null> {
     const order = await this.prismaService.order.findUnique({
       where: {
         id: order_id,
       },
       include: {
-        products: true,
+        products: {
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
       },
     });
 

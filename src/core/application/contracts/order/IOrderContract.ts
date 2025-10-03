@@ -42,7 +42,10 @@ export namespace IOrderContract {
     org_id: string;
     page?: number;
   };
-  export type GetAllOrdersOfOrgOutput = Order[];
+  export type GetAllOrdersOfOrgOutput = {
+    orders: Order[];
+    has_next: boolean;
+  };
 
   export type GetOrderParams = string;
   export type GetOrderOutput = Order | null;

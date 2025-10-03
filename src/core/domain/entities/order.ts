@@ -29,7 +29,7 @@ export class Order {
     this.total_price = data.total_price;
     this.quantity = data.quantity;
     this.table = data.table;
-    this.products = data.products;
+    this.products = data.products ?? [];
   }
 }
 
@@ -44,7 +44,7 @@ namespace Order {
     total_price: number;
     quantity: number;
     table: string;
-    products: Product[];
+    products?: Product[];
   };
 }
 

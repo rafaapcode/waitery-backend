@@ -4,6 +4,7 @@ import {
   Order,
   OrderStatus,
 } from 'src/core/domain/entities/order';
+import { createProductEntity } from 'src/core/domain/entities/product';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 
@@ -34,6 +35,8 @@ describe('Order Service', () => {
     orderService = module.get<OrderService>(OrderService);
     orderRepo = module.get<OrderRepository>(OrderRepository);
   });
+
+  beforeEach(() => jest.clearAllMocks());
 
   it('Should all services be defined', () => {
     expect(orderService).toBeDefined();
@@ -70,6 +73,64 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
+    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(0);
+  });
+
+  it('Should create a new order with products', async () => {
+    // Arrange
+    const prods = Array.from({ length: 5 }).map((_, idx) =>
+      createProductEntity({
+        category: {
+          icon: '😊',
+          name: 'teste',
+          org_id: '1231231',
+        },
+        description: 'Descrição teste',
+        discount: false,
+        discounted_price: 0,
+        image_url: 'http:',
+        ingredients: [],
+        name: 'Produto bom',
+        org_id: '1231231',
+        price: 120,
+        id: `${idx}`.repeat(11),
+      }),
+    );
+    const data = createOrderEntity({
+      org_id: '1231231',
+      products: prods,
+      quantity: 10,
+      status: OrderStatus.DONE,
+      table: '12',
+      total_price: 120,
+      user_id: 'rafael_123123',
+      id: 'order_1123132uid',
+    });
+    jest.spyOn(orderRepo, 'create').mockResolvedValue({
+      org_id: '1231231',
+      quantity: 10,
+      status: OrderStatus.DONE,
+      table: '12',
+      total_price: 120,
+      user_id: 'rafael_123123',
+      created_at: new Date(),
+      deleted_at: null,
+      id: '1231321',
+    });
+
+    // Act
+    const order = await orderService.create(data);
+
+    // Assert
+    expect(order).toBeInstanceOf(Order);
+    expect(orderRepo.create).toHaveBeenCalledTimes(1);
+    expect(orderRepo.create).toHaveBeenCalledWith(data);
+    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(5);
+    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledWith(
+      '1231231',
+      '1231321',
+      prods.map((p) => p.id),
+    );
   });
 
   it('Should delete a order', async () => {
@@ -121,6 +182,7 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getOrder').mockResolvedValue({
       org_id: '1231231',
       quantity: 10,
+      products: [],
       status: OrderStatus.DONE,
       table: '12',
       total_price: 120,
@@ -131,11 +193,138 @@ describe('Order Service', () => {
     });
 
     // Act
-    const order = await orderService.getOrder('1231231');
+    const order = await orderService.getOrder('1231321');
 
     // Assert
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.getOrder).toHaveBeenCalledTimes(1);
     expect(orderRepo.getOrder).toHaveBeenCalledWith('1231321');
+  });
+
+  it('Should return null if a order does not exists', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getOrder').mockResolvedValue(null);
+
+    // Act
+    const order = await orderService.getOrder('1231231');
+
+    // Assert
+    expect(order).toBeNull();
+    expect(orderRepo.getOrder).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getOrder).toHaveBeenCalledWith('1231231');
+  });
+
+  it('Should return all orders of page 0', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
+      Array.from({ length: 26 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: 10,
+        status: OrderStatus.DONE,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `rafael_123123-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrders({
+      org_id: '123123123',
+      page: 0,
+    });
+
+    // Assert
+    expect(has_next).toBeTruthy();
+    expect(orders.length).toBe(25);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 0, 26);
+  });
+  it('Should return all orders of page 1', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
+      Array.from({ length: 3 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: 10,
+        status: OrderStatus.DONE,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `rafael_123123-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrders({
+      org_id: '123123123',
+      page: 1,
+    });
+
+    // Assert
+    expect(has_next).toBeFalsy();
+    expect(orders.length).toBe(3);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 25, 26);
+  });
+
+  it('Should return all orders of page 0 if the page is not defined', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
+      Array.from({ length: 3 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: 10,
+        status: OrderStatus.DONE,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `rafael_123123-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrders({
+      org_id: '123123123',
+    });
+
+    // Assert
+    expect(has_next).toBeFalsy();
+    expect(orders.length).toBe(3);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 0, 26);
+  });
+
+  it('Should return all orders of today', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersOfToday').mockResolvedValue(
+      Array.from({ length: 3 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: 10,
+        status: OrderStatus.DONE,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `rafael_123123-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+      })),
+    );
+
+    // Act
+    const orders = await orderService.getAllOrdersOfToday('123123123');
+
+    // Assert
+    expect(orders.length).toBe(3);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledWith('123123123');
   });
 });
