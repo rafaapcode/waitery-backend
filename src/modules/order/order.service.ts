@@ -21,20 +21,22 @@ export class OrderService implements IOrderContract {
   async create(
     data: IOrderContract.CreateParams,
   ): Promise<IOrderContract.CreateOutput> {
-    const order = await this.orderRepo.create(data);
-    data.id = order.id;
+    const order = await this.orderRepo.create(data.order);
 
-    const products_ids = data.products.map((p) => p.id!);
-
-    if (products_ids.length > 0) {
+    if (data.product_ids.length > 0) {
       await this.orderRepo.linkOrderToProduct(
-        data.org_id,
+        data.order.org_id,
         order.id,
-        products_ids,
+        data.product_ids,
       );
     }
 
-    return data;
+    return createOrderEntity({
+      ...order,
+      products: [],
+      status: order.status as OrderStatus,
+      deleted_at: order.deleted_at ?? undefined,
+    });
   }
   async updateOrderStatus(
     params: IOrderContract.UpdateOrderStatusParams,
@@ -94,6 +96,7 @@ export class OrderService implements IOrderContract {
         createOrderEntity({
           ...order,
           status: order.status as OrderStatus,
+          products: [],
           deleted_at: order.deleted_at ?? undefined,
         }),
       ),
@@ -109,6 +112,7 @@ export class OrderService implements IOrderContract {
       createOrderEntity({
         ...order,
         status: order.status as OrderStatus,
+        products: [],
         deleted_at: order.deleted_at ?? undefined,
       }),
     );

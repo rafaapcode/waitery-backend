@@ -7,6 +7,13 @@ export enum OrderStatus {
   CANCELED = 'CANCELED',
 }
 
+type ProductsOrder = {
+  image_url?: string;
+  name: string;
+  quantity: number;
+  price: number;
+};
+
 export class Order {
   id?: string;
   readonly org_id: string;
@@ -17,7 +24,7 @@ export class Order {
   readonly total_price: number;
   readonly quantity: number;
   readonly table: string;
-  readonly products: Product[];
+  readonly products: ProductsOrder[];
 
   constructor(data: Order.Attr) {
     if (data.id) this.id = data.id;

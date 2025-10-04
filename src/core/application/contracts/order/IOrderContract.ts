@@ -38,7 +38,10 @@ export namespace IOrderContract {
     CANCELED = 'CANCELED',
   }
 
-  export type CreateParams = Order;
+  export type CreateParams = {
+    product_ids: string[];
+    order: Order;
+  };
   export type CreateOutput = Order;
 
   export type DeleteParams = string;

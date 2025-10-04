@@ -76,24 +76,12 @@ model Order {
   table       String
   created_at  DateTime    @default(now())
   deleted_at  DateTime?
+  products    Json
 
-  org      Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
-  user     User?          @relation(fields: [user_id], references: [id])
-  products ProductOrder[]
+  org  Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  user User?        @relation(fields: [user_id], references: [id])
 
   @@index([user_id, org_id, created_at, status])
-}
-
-model ProductOrder {
-  org_id String
-
-  order    Order  @relation(fields: [order_id], references: [id])
-  order_id String
-
-  product    Product @relation(fields: [product_id], references: [id])
-  product_id String
-
-  @@id([order_id, product_id])
 }
 
 model Organization {
@@ -133,9 +121,8 @@ model Product {
   discount         Boolean
   ingredients      Json
 
-  org      Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
-  orders   ProductOrder[]
-  category Category       @relation(fields: [category_id], references: [id])
+  org      Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  category Category     @relation(fields: [category_id], references: [id])
 
   @@index([org_id, name])
 }

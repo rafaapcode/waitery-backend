@@ -65,10 +65,14 @@ describe('Order Service', () => {
       created_at: new Date(),
       deleted_at: null,
       id: '1231321',
+      products: [],
     });
 
     // Act
-    const order = await orderService.create(data);
+    const order = await orderService.create({
+      order: data,
+      product_ids: [],
+    });
 
     // Assert
     expect(order).toBeInstanceOf(Order);
@@ -117,10 +121,14 @@ describe('Order Service', () => {
       created_at: new Date(),
       deleted_at: null,
       id: '1231321',
+      products: [],
     });
 
     // Act
-    const order = await orderService.create(data);
+    const order = await orderService.create({
+      order: data,
+      product_ids: prods.map((p) => p.id!),
+    });
 
     // Assert
     expect(order).toBeInstanceOf(Order);
@@ -228,6 +236,7 @@ describe('Order Service', () => {
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
+        products: [],
       })),
     );
 
@@ -258,6 +267,7 @@ describe('Order Service', () => {
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
+        products: [],
       })),
     );
 
@@ -288,6 +298,7 @@ describe('Order Service', () => {
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
+        products: [],
       })),
     );
 
@@ -317,6 +328,7 @@ describe('Order Service', () => {
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
+        products: [],
       })),
     );
 
@@ -342,6 +354,7 @@ describe('Order Service', () => {
       created_at: new Date(),
       deleted_at: null,
       id: '1231321',
+      products: [],
     });
 
     // Act
@@ -388,6 +401,7 @@ describe('Order Service', () => {
       created_at: new Date(),
       deleted_at: null,
       id: '1231321',
+      products: [],
     });
 
     // Act

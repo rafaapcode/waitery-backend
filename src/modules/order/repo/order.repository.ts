@@ -47,7 +47,7 @@ type GetOrderReturn = {
 export class OrderRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(data: IOrderContract.CreateParams): Promise<Order> {
+  async create(data: IOrderContract.CreateParams['order']): Promise<Order> {
     const order = await this.prismaService.order.create({
       data: {
         org_id: data.org_id,
@@ -57,6 +57,7 @@ export class OrderRepository {
         quantity: data.quantity,
         table: data.table,
         created_at: data.created_at,
+        products: [],
       },
     });
 
