@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IORDER_CONTRACT } from 'src/shared/constants';
 
@@ -14,6 +14,15 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
   ) {}
 
   async execute(order_id: string, org_id: string): Promise<void> {
-    throw new Error('Method not implemented');
+    const orderIsLinkedWithOrg = await this.orderContract.verifyOrderByOrg({
+      order_id,
+      org_id,
+    });
+
+    if (!orderIsLinkedWithOrg) {
+      throw new NotFoundException('Order is not from this org');
+    }
+
+    await this.orderContract.cancelOrder(order_id);
   }
 }
