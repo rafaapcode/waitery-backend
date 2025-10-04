@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
-import { createOrderEntity, OrderStatus } from 'src/core/domain/entities/order';
-import { createProductEntity } from 'src/core/domain/entities/product';
+import {
+  createOrderEntity,
+  Order,
+  OrderStatus,
+} from 'src/core/domain/entities/order';
 import { OrderRepository } from './repo/order.repository';
 
 @Injectable()
@@ -23,14 +27,6 @@ export class OrderService implements IOrderContract {
   ): Promise<IOrderContract.CreateOutput> {
     const order = await this.orderRepo.create(data.order);
 
-    if (data.product_ids.length > 0) {
-      await this.orderRepo.linkOrderToProduct(
-        data.order.org_id,
-        order.id,
-        data.product_ids,
-      );
-    }
-
     return createOrderEntity({
       ...order,
       products: [],
@@ -50,30 +46,13 @@ export class OrderService implements IOrderContract {
 
     if (!order) return null;
 
-    // Get Only the products
-    const productNormalize = order.products.map((p) => p.product);
-
-    const products = productNormalize.map((p) => {
-      const category = {
-        org_id: p.org_id,
-        name: p.category.name,
-        icon: p.category.icon,
-      };
-
-      // const ing = createIngredientEntity()
-
-      return createProductEntity({
-        ...p,
-        ingredients: [],
-        category,
-      });
-    });
-
     const orderEntity = createOrderEntity({
       ...order,
       status: order.status as OrderStatus,
       deleted_at: order.deleted_at ?? undefined,
-      products,
+      products: Order.productsFromPrismaJson(
+        order.products as Prisma.JsonArray,
+      ),
     });
 
     return orderEntity;

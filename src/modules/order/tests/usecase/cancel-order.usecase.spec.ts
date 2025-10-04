@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -95,6 +96,7 @@ describe('Cancel Order UseCase', () => {
         total_price: 120,
         org_id: org.id,
         user_id: user.id,
+        products: [] as Prisma.JsonArray,
       },
     });
 

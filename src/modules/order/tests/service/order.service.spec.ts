@@ -78,7 +78,6 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
-    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(0);
   });
 
   it('Should create a new order with products', async () => {
@@ -103,7 +102,7 @@ describe('Order Service', () => {
     );
     const data = createOrderEntity({
       org_id: '1231231',
-      products: prods,
+      products: prods.map((p, idx) => p.toOrderType(idx + 1)),
       quantity: 10,
       status: OrderStatus.DONE,
       table: '12',
@@ -134,12 +133,6 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
-    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(1);
-    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledWith(
-      '1231231',
-      '1231321',
-      prods.map((p) => p.id),
-    );
   });
 
   it('Should delete a order', async () => {

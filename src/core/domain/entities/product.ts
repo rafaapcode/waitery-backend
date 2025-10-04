@@ -1,5 +1,6 @@
 import { Category } from './category';
 import { Ingredient } from './ingredient';
+import { ProductsOrder } from './order';
 
 export class Product {
   readonly id?: string;
@@ -24,6 +25,17 @@ export class Product {
     this.category = data.category;
     this.discounted_price = data.discounted_price;
     this.discount = data.discount;
+  }
+
+  toOrderType(quantity: number = 1): ProductsOrder {
+    return {
+      category: `${this.category.icon} ${this.category.name}`,
+      discount: this.discount,
+      name: this.name,
+      price: this.discount ? this.discounted_price : this.price,
+      quantity: quantity,
+      image_url: this.image_url ?? '',
+    };
   }
 }
 

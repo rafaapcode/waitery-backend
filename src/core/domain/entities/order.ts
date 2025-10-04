@@ -1,4 +1,4 @@
-import { Product } from './product';
+import { Prisma } from 'generated/prisma';
 
 export enum OrderStatus {
   WAITING = 'WAITING',
@@ -7,11 +7,13 @@ export enum OrderStatus {
   CANCELED = 'CANCELED',
 }
 
-type ProductsOrder = {
+export type ProductsOrder = {
   image_url?: string;
   name: string;
   quantity: number;
   price: number;
+  category: string;
+  discount: boolean;
 };
 
 export class Order {
@@ -39,35 +41,25 @@ export class Order {
     this.products = data.products ?? [];
   }
 
-  productMapper(): { quantity: number; price: number; product: Product }[] {
-    const groupProductsOfAOrder = this.products.reduce((acc, curr) => {
-      if (curr.id && acc.has(curr.id)) {
-        const product = acc.get(curr.id);
-        if (product) {
-          product.quantity = product.quantity += 1;
-          product.price = product.price += curr.price;
-          acc.set(curr.id, product);
-        }
-      } else {
-        if (curr.id) {
-          acc.set(curr.id, {
-            quantity: 1,
-            price: curr.price,
-            product: curr,
-          });
-        }
-      }
+  productsToPrismaJson(): Prisma.JsonArray {
+    return this.products as Prisma.JsonArray;
+  }
 
-      return acc;
-    }, new Map<string, { quantity: number; price: number; product: Product }>());
+  static productsFromPrismaJson(products: Prisma.JsonArray): ProductsOrder[] {
+    if (
+      products &&
+      typeof products === 'object' &&
+      Array.isArray(products) &&
+      products.length > 0
+    ) {
+      return products as ProductsOrder[];
+    }
 
-    return Array.from(groupProductsOfAOrder.values());
+    return [];
   }
 
   totalQuantityAndPrice(): { quantity: number; total_price: number } {
-    const products = this.productMapper();
-
-    return products.reduce(
+    return this.products.reduce(
       (acc, curr) => {
         acc.quantity += curr.quantity;
         acc.total_price += curr.price;
@@ -89,7 +81,7 @@ namespace Order {
     total_price: number;
     quantity: number;
     table: string;
-    products?: Product[];
+    products?: ProductsOrder[];
   };
 }
 
