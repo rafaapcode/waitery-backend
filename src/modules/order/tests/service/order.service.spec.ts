@@ -125,7 +125,7 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
-    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(5);
+    expect(orderRepo.linkOrderToProduct).toHaveBeenCalledTimes(1);
     expect(orderRepo.linkOrderToProduct).toHaveBeenCalledWith(
       '1231231',
       '1231321',
@@ -243,6 +243,7 @@ describe('Order Service', () => {
     expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
     expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 0, 26);
   });
+
   it('Should return all orders of page 1', async () => {
     // Arrange
     jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(

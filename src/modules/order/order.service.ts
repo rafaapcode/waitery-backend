@@ -23,6 +23,17 @@ export class OrderService implements IOrderContract {
   ): Promise<IOrderContract.CreateOutput> {
     const order = await this.orderRepo.create(data);
     data.id = order.id;
+
+    const products_ids = data.products.map((p) => p.id!);
+
+    if (products_ids.length > 0) {
+      await this.orderRepo.linkOrderToProduct(
+        data.org_id,
+        order.id,
+        products_ids,
+      );
+    }
+
     return data;
   }
   async updateOrderStatus(
