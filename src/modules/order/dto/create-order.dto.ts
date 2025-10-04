@@ -1,12 +1,17 @@
+import { Type } from 'class-transformer';
 import {
+  IsArray,
+  IsNotEmpty,
+  IsString,
   Validate,
+  ValidateNested,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
 import { isValid } from 'ulid';
 
 @ValidatorConstraint({ name: 'isUlid', async: false })
-export class CustomULIDValidattion implements ValidatorConstraintInterface {
+export class CustomULIDValidation implements ValidatorConstraintInterface {
   validate(id: string) {
     const isValidId = isValid(id);
 
@@ -21,14 +26,18 @@ export class CustomULIDValidattion implements ValidatorConstraintInterface {
 // class ProductDto {}
 
 export class CreateOrderDto {
-  @Validate(CustomULIDValidattion)
+  @Validate(CustomULIDValidation)
   org_id: string;
 
-  @Validate(CustomULIDValidattion)
+  @Validate(CustomULIDValidation)
   user_id: string;
 
-  // total_price: number;
-  // quantity: number;
-  // table: string;
-  // products: Product[];
+  @IsString()
+  @IsNotEmpty()
+  table: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => String)
+  products: string[];
 }

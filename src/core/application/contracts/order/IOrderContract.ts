@@ -22,6 +22,12 @@ export interface IOrderContract {
   getAllOrdersOfToday: (
     params: IOrderContract.GetAllOrdersOfTodayOfOrgParams,
   ) => Promise<IOrderContract.GetAllOrdersOfTodayOfOrgOutput>;
+  verifyOrderByOrg: (
+    params: IOrderContract.VerifyOrgOrderParams,
+  ) => Promise<IOrderContract.VerifyOrgOrdersOutput>;
+  verifyOrderByUser: (
+    params: IOrderContract.VerifyUserOrderParams,
+  ) => Promise<IOrderContract.VerifyUserOrdersOutput>;
 }
 
 export namespace IOrderContract {
@@ -58,4 +64,16 @@ export namespace IOrderContract {
     status: OrderStatus;
   };
   export type UpdateOrderStatusOutput = void;
+
+  export type VerifyOrgOrderParams = {
+    order_id: string;
+    org_id: string;
+  };
+  export type VerifyOrgOrdersOutput = boolean;
+
+  export type VerifyUserOrderParams = {
+    order_id: string;
+    user_id: string;
+  };
+  export type VerifyUserOrdersOutput = boolean;
 }

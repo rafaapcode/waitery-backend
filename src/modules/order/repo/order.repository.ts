@@ -170,4 +170,22 @@ export class OrderRepository {
       })),
     });
   }
+
+  async verifyOrder(
+    order_id: string,
+    params: { org_id?: string; user_id?: string },
+  ): Promise<Order | null> {
+    if (!params.org_id && !params.user_id) return null;
+    if (params.org_id && params.user_id) return null;
+
+    const order = await this.prismaService.order.findUnique({
+      where: {
+        id: order_id,
+        ...(params.org_id && { org_id: params.org_id }),
+        ...(params.user_id && { user_id: params.user_id }),
+      },
+    });
+
+    return order;
+  }
 }
