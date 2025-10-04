@@ -31,6 +31,44 @@ export class Order {
     this.table = data.table;
     this.products = data.products ?? [];
   }
+
+  productMapper(): { quantity: number; price: number; product: Product }[] {
+    const groupProductsOfAOrder = this.products.reduce((acc, curr) => {
+      if (curr.id && acc.has(curr.id)) {
+        const product = acc.get(curr.id);
+        if (product) {
+          product.quantity = product.quantity += 1;
+          product.price = product.price += curr.price;
+          acc.set(curr.id, product);
+        }
+      } else {
+        if (curr.id) {
+          acc.set(curr.id, {
+            quantity: 1,
+            price: curr.price,
+            product: curr,
+          });
+        }
+      }
+
+      return acc;
+    }, new Map<string, { quantity: number; price: number; product: Product }>());
+
+    return Array.from(groupProductsOfAOrder.values());
+  }
+
+  totalQuantityAndPrice(): { quantity: number; total_price: number } {
+    const products = this.productMapper();
+
+    return products.reduce(
+      (acc, curr) => {
+        acc.quantity += curr.quantity;
+        acc.total_price += curr.price;
+        return acc;
+      },
+      { quantity: 0, total_price: 0 },
+    );
+  }
 }
 
 namespace Order {
