@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -16,6 +17,9 @@ describe('Create Order UseCase', () => {
   let org_id: string;
   let org_id2: string;
   let user_id: string;
+  let cat_id: string;
+  let cat_id2: string;
+  let products_ids: string[];
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,9 +41,9 @@ describe('Create Order UseCase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
+        cpf: '12345678900',
         name: 'rafael ap',
-        email: 'rafaap@gmail.com',
+        email: 'rafaap123@gmail.com',
         password:
           '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
         role: UserRole.OWNER,
@@ -48,7 +52,7 @@ describe('Create Order UseCase', () => {
 
     const org = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
+        name: 'Restaurante Fogo de chão123312',
         image_url: 'https://example.com/images/clinica.jpg',
         email: 'contato@bemestar.com',
         description:
@@ -68,7 +72,7 @@ describe('Create Order UseCase', () => {
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão2',
+        name: 'Restaurante Fogo de chão23211234454',
         image_url: 'https://example.com/images/clinica.jpg',
         email: 'contato@bemestar.com',
         description:
@@ -85,14 +89,88 @@ describe('Create Order UseCase', () => {
         owner_id: user.id,
       },
     });
+
+    const cat = await prismaService.category.create({
+      data: {
+        icon: '🥗',
+        name: 'Vegetais',
+        org_id: org.id,
+      },
+    });
+
+    const cat2 = await prismaService.category.create({
+      data: {
+        icon: '🥗',
+        name: 'Vegetais',
+        org_id: org2.id,
+      },
+    });
+
+    const prod1 = await prismaService.product.create({
+      data: {
+        description: 'Descrição',
+        image_url: 'http://',
+        name: 'Produto bom 1',
+        price: 30,
+        ingredients: [
+          { name: 'pão', icon: '💪' },
+          { name: 'mussarela', icon: '💪' },
+        ] as Prisma.JsonArray,
+        category_id: cat.id,
+        org_id: org.id,
+      },
+    });
+
+    const prod2 = await prismaService.product.create({
+      data: {
+        description: 'Descrição',
+        image_url: 'http://',
+        name: 'Produto bom 2',
+        price: 30,
+        ingredients: [
+          { name: 'pão', icon: '💪' },
+          { name: 'mussarela', icon: '💪' },
+        ] as Prisma.JsonArray,
+        category_id: cat.id,
+        org_id: org.id,
+      },
+    });
+
+    const prod3 = await prismaService.product.create({
+      data: {
+        description: 'Descrição',
+        image_url: 'http://',
+        name: 'Produto bom 3',
+        price: 30,
+        ingredients: [
+          { name: 'pão', icon: '💪' },
+          { name: 'mussarela', icon: '💪' },
+        ] as Prisma.JsonArray,
+        category_id: cat2.id,
+        org_id: org.id,
+      },
+    });
+
     org_id = org.id;
     org_id2 = org2.id;
     user_id = user.id;
     order_id = '';
+    cat_id = cat.id;
+    cat_id2 = cat2.id;
+    products_ids = [prod1.id, prod2.id, prod3.id];
   });
 
   afterAll(async () => {
     // await prismaService.order.delete({ where: { id: order_id } });
+    await prismaService.product.deleteMany({
+      where: {
+        id: {
+          in: products_ids,
+        },
+      },
+    });
+    await prismaService.category.delete({ where: { id: cat_id } });
+    await prismaService.category.delete({ where: { id: cat_id2 } });
     await prismaService.organization.delete({ where: { id: org_id } });
     await prismaService.organization.delete({ where: { id: org_id2 } });
     await prismaService.user.delete({ where: { id: user_id } });
@@ -107,7 +185,8 @@ describe('Create Order UseCase', () => {
     expect(org_id).toBeDefined();
     expect(org_id2).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(cat_id).toBeDefined();
+    expect(cat_id2).toBeDefined();
+    expect(products_ids).toBeDefined();
   });
-
-  // it('Should ')
 });

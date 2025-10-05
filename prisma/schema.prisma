@@ -117,8 +117,8 @@ model Product {
   description      String
   price            Float
   category_id      String
-  discounted_price Float
-  discount         Boolean
+  discounted_price Float   @default(0)
+  discount         Boolean @default(false)
   ingredients      Json
 
   org      Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
