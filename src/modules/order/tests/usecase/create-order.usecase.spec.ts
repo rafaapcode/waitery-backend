@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
+import { createOrderEntity, OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IORDER_CONTRACT } from 'src/shared/constants';
@@ -188,5 +189,20 @@ describe('Create Order UseCase', () => {
     expect(cat_id).toBeDefined();
     expect(cat_id2).toBeDefined();
     expect(products_ids).toBeDefined();
+  });
+
+  it('Should create a new order', async () => {
+    // Arrange
+    const data: IOrderContract.CreateParams = {
+      product_ids: [products_ids[0], products_ids[1]],
+      order: createOrderEntity({
+        org_id,
+        quantity: 4,
+        status: OrderStatus.WAITING,
+        table: 'Mesa 15',
+        total_price: 120,
+        user_id,
+      }),
+    };
   });
 });

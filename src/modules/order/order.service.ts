@@ -17,11 +17,13 @@ export class OrderService implements IOrderContract {
   ): Promise<IOrderContract.DeleteOutput> {
     await this.orderRepo.cancel(order_id);
   }
+
   async deleteOrder(
     order_id: IOrderContract.DeleteParams,
   ): Promise<IOrderContract.DeleteOutput> {
     await this.orderRepo.delete(order_id);
   }
+
   async create(
     data: IOrderContract.CreateParams,
   ): Promise<IOrderContract.CreateOutput> {
@@ -34,11 +36,13 @@ export class OrderService implements IOrderContract {
       deleted_at: order.deleted_at ?? undefined,
     });
   }
+
   async updateOrderStatus(
     params: IOrderContract.UpdateOrderStatusParams,
   ): Promise<IOrderContract.UpdateOrderStatusOutput> {
     await this.orderRepo.updateOrder(params.order_id, params.status);
   }
+
   async getOrder(
     id: IOrderContract.GetOrderParams,
   ): Promise<IOrderContract.GetOrderOutput> {
@@ -57,6 +61,7 @@ export class OrderService implements IOrderContract {
 
     return orderEntity;
   }
+
   async getAllOrders(
     params: IOrderContract.GetAllOrdersOfOrgParams,
   ): Promise<IOrderContract.GetAllOrdersOfOrgOutput> {
@@ -82,6 +87,7 @@ export class OrderService implements IOrderContract {
       has_next,
     };
   }
+
   async getAllOrdersOfToday(
     org_id: IOrderContract.GetAllOrdersOfTodayOfOrgParams,
   ): Promise<IOrderContract.GetAllOrdersOfTodayOfOrgOutput> {
@@ -96,6 +102,7 @@ export class OrderService implements IOrderContract {
       }),
     );
   }
+
   async verifyOrderByOrg(
     params: IOrderContract.VerifyOrgOrderParams,
   ): Promise<IOrderContract.VerifyOrgOrdersOutput> {
@@ -105,6 +112,7 @@ export class OrderService implements IOrderContract {
 
     return order !== null;
   }
+
   async verifyOrderByUser(
     params: IOrderContract.VerifyUserOrderParams,
   ): Promise<IOrderContract.VerifyUserOrdersOutput> {
@@ -114,4 +122,25 @@ export class OrderService implements IOrderContract {
 
     return order !== null;
   }
+
+  async getProductsOfOrder(
+    products_ids: IOrderContract.GetProductsOfOrdersParams,
+  ): Promise<IOrderContract.GetProductsOfOrdersOutput> {
+    const products = await this.orderRepo.getProductsOfOrder(products_ids);
+    return products.map((p) => ({
+      category: `${p.}`,
+      discount: p.discount,
+      name: p.name,
+      price: p.discount ? p.discounted_price : p.price,
+      quantity: 1,
+      image_url: p.image_url ?? undefined,
+    }));
+  }
 }
+
+// image_url?: string;
+//   name: string;
+//   quantity: number;
+//   price: number;
+//   category: string;
+//   discount: boolean;

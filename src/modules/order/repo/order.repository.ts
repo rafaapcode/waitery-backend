@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Order } from 'generated/prisma';
+import { Order, Product } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -64,6 +64,18 @@ export class OrderRepository {
         status: new_status,
       },
     });
+  }
+
+  async getProductsOfOrder(products_ids: string[]): Promise<Product[]> {
+    const products = await this.prismaService.product.findMany({
+      where: {
+        id: {
+          in: products_ids,
+        },
+      },
+    });
+
+    return products;
   }
 
   async getAllOrders(

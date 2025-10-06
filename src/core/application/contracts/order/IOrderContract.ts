@@ -1,4 +1,4 @@
-import { Order } from 'src/core/domain/entities/order';
+import { Order, ProductsOrder } from 'src/core/domain/entities/order';
 
 export interface IOrderContract {
   create: (
@@ -16,6 +16,9 @@ export interface IOrderContract {
   getOrder: (
     id: IOrderContract.GetOrderParams,
   ) => Promise<IOrderContract.GetOrderOutput>;
+  getProductsOfOrder: (
+    products_id: IOrderContract.GetProductsOfOrdersParams,
+  ) => Promise<IOrderContract.GetProductsOfOrdersOutput>;
   getAllOrders: (
     params: IOrderContract.GetAllOrdersOfOrgParams,
   ) => Promise<IOrderContract.GetAllOrdersOfOrgOutput>;
@@ -58,6 +61,9 @@ export namespace IOrderContract {
 
   export type GetOrderParams = string;
   export type GetOrderOutput = Order | null;
+
+  export type GetProductsOfOrdersParams = string[];
+  export type GetProductsOfOrdersOutput = ProductsOrder[];
 
   export type GetAllOrdersOfTodayOfOrgParams = string;
   export type GetAllOrdersOfTodayOfOrgOutput = Order[];
