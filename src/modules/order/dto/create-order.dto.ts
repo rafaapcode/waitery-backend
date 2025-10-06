@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -5,9 +7,8 @@ import {
   IsNumber,
   IsString,
   Validate,
-  ValidateNested,
   ValidatorConstraint,
-  ValidatorConstraintInterface,
+  ValidatorConstraintInterface
 } from 'class-validator';
 import { isValid } from 'ulid';
 
@@ -25,7 +26,8 @@ export class CustomULIDValidation implements ValidatorConstraintInterface {
 }
 
 class OrdersDto {
-  @Validate(CustomULIDValidation)
+  @IsString()
+  @IsNotEmpty()
   product_id: string;
 
   @IsNumber()
@@ -47,7 +49,6 @@ export class CreateOrderDto {
   table: string;
 
   @IsArray()
-  @ValidateNested({ each: true })
   @Type(() => OrdersDto)
   products: OrdersDto[];
 }
