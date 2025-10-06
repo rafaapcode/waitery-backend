@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
 import { IORDER_CONTRACT } from 'src/shared/constants';
+import { OrganizationModule } from '../organization/organization.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { OrderRepository } from './repo/order.repository';
@@ -13,7 +14,7 @@ import { GetOrderUseCase } from './usecases/GetOrderUseCase';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, OrganizationModule],
   controllers: [OrderController],
   providers: [
     OrderRepository,

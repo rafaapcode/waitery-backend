@@ -1,10 +1,15 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
-import { createOrderEntity, OrderStatus } from 'src/core/domain/entities/order';
+import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { Order, OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IORDER_CONTRACT } from 'src/shared/constants';
+import { OrganizationService } from 'src/modules/organization/organization.service';
+import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
+import { IORDER_CONTRACT, IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import { CreateOrderDto } from '../../dto/create-order.dto';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 import { CreateOrderUseCase } from '../../usecases/CreateOrderUseCase';
@@ -13,6 +18,8 @@ describe('Create Order UseCase', () => {
   let createOrderUseCase: CreateOrderUseCase;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
+  let orgService: IOrganizationContract;
+  let orgRepo: OrganizationRepo;
   let prismaService: PrismaService;
   let order_id: string;
   let org_id: string;
@@ -28,9 +35,14 @@ describe('Create Order UseCase', () => {
         CreateOrderUseCase,
         PrismaService,
         OrderRepository,
+        OrganizationRepo,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
+        },
+        {
+          provide: IORGANIZATION_CONTRACT,
+          useClass: OrganizationService,
         },
       ],
     }).compile();
@@ -39,6 +51,8 @@ describe('Create Order UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     orderService = module.get<OrderService>(IORDER_CONTRACT);
     orderRepo = module.get<OrderRepository>(OrderRepository);
+    orgService = module.get<OrganizationService>(IORGANIZATION_CONTRACT);
+    orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
 
     const user = await prismaService.user.create({
       data: {
@@ -162,7 +176,7 @@ describe('Create Order UseCase', () => {
   });
 
   afterAll(async () => {
-    // await prismaService.order.delete({ where: { id: order_id } });
+    await prismaService.order.delete({ where: { id: order_id } });
     await prismaService.product.deleteMany({
       where: {
         id: {
@@ -178,7 +192,6 @@ describe('Create Order UseCase', () => {
   });
 
   it('Should all services be defined', () => {
-    console.log(order_id);
     expect(createOrderUseCase).toBeDefined();
     expect(orderService).toBeDefined();
     expect(prismaService).toBeDefined();
@@ -189,20 +202,86 @@ describe('Create Order UseCase', () => {
     expect(cat_id).toBeDefined();
     expect(cat_id2).toBeDefined();
     expect(products_ids).toBeDefined();
+    expect(orgService).toBeDefined();
+    expect(orgRepo).toBeDefined();
   });
 
   it('Should create a new order', async () => {
     // Arrange
-    const data: IOrderContract.CreateParams = {
-      product_ids: [products_ids[0], products_ids[1]],
-      order: createOrderEntity({
-        org_id,
-        quantity: 4,
-        status: OrderStatus.WAITING,
-        table: 'Mesa 15',
-        total_price: 120,
-        user_id,
-      }),
+    const data: CreateOrderDto = {
+      org_id,
+      user_id,
+      table: 'Mesa 15',
+      products: [
+        {
+          price: 30,
+          product_id: products_ids[0],
+          quantity: 2,
+        },
+        {
+          price: 30,
+          product_id: products_ids[1],
+          quantity: 2,
+        },
+      ],
     };
+    jest.spyOn(orderService, 'getProductsOfOrder');
+
+    // Act
+    const order = await createOrderUseCase.execute(data);
+
+    order_id = order.id!;
+
+    // Assert
+    expect(order).toBeInstanceOf(Order);
+    expect(order.id).toBeDefined();
+    expect(order.created_at).toBeDefined();
+    expect(order.status).toBe(OrderStatus.WAITING);
+    expect(order.quantity).toBe(4);
+    expect(order.total_price).toBe(60);
+    expect(order.products.length).toBe(2);
+    expect(order.products[0].category).toBe(`🥗 Vegetais`);
+    expect(orderService.getProductsOfOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it('Should throw a BadRequestException if the products is not provided', async () => {
+    // Arrange
+    const data: CreateOrderDto = {
+      org_id,
+      user_id,
+      table: 'Mesa 15',
+      products: [],
+    };
+
+    // Assert
+    await expect(createOrderUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('Should throw a NotFoundException if the org not exist', async () => {
+    // Arrange
+    const data: CreateOrderDto = {
+      org_id: 'org_id',
+      user_id,
+      table: 'Mesa 15',
+      products: [
+        {
+          price: 30,
+          product_id: products_ids[0],
+          quantity: 2,
+        },
+        {
+          price: 30,
+          product_id: products_ids[1],
+          quantity: 2,
+        },
+      ],
+    };
+
+    // Assert
+    await expect(createOrderUseCase.execute(data)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

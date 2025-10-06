@@ -69,10 +69,7 @@ describe('Order Service', () => {
     });
 
     // Act
-    const order = await orderService.create({
-      order: data,
-      product_ids: [],
-    });
+    const order = await orderService.create(data);
 
     // Assert
     expect(order).toBeInstanceOf(Order);
@@ -124,10 +121,7 @@ describe('Order Service', () => {
     });
 
     // Act
-    const order = await orderService.create({
-      order: data,
-      product_ids: prods.map((p) => p.id!),
-    });
+    const order = await orderService.create(data);
 
     // Assert
     expect(order).toBeInstanceOf(Order);

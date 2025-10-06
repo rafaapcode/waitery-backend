@@ -27,11 +27,13 @@ export class OrderService implements IOrderContract {
   async create(
     data: IOrderContract.CreateParams,
   ): Promise<IOrderContract.CreateOutput> {
-    const order = await this.orderRepo.create(data.order);
+    const order = await this.orderRepo.create(data);
 
     return createOrderEntity({
       ...order,
-      products: [],
+      products: Order.productsFromPrismaJson(
+        order.products as Prisma.JsonArray,
+      ),
       status: order.status as OrderStatus,
       deleted_at: order.deleted_at ?? undefined,
     });
@@ -124,17 +126,39 @@ export class OrderService implements IOrderContract {
   }
 
   async getProductsOfOrder(
-    products_ids: IOrderContract.GetProductsOfOrdersParams,
+    products_info: IOrderContract.GetProductsOfOrdersParams,
   ): Promise<IOrderContract.GetProductsOfOrdersOutput> {
-    const products = await this.orderRepo.getProductsOfOrder(products_ids);
+    const products = await this.orderRepo.getProductsOfOrder(products_info);
+
+    const mapProduct = new Map<string, number>();
+
+    products_info.forEach((p) => mapProduct.set(p.product_id, p.quantity));
+
     return products.map((p) => ({
-      category: `${p.}`,
+      category: `${p.category.icon} ${p.category.name}`,
       discount: p.discount,
       name: p.name,
       price: p.discount ? p.discounted_price : p.price,
-      quantity: 1,
+      quantity: mapProduct.get(p.id)!,
       image_url: p.image_url ?? undefined,
     }));
+  }
+
+  async getOrderOfUser(
+    user_id: IOrderContract.GetOrdersOfUserParams,
+  ): Promise<IOrderContract.GetOrdersOfUserOutput> {
+    const orders = await this.orderRepo.getOrdersOfUser(user_id);
+
+    return orders.map((order) =>
+      createOrderEntity({
+        ...order,
+        status: order.status as OrderStatus,
+        products: Order.productsFromPrismaJson(
+          order.products as Prisma.JsonArray,
+        ),
+        deleted_at: order.deleted_at ?? undefined,
+      }),
+    );
   }
 }
 

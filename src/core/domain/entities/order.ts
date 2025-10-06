@@ -32,7 +32,7 @@ export class Order {
     if (data.id) this.id = data.id;
     this.org_id = data.org_id;
     this.user_id = data.user_id;
-    this.status = data.status;
+    this.status = data.status ?? OrderStatus.WAITING;
     this.deleted_at = data.deleted_at;
     this.created_at = data.created_at ?? new Date();
     this.total_price = data.total_price;
@@ -58,8 +58,11 @@ export class Order {
     return [];
   }
 
-  totalQuantityAndPrice(): { quantity: number; total_price: number } {
-    return this.products.reduce(
+  static totalQuantityAndPrice(data: { quantity: number; price: number }[]): {
+    quantity: number;
+    total_price: number;
+  } {
+    return data.reduce(
       (acc, curr) => {
         acc.quantity += curr.quantity;
         acc.total_price += curr.price;
@@ -75,7 +78,7 @@ namespace Order {
     id?: string;
     org_id: string;
     user_id: string;
-    status: OrderStatus;
+    status?: OrderStatus;
     deleted_at?: Date;
     created_at?: Date;
     total_price: number;

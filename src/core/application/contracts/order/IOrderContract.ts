@@ -17,7 +17,7 @@ export interface IOrderContract {
     id: IOrderContract.GetOrderParams,
   ) => Promise<IOrderContract.GetOrderOutput>;
   getProductsOfOrder: (
-    products_id: IOrderContract.GetProductsOfOrdersParams,
+    products_info: IOrderContract.GetProductsOfOrdersParams,
   ) => Promise<IOrderContract.GetProductsOfOrdersOutput>;
   getAllOrders: (
     params: IOrderContract.GetAllOrdersOfOrgParams,
@@ -31,6 +31,9 @@ export interface IOrderContract {
   verifyOrderByUser: (
     params: IOrderContract.VerifyUserOrderParams,
   ) => Promise<IOrderContract.VerifyUserOrdersOutput>;
+  getOrderOfUser: (
+    user_id: IOrderContract.GetOrdersOfUserParams,
+  ) => Promise<IOrderContract.GetOrdersOfUserOutput>;
 }
 
 export namespace IOrderContract {
@@ -41,10 +44,7 @@ export namespace IOrderContract {
     CANCELED = 'CANCELED',
   }
 
-  export type CreateParams = {
-    product_ids: string[];
-    order: Order;
-  };
+  export type CreateParams = Order;
   export type CreateOutput = Order;
 
   export type DeleteParams = string;
@@ -62,7 +62,13 @@ export namespace IOrderContract {
   export type GetOrderParams = string;
   export type GetOrderOutput = Order | null;
 
-  export type GetProductsOfOrdersParams = string[];
+  export type GetOrdersOfUserParams = string;
+  export type GetOrdersOfUserOutput = Order[];
+
+  export type GetProductsOfOrdersParams = {
+    product_id: string;
+    quantity: number;
+  }[];
   export type GetProductsOfOrdersOutput = ProductsOrder[];
 
   export type GetAllOrdersOfTodayOfOrgParams = string;

@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
+  IsNumber,
   IsString,
   Validate,
   ValidateNested,
@@ -23,7 +24,16 @@ export class CustomULIDValidation implements ValidatorConstraintInterface {
   }
 }
 
-// class ProductDto {}
+class OrdersDto {
+  @Validate(CustomULIDValidation)
+  product_id: string;
+
+  @IsNumber()
+  quantity: number;
+
+  @IsNumber()
+  price: number;
+}
 
 export class CreateOrderDto {
   @Validate(CustomULIDValidation)
@@ -38,6 +48,6 @@ export class CreateOrderDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => String)
-  products: string[];
+  @Type(() => OrdersDto)
+  products: OrdersDto[];
 }

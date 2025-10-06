@@ -4,11 +4,15 @@ import { IOrderContract } from 'src/core/application/contracts/order/IOrderContr
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
 
+type GetProductsOfOrder = Product & {
+  category: { name: string; icon: string };
+};
+
 @Injectable()
 export class OrderRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(data: IOrderContract.CreateParams['order']): Promise<Order> {
+  async create(data: IOrderContract.CreateParams): Promise<Order> {
     const order = await this.prismaService.order.create({
       data: {
         org_id: data.org_id,
@@ -55,6 +59,16 @@ export class OrderRepository {
     return order;
   }
 
+  async getOrdersOfUser(user_id: string): Promise<Order[]> {
+    const order = await this.prismaService.order.findMany({
+      where: {
+        user_id,
+      },
+    });
+
+    return order;
+  }
+
   async updateOrder(order_id: string, new_status: OrderStatus): Promise<void> {
     await this.prismaService.order.update({
       where: {
@@ -66,16 +80,35 @@ export class OrderRepository {
     });
   }
 
-  async getProductsOfOrder(products_ids: string[]): Promise<Product[]> {
+  async getProductsOfOrder(
+    products_info: {
+      product_id: string;
+      quantity: number;
+    }[],
+  ): Promise<GetProductsOfOrder[]> {
     const products = await this.prismaService.product.findMany({
       where: {
         id: {
-          in: products_ids,
+          in: products_info.map((p) => p.product_id),
+        },
+      },
+      include: {
+        category: {
+          select: {
+            icon: true,
+            name: true,
+          },
         },
       },
     });
 
-    return products;
+    return products.map((p) => ({
+      ...p,
+      category: {
+        name: p.category.name,
+        icon: p.category.icon,
+      },
+    }));
   }
 
   async getAllOrders(
