@@ -127,9 +127,10 @@ export class OrderRepository {
     return orders;
   }
 
-  async getAllOrdersOfToday(
-    org_id: IOrderContract.GetAllOrdersOfTodayOfOrgParams,
-  ): Promise<Order[]> {
+  async getAllOrdersOfToday({
+    org_id,
+    orders_canceled,
+  }: IOrderContract.GetAllOrdersOfTodayOfOrgParams): Promise<Order[]> {
     const date = new Date();
     const todayDay = date.getDate();
     const actualMonth = date.getMonth();
@@ -141,6 +142,7 @@ export class OrderRepository {
         created_at: {
           gt: new Date(actualYear, actualMonth, todayDay, 0, 0),
         },
+        ...(!orders_canceled && { deleted_at: null }),
       },
     });
 

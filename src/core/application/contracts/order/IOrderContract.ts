@@ -71,7 +71,10 @@ export namespace IOrderContract {
   }[];
   export type GetProductsOfOrdersOutput = ProductsOrder[];
 
-  export type GetAllOrdersOfTodayOfOrgParams = string;
+  export type GetAllOrdersOfTodayOfOrgParams = {
+    org_id: string;
+    orders_canceled?: boolean;
+  };
   export type GetAllOrdersOfTodayOfOrgOutput = Order[];
 
   export type UpdateOrderStatusParams = {
