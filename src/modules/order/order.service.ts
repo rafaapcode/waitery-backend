@@ -91,9 +91,9 @@ export class OrderService implements IOrderContract {
   }
 
   async getAllOrdersOfToday(
-    org_id: IOrderContract.GetAllOrdersOfTodayOfOrgParams,
+    params: IOrderContract.GetAllOrdersOfTodayOfOrgParams,
   ): Promise<IOrderContract.GetAllOrdersOfTodayOfOrgOutput> {
-    const orders = await this.orderRepo.getAllOrdersOfToday(org_id);
+    const orders = await this.orderRepo.getAllOrdersOfToday(params);
 
     return orders.map((order) =>
       createOrderEntity({

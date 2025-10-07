@@ -320,13 +320,19 @@ describe('Order Service', () => {
     );
 
     // Act
-    const orders = await orderService.getAllOrdersOfToday('123123123');
+    const orders = await orderService.getAllOrdersOfToday({
+      org_id: '123123123',
+      orders_canceled: true,
+    });
 
     // Assert
     expect(orders.length).toBe(3);
     expect(orders[0]).toBeInstanceOf(Order);
     expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledWith('123123123');
+    expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledWith({
+      orders_canceled: true,
+      org_id: '123123123',
+    });
   });
 
   it('Should return true if the order of a org exists', async () => {
