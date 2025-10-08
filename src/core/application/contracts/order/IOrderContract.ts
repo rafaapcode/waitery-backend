@@ -62,8 +62,14 @@ export namespace IOrderContract {
   export type GetOrderParams = string;
   export type GetOrderOutput = Order | null;
 
-  export type GetOrdersOfUserParams = string;
-  export type GetOrdersOfUserOutput = Order[];
+  export type GetOrdersOfUserParams = {
+    user_id: string;
+    page?: number;
+  };
+  export type GetOrdersOfUserOutput = {
+    orders: Order[];
+    has_next: boolean;
+  };
 
   export type GetProductsOfOrdersParams = {
     product_id: string;

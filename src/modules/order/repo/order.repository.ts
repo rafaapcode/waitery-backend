@@ -59,8 +59,14 @@ export class OrderRepository {
     return order;
   }
 
-  async getOrdersOfUser(user_id: string): Promise<Order[]> {
+  async getOrdersOfUser(
+    user_id: string,
+    offset: number,
+    limit: number,
+  ): Promise<Order[]> {
     const order = await this.prismaService.order.findMany({
+      take: limit,
+      skip: offset,
       where: {
         user_id,
       },

@@ -145,20 +145,35 @@ export class OrderService implements IOrderContract {
   }
 
   async getOrderOfUser(
-    user_id: IOrderContract.GetOrdersOfUserParams,
+    params: IOrderContract.GetOrdersOfUserParams,
   ): Promise<IOrderContract.GetOrdersOfUserOutput> {
-    const orders = await this.orderRepo.getOrdersOfUser(user_id);
+    const { user_id, page } = params;
+    const LIMIT = 25;
+    const PAGE = page ? (page >= 0 ? page : 0) : 0;
+    const OFFSET = PAGE * LIMIT;
 
-    return orders.map((order) =>
-      createOrderEntity({
-        ...order,
-        status: order.status as OrderStatus,
-        products: Order.productsFromPrismaJson(
-          order.products as Prisma.JsonArray,
-        ),
-        deleted_at: order.deleted_at ?? undefined,
-      }),
+    const orders = await this.orderRepo.getOrdersOfUser(
+      user_id,
+      OFFSET,
+      LIMIT + 1,
     );
+    let has_next = false;
+
+    if (orders.length > 25) has_next = true;
+
+    return {
+      has_next,
+      orders: orders.slice(0, LIMIT).map((order) =>
+        createOrderEntity({
+          ...order,
+          status: order.status as OrderStatus,
+          products: Order.productsFromPrismaJson(
+            order.products as Prisma.JsonArray,
+          ),
+          deleted_at: order.deleted_at ?? undefined,
+        }),
+      ),
+    };
   }
 }
 
