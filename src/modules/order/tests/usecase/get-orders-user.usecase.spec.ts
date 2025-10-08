@@ -7,10 +7,10 @@ import { PrismaService } from 'src/infra/database/database.service';
 import { IORDER_CONTRACT } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
-import { GetMyOrderUseCase } from '../../usecases/GetMyOrdersUseCase';
+import { GetOrdersOfUserUseCase } from '../../usecases/GetOrdersOfUserUseCase';
 
-describe('Get My Orders UseCase', () => {
-  let getMyOrdersUseCase: GetMyOrderUseCase;
+describe('Get Orders of a User UseCase', () => {
+  let getOrdersOfUserUseCase: GetOrdersOfUserUseCase;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let prismaService: PrismaService;
@@ -21,7 +21,7 @@ describe('Get My Orders UseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        GetMyOrderUseCase,
+        GetOrdersOfUserUseCase,
         PrismaService,
         OrderRepository,
         {
@@ -31,7 +31,9 @@ describe('Get My Orders UseCase', () => {
       ],
     }).compile();
 
-    getMyOrdersUseCase = module.get<GetMyOrderUseCase>(GetMyOrderUseCase);
+    getOrdersOfUserUseCase = module.get<GetOrdersOfUserUseCase>(
+      GetOrdersOfUserUseCase,
+    );
     prismaService = module.get<PrismaService>(PrismaService);
     orderService = module.get<OrderService>(IORDER_CONTRACT);
     orderRepo = module.get<OrderRepository>(OrderRepository);
@@ -103,7 +105,7 @@ describe('Get My Orders UseCase', () => {
   });
 
   it('Should all services be defined', () => {
-    expect(getMyOrdersUseCase).toBeDefined();
+    expect(getOrdersOfUserUseCase).toBeDefined();
     expect(orderService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(orderRepo).toBeDefined();
@@ -114,7 +116,7 @@ describe('Get My Orders UseCase', () => {
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {
     // Act
-    const orders = await getMyOrdersUseCase.execute({
+    const orders = await getOrdersOfUserUseCase.execute({
       user_id,
     });
 
@@ -126,7 +128,7 @@ describe('Get My Orders UseCase', () => {
 
   it('Should get all orders with 25 orders in the first page with the page parameter', async () => {
     // Act
-    const orders = await getMyOrdersUseCase.execute({
+    const orders = await getOrdersOfUserUseCase.execute({
       user_id,
       page: 0,
     });
@@ -139,10 +141,10 @@ describe('Get My Orders UseCase', () => {
 
   it('Should get all orders with 25 orders in the second page', async () => {
     // Act
-    const orders = await getMyOrdersUseCase.execute({
+    const orders = await getOrdersOfUserUseCase.execute({
       user_id,
     });
-    const orders2 = await getMyOrdersUseCase.execute({
+    const orders2 = await getOrdersOfUserUseCase.execute({
       user_id,
       page: 1,
     });
@@ -159,11 +161,11 @@ describe('Get My Orders UseCase', () => {
 
   it('Should get all orders with 18 orders in the third page', async () => {
     // Act
-    const orders2 = await getMyOrdersUseCase.execute({
+    const orders2 = await getOrdersOfUserUseCase.execute({
       user_id,
       page: 1,
     });
-    const orders3 = await getMyOrdersUseCase.execute({
+    const orders3 = await getOrdersOfUserUseCase.execute({
       user_id,
       page: 2,
     });
@@ -180,7 +182,7 @@ describe('Get My Orders UseCase', () => {
 
   it('Should return 0 orders in the Fourth page', async () => {
     // Act
-    const orders = await getMyOrdersUseCase.execute({
+    const orders = await getOrdersOfUserUseCase.execute({
       user_id,
       page: 3,
     });

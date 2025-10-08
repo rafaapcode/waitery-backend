@@ -4,7 +4,10 @@ import { Order } from 'src/core/domain/entities/order';
 import { IORDER_CONTRACT } from 'src/shared/constants';
 
 interface IGetOrdersOfUserUseCase {
-  execute(user_id: string): Promise<Order[]>;
+  execute(params: { user_id: string; page?: number }): Promise<{
+    has_next: boolean;
+    orders: Order[];
+  }>;
 }
 
 @Injectable()
@@ -14,7 +17,12 @@ export class GetOrdersOfUserUseCase implements IGetOrdersOfUserUseCase {
     private readonly orderContract: IOrderContract,
   ) {}
 
-  async execute(user_id: string): Promise<Order[]> {
-    throw new Error('Method not implemented');
+  async execute(params: { user_id: string; page?: number }): Promise<{
+    has_next: boolean;
+    orders: Order[];
+  }> {
+    const orders = await this.orderContract.getOrderOfUser(params);
+
+    return orders;
   }
 }
