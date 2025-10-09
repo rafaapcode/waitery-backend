@@ -53,6 +53,8 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       products,
     });
 
+    console.log('Orders', order);
+
     const new_order = await this.orderContract.create(order);
 
     return new_order;
