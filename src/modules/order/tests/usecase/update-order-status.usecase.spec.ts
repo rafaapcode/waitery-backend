@@ -1,7 +1,9 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
@@ -20,6 +22,7 @@ describe('Update Order Status UseCase', () => {
   let prismaService: PrismaService;
   let order_id: string;
   let org_id: string;
+  let org_id2: string;
   let user_id: string;
   let cat_id: string;
   let product_id: string;
@@ -82,6 +85,26 @@ describe('Update Order Status UseCase', () => {
       },
     });
 
+    const org2 = await prismaService.organization.create({
+      data: {
+        name: 'Restaurante Fogo de chão da nevasca 2',
+        image_url: 'https://example.com/images/clinica.jpg',
+        email: 'contato@bemestar.com',
+        description:
+          'Clínica especializada em atendimento psicológico e terapias.',
+        location_code: 'BR-MG-015',
+        open_hour: 8,
+        close_hour: 18,
+        cep: '30130-010',
+        city: 'Belo Horizonte',
+        neighborhood: 'Funcionários',
+        street: 'Rua da Bahia, 1200',
+        lat: -19.92083,
+        long: -43.937778,
+        owner_id: user.id,
+      },
+    });
+
     const cat = await prismaService.category.create({
       data: {
         icon: '🥗',
@@ -114,15 +137,19 @@ describe('Update Order Status UseCase', () => {
         user_id: user.id,
         products: [
           {
+            category: '🥗 Vegetais',
+            discount: false,
+            name: 'Produto bom 1',
             price: 30,
-            product_id,
             quantity: 2,
+            image_url: 'http://',
           },
         ],
       },
     });
 
     org_id = org.id;
+    org_id2 = org2.id;
     user_id = user.id;
     order_id = order.id;
     cat_id = cat.id;
@@ -149,11 +176,86 @@ describe('Update Order Status UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(orderRepo).toBeDefined();
     expect(org_id).toBeDefined();
+    expect(org_id2).toBeDefined();
     expect(user_id).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(product_id).toBeDefined();
     expect(orgService).toBeDefined();
     expect(orgRepo).toBeDefined();
     expect(order_id).toBeDefined();
+  });
+
+  it('Should update a status of an order', async () => {
+    // Arrange
+    const old_order = await prismaService.order.findUnique({
+      where: { id: order_id },
+    });
+
+    // Act
+    await updateOrderUseCase.execute(
+      {
+        order_id,
+        status: OrderStatus.IN_PRODUCTION,
+      },
+      org_id,
+    );
+    const new_order = await prismaService.order.findUnique({
+      where: { id: order_id },
+    });
+
+    expect(old_order?.status).toBe(OrderStatus.WAITING);
+    expect(new_order?.status).toBe(OrderStatus.IN_PRODUCTION);
+  });
+
+  it('Should throw an error if the order does not exits', async () => {
+    // Assert
+    await expect(
+      updateOrderUseCase.execute(
+        {
+          order_id: 'order_id',
+          status: OrderStatus.IN_PRODUCTION,
+        },
+        org_id,
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw an error if the org does not exits', async () => {
+    // Assert
+    await expect(
+      updateOrderUseCase.execute(
+        {
+          order_id,
+          status: OrderStatus.IN_PRODUCTION,
+        },
+        'org_id',
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw an error if the org is not related with the order', async () => {
+    // Assert
+    await expect(
+      updateOrderUseCase.execute(
+        {
+          order_id,
+          status: OrderStatus.IN_PRODUCTION,
+        },
+        org_id2,
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw an error if the new Status is equal to the current status', async () => {
+    // Assert
+    await expect(
+      updateOrderUseCase.execute(
+        {
+          order_id,
+          status: OrderStatus.IN_PRODUCTION,
+        },
+        org_id,
+      ),
+    ).rejects.toThrow(ConflictException);
   });
 });

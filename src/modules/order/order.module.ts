@@ -10,6 +10,8 @@ import { CreateOrderUseCase } from './usecases/CreateOrderUseCase';
 import { DeleteOrderUseCase } from './usecases/DeleteOrderUseCase';
 import { GetAllOrdersOfTodayUseCase } from './usecases/GetAllOrdersOfTodayUseCase';
 import { GetAllOrdersOfOrgUseCase } from './usecases/GetAllOrdersUseCase';
+import { GetMyOrderUseCase } from './usecases/GetMyOrdersUseCase';
+import { GetOrdersOfUserUseCase } from './usecases/GetOrdersOfUserUseCase';
 import { GetOrderUseCase } from './usecases/GetOrderUseCase';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
@@ -25,6 +27,8 @@ import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
     GetAllOrdersOfOrgUseCase,
     GetOrderUseCase,
     UpdateOrderStatusUseCase,
+    GetMyOrderUseCase,
+    GetOrdersOfUserUseCase,
     {
       provide: IORDER_CONTRACT,
       useClass: OrderService,

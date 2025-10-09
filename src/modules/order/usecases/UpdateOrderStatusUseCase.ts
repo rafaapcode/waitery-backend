@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IORDER_CONTRACT } from 'src/shared/constants';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
@@ -15,6 +20,23 @@ export class UpdateOrderStatusUseCase implements IUpdateOrderStatusUseCase {
   ) {}
 
   async execute(data: UpdateOrderStatusDto, org_id: string): Promise<void> {
-    throw new Error('Method not implemented');
+    const order_exits = await this.orderContract.getOrder(data.order_id);
+
+    if (!order_exits) throw new NotFoundException('Order not found');
+
+    const orgHasOrder = await this.orderContract.verifyOrderByOrg({
+      order_id: data.order_id,
+      org_id,
+    });
+
+    if (!orgHasOrder) throw new NotFoundException('Order not found');
+
+    if (order_exits.status === data.status) {
+      throw new ConflictException(
+        'The new status must be different from the actual status',
+      );
+    }
+
+    await this.orderContract.updateOrderStatus(data);
   }
 }
