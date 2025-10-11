@@ -8,7 +8,7 @@ import {
   IsString,
   Validate,
   ValidatorConstraint,
-  ValidatorConstraintInterface
+  ValidatorConstraintInterface,
 } from 'class-validator';
 import { isValid } from 'ulid';
 
