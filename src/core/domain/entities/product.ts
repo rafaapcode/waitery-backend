@@ -1,5 +1,5 @@
+import { Prisma } from 'generated/prisma';
 import { Category } from './category';
-import { Ingredient } from './ingredient';
 import { ProductsOrder } from './order';
 
 export class Product {
@@ -9,7 +9,7 @@ export class Product {
   readonly description: string;
   readonly image_url: string;
   readonly price: number;
-  readonly ingredients: Ingredient[];
+  readonly ingredients: string[];
   readonly category: Category;
   readonly discounted_price: number;
   readonly discount: boolean;
@@ -25,6 +25,23 @@ export class Product {
     this.category = data.category;
     this.discounted_price = data.discounted_price;
     this.discount = data.discount;
+  }
+
+  static toCategoryIngredients(data: Prisma.JsonArray): string[] {
+    if (
+      data &&
+      typeof data === 'object' &&
+      Array.isArray(data) &&
+      data.length > 0
+    ) {
+      return data as string[];
+    }
+
+    return [];
+  }
+
+  ingredientsCategoryToPrismaJson(): Prisma.JsonArray {
+    return this.ingredients as Prisma.JsonArray;
   }
 
   toOrderType(quantity: number = 1): ProductsOrder {
@@ -47,7 +64,7 @@ namespace Product {
     description: string;
     image_url: string;
     price: number;
-    ingredients: Ingredient[];
+    ingredients: string[];
     category: Category;
     discounted_price: number;
     discount: boolean;

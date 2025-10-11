@@ -6,6 +6,7 @@ import {
   Order,
   OrderStatus,
 } from 'src/core/domain/entities/order';
+import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { OrderRepository } from './repo/order.repository';
 
 @Injectable()
@@ -128,20 +129,22 @@ export class OrderService implements IOrderContract {
   async getProductsOfOrder(
     products_info: IOrderContract.GetProductsOfOrdersParams,
   ): Promise<IOrderContract.GetProductsOfOrdersOutput> {
-    const products = await this.orderRepo.getProductsOfOrder(products_info);
+    const products = (
+      await this.orderRepo.getProductsOfOrder(products_info)
+    ).map((p) =>
+      createProductEntity({
+        ...p,
+        ingredients: Product.toCategoryIngredients(
+          p.ingredients as Prisma.JsonArray,
+        ),
+      }),
+    );
 
     const mapProduct = new Map<string, number>();
 
     products_info.forEach((p) => mapProduct.set(p.product_id, p.quantity));
 
-    return products.map((p) => ({
-      category: `${p.category.icon} ${p.category.name}`,
-      discount: p.discount,
-      name: p.name,
-      price: p.discount ? p.discounted_price : p.price,
-      quantity: mapProduct.get(p.id)!,
-      image_url: p.image_url ?? undefined,
-    }));
+    return products.map((p) => p.toOrderType(mapProduct.get(p.id!)));
   }
 
   async getOrderOfUser(

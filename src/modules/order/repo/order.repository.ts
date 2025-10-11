@@ -5,7 +5,7 @@ import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
 
 type GetProductsOfOrder = Product & {
-  category: { name: string; icon: string };
+  category: { org_id: string; name: string; icon: string };
 };
 
 @Injectable()
@@ -103,6 +103,7 @@ export class OrderRepository {
           select: {
             icon: true,
             name: true,
+            org_id: true,
           },
         },
       },
@@ -113,6 +114,7 @@ export class OrderRepository {
       category: {
         name: p.category.name,
         icon: p.category.icon,
+        org_id: p.category.org_id,
       },
     }));
   }
