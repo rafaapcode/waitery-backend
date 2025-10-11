@@ -15,6 +15,7 @@ describe('Get My Orders UseCase', () => {
   let orderRepo: OrderRepository;
   let prismaService: PrismaService;
   let org_id: string;
+  let org_id2: string;
   let user_id: string;
   let user_id2: string;
 
@@ -78,6 +79,26 @@ describe('Get My Orders UseCase', () => {
       },
     });
 
+    const org2 = await prismaService.organization.create({
+      data: {
+        name: 'Restaurante Fogo de chão 1231123',
+        image_url: 'https://example.com/images/clinica.jpg',
+        email: 'contato@bemestar.com',
+        description:
+          'Clínica especializada em atendimento psicológico e terapias.',
+        location_code: 'BR-MG-015',
+        open_hour: 8,
+        close_hour: 18,
+        cep: '30130-010',
+        city: 'Belo Horizonte',
+        neighborhood: 'Funcionários',
+        street: 'Rua da Bahia, 1200',
+        lat: -19.92083,
+        long: -43.937778,
+        owner_id: user2.id,
+      },
+    });
+
     await prismaService.order.createMany({
       data: Array.from({ length: 67 }).map((_, idx) => ({
         quantity: 1,
@@ -89,15 +110,31 @@ describe('Get My Orders UseCase', () => {
       })),
     });
 
+    await prismaService.order.createMany({
+      data: Array.from({ length: 5 }).map((_, idx) => ({
+        quantity: 2,
+        table: `Mesa ${idx}`,
+        total_price: 100,
+        org_id: org2.id,
+        user_id: user.id,
+        products: [] as Prisma.JsonArray,
+      })),
+    });
+
     org_id = org.id;
+    org_id2 = org2.id;
     user_id = user.id;
     user_id2 = user2.id;
   });
 
   afterAll(async () => {
     await prismaService.order.deleteMany({ where: { org_id: org_id } });
+    await prismaService.order.deleteMany({ where: { org_id: org_id2 } });
     await prismaService.organization.deleteMany({
       where: { owner_id: user_id },
+    });
+    await prismaService.organization.deleteMany({
+      where: { owner_id: user_id2 },
     });
     await prismaService.user.deleteMany({ where: { name: 'rafael ap' } });
   });
@@ -157,7 +194,7 @@ describe('Get My Orders UseCase', () => {
     expect(orders.orders[3].id).not.toBe(orders2.orders[3].id);
   });
 
-  it('Should get all orders with 18 orders in the third page', async () => {
+  it('Should get all orders with 22 orders in the third page', async () => {
     // Act
     const orders2 = await getMyOrdersUseCase.execute({
       user_id,
@@ -170,7 +207,7 @@ describe('Get My Orders UseCase', () => {
 
     // Assert
     expect(orders3.has_next).toBeFalsy();
-    expect(orders3.orders.length).toBe(17);
+    expect(orders3.orders.length).toBe(22);
     expect(orders3.orders[0]).toBeInstanceOf(Order);
     expect(orders2.orders[0].id).not.toBe(orders3.orders[0].id);
     expect(orders2.orders[1].id).not.toBe(orders3.orders[1].id);
