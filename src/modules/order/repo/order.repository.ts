@@ -104,6 +104,7 @@ export class OrderRepository {
             icon: true,
             name: true,
             org_id: true,
+            id: true,
           },
         },
       },

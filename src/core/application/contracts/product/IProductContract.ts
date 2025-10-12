@@ -25,36 +25,24 @@ export interface IProductContract {
 }
 
 export namespace IProductContract {
-  export type CreateParams = {
-    org_id: string;
-    name: string;
-    image_url: string;
-    description: string;
-    price: number;
-    category_id: string;
-    discounted_price?: number;
-    discount: boolean;
-    city: string;
-    ingredients: string[];
-  };
+  export type CreateParams = Product;
 
   export type CreateOutput = Product;
 
   export type UpdateParams = {
     id: string;
     data: {
-      name: string;
-      image_url: string;
-      description: string;
-      price: number;
+      name?: string;
+      image_url?: string;
+      description?: string;
+      price?: number;
       discounted_price?: number;
-      discount: boolean;
-      city: string;
-      ingredients: string[];
+      discount?: boolean;
+      ingredients?: string[];
     };
   };
 
-  export type UpdateOutput = Product;
+  export type UpdateOutput = void;
 
   export type DeleteParams = string;
 

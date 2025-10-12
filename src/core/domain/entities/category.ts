@@ -10,6 +10,10 @@ export class Category {
     this.name = data.name;
     this.icon = data.icon;
   }
+
+  formatCategory(): string {
+    return `${this.icon} ${this.name}`;
+  }
 }
 
 namespace Category {

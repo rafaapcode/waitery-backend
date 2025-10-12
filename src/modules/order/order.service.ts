@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
+import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
   createOrderEntity,
   Order,
@@ -137,6 +138,9 @@ export class OrderService implements IOrderContract {
         ingredients: Product.toCategoryIngredients(
           p.ingredients as Prisma.JsonArray,
         ),
+        category: createCategoryEntity({
+          ...p.category,
+        }),
       }),
     );
 

@@ -1,27 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { Product } from 'generated/prisma';
+import { Prisma, Product } from 'generated/prisma';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { PrismaService } from 'src/infra/database/database.service';
+
+type ProductWithCategory = Product & {
+  category: {
+    name: string;
+    id: string;
+    org_id: string;
+    icon: string;
+  };
+};
 
 @Injectable()
 export class ProductRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: IProductContract.CreateParams): Promise<Product> {
+  async create(
+    data: IProductContract.CreateParams,
+  ): Promise<ProductWithCategory> {
     const product = await this.prisma.product.create({
-      data,
+      data: {
+        description: data.description,
+        image_url: data.image_url,
+        ingredients: data.ingredientsCategoryToPrismaJson(),
+        name: data.name,
+        price: data.price,
+        category_id: data.category.id!,
+        org_id: data.org_id,
+      },
+      include: {
+        category: true,
+      },
     });
 
     return product;
   }
 
-  async update(data: IProductContract.UpdateParams): Promise<Product> {
-    const product = await this.prisma.product.update({
+  async update(data: IProductContract.UpdateParams): Promise<void> {
+    await this.prisma.product.update({
       where: { id: data.id },
-      data: data.data,
+      data: {
+        ...data.data,
+        ...(data.data.ingredients && {
+          ingredients: data.data.ingredients as Prisma.JsonArray,
+        }),
+      },
     });
-
-    return product;
   }
 
   async delete(product_id: IProductContract.DeleteParams): Promise<void> {
@@ -30,17 +55,27 @@ export class ProductRepository {
     });
   }
 
-  async get(product_id: IProductContract.GetParams): Promise<Product | null> {
+  async get(
+    product_id: IProductContract.GetParams,
+  ): Promise<ProductWithCategory | null> {
     const product = await this.prisma.product.findUnique({
       where: { id: product_id },
+      include: {
+        category: true,
+      },
     });
 
     return product;
   }
 
-  async getAll(params: IProductContract.GetAllParams): Promise<Product[]> {
+  async getAll(
+    params: IProductContract.GetAllParams,
+  ): Promise<ProductWithCategory[]> {
     const product = await this.prisma.product.findMany({
       where: { org_id: params.org_id },
+      include: {
+        category: true,
+      },
     });
 
     return product;
