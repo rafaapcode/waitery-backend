@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
@@ -47,24 +49,29 @@ export class OrderController {
   }
 
   @Patch('cancel/:order_id/:org_id')
-  cancelOrder(
+  @HttpCode(HttpStatus.OK)
+  async cancelOrder(
     @Param('order_id', ParseULIDPipe) order_id: string,
     @Param('org_id', ParseULIDPipe) org_id: string,
   ) {
-    return this.cancelOrderUseCase.execute(order_id, org_id);
+    await this.cancelOrderUseCase.execute(order_id, org_id);
+    return { message: 'Order cancelled with success!' };
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Delete('delete/:order_id/:org_id')
-  deleteOrder(
+  @HttpCode(HttpStatus.OK)
+  async deleteOrder(
     @Param('order_id', ParseULIDPipe) order_id: string,
     @Param('org_id', ParseULIDPipe) org_id: string,
   ) {
-    return this.deleteOrderUseCase.execute(order_id, org_id);
+    await this.deleteOrderUseCase.execute(order_id, org_id);
+    return { message: 'Delete cancelled with success!' };
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Get('get-all/today')
+  @HttpCode(HttpStatus.OK)
   getAllOrdersToday(
     @GetMe() me: JwtPayload,
     @Query('org_id', ParseULIDPipe) org_id: string,
@@ -82,6 +89,7 @@ export class OrderController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Get('get-all/:org_id/:page')
+  @HttpCode(HttpStatus.OK)
   getAllOrders(
     @Param('org_id', ParseULIDPipe) org_id: string,
     @Param('page', ParseIntPipe) page?: number,
@@ -93,6 +101,7 @@ export class OrderController {
   }
 
   @Get('me/:page')
+  @HttpCode(HttpStatus.OK)
   getMyOrders(
     @GetMe() me: JwtPayload,
     @Param('page', ParseIntPipe) page?: number,
@@ -105,6 +114,7 @@ export class OrderController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Get('user/:user_id/:page')
+  @HttpCode(HttpStatus.OK)
   getOrderOfuser(
     @Param('user_id', ParseULIDPipe) user_id: string,
     @Param('page', ParseIntPipe) page?: number,
@@ -116,6 +126,7 @@ export class OrderController {
   }
 
   @Get(':order_id/:org_id')
+  @HttpCode(HttpStatus.OK)
   getOrder(
     @Param('order_id', ParseULIDPipe) order_id: string,
     @Param('org_id', ParseULIDPipe) org_id: string,
@@ -125,10 +136,12 @@ export class OrderController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.WAITER)
   @Patch(':order_id/:org_id')
-  updateOrderStatus(
+  @HttpCode(HttpStatus.OK)
+  async updateOrderStatus(
     @Body() data: UpdateOrderStatusDto,
     @Param('org_id', ParseULIDPipe) org_id: string,
   ) {
-    return this.updateOrderStatusUseCase.execute(data, org_id);
+    await this.updateOrderStatusUseCase.execute(data, org_id);
+    return { message: 'Order updated with success !' };
   }
 }
