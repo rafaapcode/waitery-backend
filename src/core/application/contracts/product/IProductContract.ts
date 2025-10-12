@@ -24,6 +24,10 @@ export interface IProductContract {
     params: IProductContract.GetAllParams,
   ): Promise<IProductContract.GetAllOutput>;
 
+  getProductByName(
+    params: IProductContract.GetProductsByNameParams,
+  ): Promise<IProductContract.GetProductsByNameOutput>;
+
   verifyOrgById(
     params: IProductContract.VerifyOrgsParamsById,
   ): Promise<IProductContract.VerifyOrgsOutput>;
@@ -85,4 +89,11 @@ export namespace IProductContract {
     has_next: boolean;
     products: Product[];
   };
+
+  export type GetProductsByNameParams = {
+    name: string;
+    org_id: string;
+  };
+
+  export type GetProductsByNameOutput = Product | null;
 }

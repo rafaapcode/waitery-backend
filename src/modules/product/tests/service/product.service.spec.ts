@@ -27,6 +27,7 @@ describe('Products Service', () => {
             getAll: jest.fn(),
             verifyOrgById: jest.fn(),
             getByCategory: jest.fn(),
+            getByName: jest.fn(),
           },
         },
       ],
@@ -319,5 +320,56 @@ describe('Products Service', () => {
       16,
       15,
     );
+  });
+
+  it('Should return a product filtered by name', async () => {
+    // Arrange
+    const data: IProductContract.GetProductsByNameParams = {
+      org_id: 'org_id',
+      name: 'nome teste 1',
+    };
+    jest.spyOn(prodcutRepo, 'getByName').mockResolvedValue({
+      description: 'description',
+      discount: false,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 0,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+      category: {
+        icon: '💪',
+        name: 'nam,e',
+        org_id: 'org_id',
+        id: '123123',
+      },
+    });
+
+    // Act
+    const product = await productService.getProductByName(data);
+
+    // Assert
+    expect(product).toBeInstanceOf(Product);
+    expect(prodcutRepo.getByName).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getByName).toHaveBeenCalledWith(data.name, data.org_id);
+  });
+
+  it('Should return null if a product does not exists with a specific name', async () => {
+    // Arrange
+    const data: IProductContract.GetProductsByNameParams = {
+      org_id: 'org_id',
+      name: 'nome teste 1',
+    };
+    jest.spyOn(prodcutRepo, 'getByName').mockResolvedValue(null);
+
+    // Act
+    const product = await productService.getProductByName(data);
+
+    // Assert
+    expect(product).toBeNull();
+    expect(prodcutRepo.getByName).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getByName).toHaveBeenCalledWith(data.name, data.org_id);
   });
 });

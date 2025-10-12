@@ -148,4 +148,25 @@ export class ProductService implements IProductContract {
       ),
     };
   }
+
+  async getProductByName(
+    params: IProductContract.GetProductsByNameParams,
+  ): Promise<IProductContract.GetProductsByNameOutput> {
+    const product = await this.productRepo.getByName(
+      params.name,
+      params.org_id,
+    );
+
+    if (!product) return null;
+
+    return createProductEntity({
+      ...product,
+      ingredients: Product.toCategoryIngredients(
+        product.ingredients as Prisma.JsonArray,
+      ),
+      category: createCategoryEntity({
+        ...product.category,
+      }),
+    });
+  }
 }
