@@ -1,1 +1,5 @@
-// describe('Create Product Usecase', async () => {});
+describe('Create Product Usecase', () => {
+  it('teste', () => {
+    expect(1).toBeTruthy();
+  });
+});
