@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
-import { Category } from 'src/core/domain/entities/category';
+import {
+  Category,
+  createCategoryEntity,
+} from 'src/core/domain/entities/category';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 
@@ -39,11 +42,11 @@ describe('Category Service', () => {
 
   it('Should create a new category', async () => {
     // Arrange
-    const data: ICategoryContract.CreateParams = {
+    const data: ICategoryContract.CreateParams = createCategoryEntity({
       icon: '🍕',
       name: 'Massas',
       org_id: 'org_id12312313',
-    };
+    });
     jest.spyOn(categoryRepo, 'create').mockResolvedValue({
       icon: '🍕',
       name: 'Massas',

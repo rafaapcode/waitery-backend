@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
   createOrderEntity,
   Order,
@@ -81,11 +82,12 @@ describe('Order Service', () => {
     // Arrange
     const prods = Array.from({ length: 5 }).map((_, idx) =>
       createProductEntity({
-        category: {
+        category: createCategoryEntity({
           icon: '😊',
           name: 'teste',
           org_id: '1231231',
-        },
+          id: '123123_Cat',
+        }),
         description: 'Descrição teste',
         discount: false,
         discounted_price: 0,
