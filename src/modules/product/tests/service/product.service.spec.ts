@@ -5,6 +5,7 @@ import {
   createCategoryEntity,
 } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
+import { UserRole } from 'src/core/domain/entities/user';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
 
@@ -33,6 +34,8 @@ describe('Products Service', () => {
     productService = module.get<ProductService>(ProductService);
     prodcutRepo = module.get<ProductRepository>(ProductRepository);
   });
+
+  beforeEach(() => jest.clearAllMocks());
 
   it('Should define all services', () => {
     expect(productService).toBeDefined();
@@ -147,5 +150,106 @@ describe('Products Service', () => {
     expect(product).toBeInstanceOf(Product);
     expect(prodcutRepo.get).toHaveBeenCalledTimes(1);
     expect(prodcutRepo.get).toHaveBeenCalledWith(id);
+  });
+
+  it('Should  return null if a product does not exist', async () => {
+    // Arrange
+    const id = 'id_product';
+    jest.spyOn(prodcutRepo, 'get').mockResolvedValue(null);
+
+    // Act
+    const product = await productService.get(id);
+
+    // Assert
+    expect(product).toBeNull();
+    expect(prodcutRepo.get).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.get).toHaveBeenCalledWith(id);
+  });
+
+  it('Should return all products of a org of page 0', async () => {
+    // Arrange
+    const org_id = 'org_id';
+    jest.spyOn(prodcutRepo, 'getAll').mockResolvedValue(
+      Array.from({ length: 16 }).map((_, idx) => ({
+        description: 'description',
+        discount: false,
+        image_url: 'http://locaho',
+        ingredients: [],
+        name: 'Produto 1',
+        org_id: 'org_id',
+        price: 12,
+        discounted_price: 0,
+        category_id: `cateory_id_${idx}`,
+        id: `${idx}`,
+        category: {
+          icon: '💪',
+          name: 'nam,e',
+          org_id: 'org_id',
+          id: '123123',
+        },
+      })),
+    );
+
+    // Act
+    const product = await productService.getAll({
+      org_id,
+    });
+
+    // Assert
+    expect(product.has_next).toBeTruthy();
+    expect(product.products.length).toBe(16);
+    expect(product.products[0]).toBeInstanceOf(Product);
+    expect(prodcutRepo.getAll).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getAll).toHaveBeenCalledWith(org_id, 16, 0);
+  });
+
+  it('Should return zero products on page 1', async () => {
+    // Arrange
+    const org_id = 'org_id';
+    jest.spyOn(prodcutRepo, 'getAll').mockResolvedValue([]);
+
+    // Act
+    const product = await productService.getAll({
+      org_id,
+      page: 1,
+    });
+
+    // Assert
+    expect(product.has_next).toBeFalsy();
+    expect(product.products.length).toBe(0);
+    expect(prodcutRepo.getAll).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getAll).toHaveBeenCalledWith(org_id, 16, 15);
+  });
+
+  it('Should return true if the user  is related with the ORG', async () => {
+    // Arrange
+    const data = {
+      org_id: 'org_id',
+      user_id: 'user_id',
+      user_role: UserRole.OWNER,
+    };
+    jest.spyOn(prodcutRepo, 'verifyOrgById').mockResolvedValue(true);
+
+    // Act
+    const user_has_org = await productService.verifyOrgById(data);
+
+    // Assert
+    expect(user_has_org).toBeTruthy();
+  });
+
+  it('Should return false if the user is not related with the ORG', async () => {
+    // Arrange
+    const data = {
+      org_id: 'org_id',
+      user_id: 'user_id',
+      user_role: UserRole.ADMIN,
+    };
+    jest.spyOn(prodcutRepo, 'verifyOrgById').mockResolvedValue(false);
+
+    // Act
+    const user_has_org = await productService.verifyOrgById(data);
+
+    // Assert
+    expect(user_has_org).toBeFalsy();
   });
 });

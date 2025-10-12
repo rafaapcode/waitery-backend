@@ -77,7 +77,7 @@ export class OrderService implements IOrderContract {
     const orders = await this.orderRepo.getAllOrders(org_id, OFFSET, LIMIT + 1);
     let has_next = false;
 
-    if (orders.length > 25) has_next = true;
+    if (orders.length > LIMIT) has_next = true;
 
     return {
       orders: orders.slice(0, LIMIT).map((order) =>

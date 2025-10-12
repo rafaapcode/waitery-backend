@@ -51,21 +51,64 @@ export class ProductService implements IProductContract {
     await this.productRepo.delete(product_id);
   }
 
-  get(
+  async get(
     product_id: IProductContract.GetParams,
   ): Promise<IProductContract.GetOutput> {
-    throw new Error('Method not implemented.');
+    const product = await this.productRepo.get(product_id);
+
+    if (!product) return null;
+
+    return createProductEntity({
+      ...product,
+      ingredients: Product.toCategoryIngredients(
+        product.ingredients as Prisma.JsonArray,
+      ),
+      category: createCategoryEntity({
+        ...product.category,
+      }),
+    });
   }
 
-  getAll(
-    params: IProductContract.GetAllParams,
-  ): Promise<IProductContract.GetAllOutput> {
-    throw new Error('Method not implemented.');
+  async getAll({
+    page,
+    org_id,
+  }: IProductContract.GetAllParams): Promise<IProductContract.GetAllOutput> {
+    const LIMIT = 15;
+    const PAGE = page ? (page >= 0 ? page : 0) : 0;
+    const OFFSET = PAGE * LIMIT;
+
+    const products = await this.productRepo.getAll(org_id, LIMIT + 1, OFFSET);
+    let has_next = false;
+
+    if (products.length > LIMIT) {
+      has_next = true;
+    }
+
+    return {
+      has_next,
+      products: products.map((p) =>
+        createProductEntity({
+          ...p,
+          ingredients: Product.toCategoryIngredients(
+            p.ingredients as Prisma.JsonArray,
+          ),
+          category: createCategoryEntity({
+            ...p.category,
+          }),
+        }),
+      ),
+    };
   }
 
-  verifyOrgById(
+  async verifyOrgById(
     params: IProductContract.VerifyOrgsParamsById,
   ): Promise<IProductContract.VerifyOrgsOutput> {
-    throw new Error('Method not implemented.');
+    const userHasOrg = await this.productRepo.verifyOrgById(
+      params.org_id,
+      params.user_id,
+      params.user_role,
+    );
+
+    return userHasOrg;
   }
 }

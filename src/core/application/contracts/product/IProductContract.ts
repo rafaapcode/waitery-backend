@@ -1,4 +1,5 @@
 import { Product } from 'src/core/domain/entities/product';
+import { UserRole } from 'src/core/domain/entities/user';
 
 export interface IProductContract {
   create(
@@ -53,14 +54,19 @@ export namespace IProductContract {
   export type GetOutput = Product | null;
 
   export type GetAllParams = {
+    page?: number;
     org_id: string;
   };
 
-  export type GetAllOutput = Product[] | null;
+  export type GetAllOutput = {
+    has_next: boolean;
+    products: Product[];
+  };
 
   export type VerifyOrgsParamsById = {
     user_id: string;
     org_id: string;
+    user_role: UserRole;
   };
 
   export type VerifyOrgsOutput = boolean;

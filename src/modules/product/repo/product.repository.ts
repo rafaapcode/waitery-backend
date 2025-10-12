@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Product } from 'generated/prisma';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
 type ProductWithCategory = Product & {
@@ -69,10 +70,14 @@ export class ProductRepository {
   }
 
   async getAll(
-    params: IProductContract.GetAllParams,
+    org_id: string,
+    limit: number,
+    offset: number,
   ): Promise<ProductWithCategory[]> {
     const product = await this.prisma.product.findMany({
-      where: { org_id: params.org_id },
+      take: limit,
+      skip: offset,
+      where: { org_id },
       include: {
         category: true,
       },
@@ -82,12 +87,24 @@ export class ProductRepository {
   }
 
   async verifyOrgById(
-    params: IProductContract.VerifyOrgsParamsById,
+    org_id: string,
+    user_id: string,
+    userRole: UserRole,
   ): Promise<boolean> {
+    if (userRole === UserRole.OWNER) {
+      const product = await this.prisma.organization.findFirst({
+        where: {
+          owner_id: user_id,
+        },
+      });
+
+      return product !== null;
+    }
+
     const product = await this.prisma.userOrg.findFirst({
       where: {
-        org_id: params.org_id,
-        user_id: params.user_id,
+        org_id: org_id,
+        user_id: user_id,
       },
     });
 
