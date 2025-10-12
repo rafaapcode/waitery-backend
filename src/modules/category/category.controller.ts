@@ -67,7 +67,8 @@ export class CategoryController {
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  delete(@Param('id', ParseULIDPipe) id: string) {
-    return this.deleteCategoryUseCase.execute(id);
+  async delete(@Param('id', ParseULIDPipe) id: string) {
+    await this.deleteCategoryUseCase.execute(id);
+    return { message: 'Category deleted with success !' };
   }
 }
