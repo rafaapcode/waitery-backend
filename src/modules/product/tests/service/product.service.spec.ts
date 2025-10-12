@@ -26,6 +26,7 @@ describe('Products Service', () => {
             get: jest.fn(),
             getAll: jest.fn(),
             verifyOrgById: jest.fn(),
+            getByCategory: jest.fn(),
           },
         },
       ],
@@ -197,7 +198,7 @@ describe('Products Service', () => {
 
     // Assert
     expect(product.has_next).toBeTruthy();
-    expect(product.products.length).toBe(16);
+    expect(product.products.length).toBe(15);
     expect(product.products[0]).toBeInstanceOf(Product);
     expect(prodcutRepo.getAll).toHaveBeenCalledTimes(1);
     expect(prodcutRepo.getAll).toHaveBeenCalledWith(org_id, 16, 0);
@@ -251,5 +252,72 @@ describe('Products Service', () => {
 
     // Assert
     expect(user_has_org).toBeFalsy();
+  });
+
+  it('Should return all products of a category on the page 0', async () => {
+    // Arrange
+    const data: IProductContract.GetProductsByCategoryParams = {
+      category_id: 'cat_id',
+      org_id: 'org_id',
+    };
+    jest.spyOn(prodcutRepo, 'getByCategory').mockResolvedValue(
+      Array.from({ length: 16 }).map((_, idx) => ({
+        description: 'description',
+        discount: false,
+        image_url: 'http://locaho',
+        ingredients: [],
+        name: 'Produto 1',
+        org_id: 'org_id',
+        price: 12,
+        discounted_price: 0,
+        category_id: `cateory_id_${idx}`,
+        id: `${idx}`,
+        category: {
+          icon: '💪',
+          name: 'nam,e',
+          org_id: 'org_id',
+          id: '123123',
+        },
+      })),
+    );
+
+    // Act
+    const products = await productService.getProductsByCategory(data);
+
+    // Assert
+    expect(products.has_next).toBeTruthy();
+    expect(products.products.length).toBe(15);
+    expect(products.products[0]).toBeInstanceOf(Product);
+    expect(prodcutRepo.getByCategory).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getByCategory).toHaveBeenCalledWith(
+      data.org_id,
+      data.category_id,
+      16,
+      0,
+    );
+  });
+
+  it('Should return 0 products of a category on the page 1', async () => {
+    // Arrange
+    const data: IProductContract.GetProductsByCategoryParams = {
+      category_id: 'cat_id',
+      org_id: 'org_id',
+      page: 1,
+    };
+    jest.spyOn(prodcutRepo, 'getByCategory').mockResolvedValue([]);
+
+    // Act
+    const products = await productService.getProductsByCategory(data);
+
+    // Assert
+    expect(products.has_next).toBeFalsy();
+    expect(products.products.length).toBe(0);
+    expect(prodcutRepo.getByCategory).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.getByCategory).toHaveBeenCalledWith(
+      data.org_id,
+      data.category_id,
+      16,
+      15,
+    );
   });
 });

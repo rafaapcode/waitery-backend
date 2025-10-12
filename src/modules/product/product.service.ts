@@ -86,7 +86,7 @@ export class ProductService implements IProductContract {
 
     return {
       has_next,
-      products: products.map((p) =>
+      products: products.slice(0, LIMIT).map((p) =>
         createProductEntity({
           ...p,
           ingredients: Product.toCategoryIngredients(
@@ -110,5 +110,42 @@ export class ProductService implements IProductContract {
     );
 
     return userHasOrg;
+  }
+
+  async getProductsByCategory({
+    category_id,
+    org_id,
+    page,
+  }: IProductContract.GetProductsByCategoryParams): Promise<IProductContract.GetProductsByCategoryOutput> {
+    const LIMIT = 15;
+    const PAGE = page ? (page >= 0 ? page : 0) : 0;
+    const OFFSET = PAGE * LIMIT;
+    let has_next = false;
+
+    const products = await this.productRepo.getByCategory(
+      org_id,
+      category_id,
+      LIMIT + 1,
+      OFFSET,
+    );
+
+    if (products.length > LIMIT) {
+      has_next = true;
+    }
+
+    return {
+      has_next,
+      products: products.slice(0, LIMIT).map((p) =>
+        createProductEntity({
+          ...p,
+          ingredients: Product.toCategoryIngredients(
+            p.ingredients as Prisma.JsonArray,
+          ),
+          category: createCategoryEntity({
+            ...p.category,
+          }),
+        }),
+      ),
+    };
   }
 }

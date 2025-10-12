@@ -110,4 +110,25 @@ export class ProductRepository {
 
     return product !== null;
   }
+
+  async getByCategory(
+    org_id: string,
+    category_id: string,
+    limit: number,
+    offset: number,
+  ): Promise<ProductWithCategory[]> {
+    const product = await this.prisma.product.findMany({
+      take: limit,
+      skip: offset,
+      where: {
+        org_id,
+        category_id,
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    return product;
+  }
 }

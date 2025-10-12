@@ -20,6 +20,10 @@ export interface IProductContract {
     params: IProductContract.GetAllParams,
   ): Promise<IProductContract.GetAllOutput>;
 
+  getProductsByCategory(
+    params: IProductContract.GetAllParams,
+  ): Promise<IProductContract.GetAllOutput>;
+
   verifyOrgById(
     params: IProductContract.VerifyOrgsParamsById,
   ): Promise<IProductContract.VerifyOrgsOutput>;
@@ -70,4 +74,15 @@ export namespace IProductContract {
   };
 
   export type VerifyOrgsOutput = boolean;
+
+  export type GetProductsByCategoryParams = {
+    page?: number;
+    category_id: string;
+    org_id: string;
+  };
+
+  export type GetProductsByCategoryOutput = {
+    has_next: boolean;
+    products: Product[];
+  };
 }
