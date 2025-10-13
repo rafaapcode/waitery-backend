@@ -37,7 +37,7 @@ describe('Create User UseCase', () => {
       ],
     }).compile();
 
-    userService = module.get<UserService>(IUSER_CONTRACT);
+    userService = module.get<IUserContract>(IUSER_CONTRACT);
     userRepo = module.get<UserRepo>(UserRepo);
     hashService = module.get<HashService>(HashService);
     prismaService = module.get<PrismaService>(PrismaService);

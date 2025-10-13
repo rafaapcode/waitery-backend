@@ -48,6 +48,18 @@ export class IngredientRepository {
     return ingredient;
   }
 
+  async getAllIngsByIds(ing_ids: string[]): Promise<Ingredient[]> {
+    const ingredients = await this.prisma.ingredient.findMany({
+      where: {
+        id: {
+          in: ing_ids,
+        },
+      },
+    });
+
+    return ingredients;
+  }
+
   async update(data: IIngredientContract.UpdateParams): Promise<Ingredient> {
     const ingredientUpdated = await this.prisma.ingredient.update({
       where: {

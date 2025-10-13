@@ -8,6 +8,10 @@ export class Ingredient {
     this.name = data.name;
     this.icon = data.icon;
   }
+
+  formatToString(): string {
+    return `${this.icon} ${this.name}`;
+  }
 }
 
 namespace Ingredient {

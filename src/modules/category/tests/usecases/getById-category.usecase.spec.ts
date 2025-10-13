@@ -34,7 +34,7 @@ describe('Get Category by Id UseCase', () => {
       GetByIdCategoryUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    categoryService = module.get<CategoryService>(ICATEGORY_CONTRACT);
+    categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
 
     const { id } = await prismaService.organization.create({

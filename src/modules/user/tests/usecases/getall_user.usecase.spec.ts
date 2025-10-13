@@ -38,7 +38,7 @@ describe('GetAll Users UseCase', () => {
       ],
     }).compile();
 
-    userService = module.get<UserService>(IUSER_CONTRACT);
+    userService = module.get<IUserContract>(IUSER_CONTRACT);
     userRepo = module.get<UserRepo>(UserRepo);
     prismaService = module.get<PrismaService>(PrismaService);
     getAllUserUseCase = module.get<GetAllUserUseCase>(GetAllUserUseCase);

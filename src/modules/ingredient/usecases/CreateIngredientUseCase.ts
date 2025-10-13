@@ -1,6 +1,9 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
-import { Ingredient } from 'src/core/domain/entities/ingredient';
+import {
+  createIngredientEntity,
+  Ingredient,
+} from 'src/core/domain/entities/ingredient';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { CreateIngredientDto } from '../dto/create-ingredient.dto';
 
@@ -20,10 +23,12 @@ export class CreateIngredientUseCase implements ICreateIngredientUseCase {
 
     if (ingExists) throw new ConflictException('Ingredient alredy exists');
 
-    const ing = await this.ingContract.create({
-      ...data,
-      name: data.name.toLowerCase(),
-    });
+    const ing = await this.ingContract.create(
+      createIngredientEntity({
+        ...data,
+        name: data.name.toLowerCase(),
+      }),
+    );
 
     return ing;
   }

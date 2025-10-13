@@ -34,7 +34,7 @@ describe('Get My Orders UseCase', () => {
 
     getMyOrdersUseCase = module.get<GetMyOrderUseCase>(GetMyOrderUseCase);
     prismaService = module.get<PrismaService>(PrismaService);
-    orderService = module.get<OrderService>(IORDER_CONTRACT);
+    orderService = module.get<IOrderContract>(IORDER_CONTRACT);
     orderRepo = module.get<OrderRepository>(OrderRepository);
 
     const user = await prismaService.user.create({

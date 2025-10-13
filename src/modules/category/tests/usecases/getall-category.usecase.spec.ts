@@ -47,10 +47,10 @@ describe('GetAll Categories UseCase', () => {
       GetAllCategoryUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    categoryService = module.get<CategoryService>(ICATEGORY_CONTRACT);
+    categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
-    orgService = module.get<OrganizationService>(IORGANIZATION_CONTRACT);
+    orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
 
     const { id } = await prismaService.organization.create({
       data: {

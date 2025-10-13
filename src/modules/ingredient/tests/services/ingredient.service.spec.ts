@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
-import { Ingredient } from 'src/core/domain/entities/ingredient';
+import {
+  createIngredientEntity,
+  Ingredient,
+} from 'src/core/domain/entities/ingredient';
 import { IngredientService } from '../../ingredient.service';
 import { IngredientRepository } from '../../repo/ingredient.repository';
 
@@ -21,6 +24,7 @@ describe('Ingredient Service', () => {
             update: jest.fn(),
             delete: jest.fn(),
             getByName: jest.fn(),
+            getAllIngsByIds: jest.fn(),
           },
         },
       ],
@@ -39,10 +43,10 @@ describe('Ingredient Service', () => {
 
   it('Should create a new ingredient', async () => {
     // Arrange
-    const data: IIngredientContract.CreateParams = {
+    const data: IIngredientContract.CreateParams = createIngredientEntity({
       icon: '🍪',
       name: 'Ing 1',
-    };
+    });
     jest.spyOn(ingredientRepo, 'create').mockResolvedValue({
       icon: '🍪',
       name: 'Ing 1',
@@ -211,5 +215,26 @@ describe('Ingredient Service', () => {
     expect(ing).toBeNull();
     expect(ingredientRepo.getByName).toHaveBeenCalledTimes(1);
     expect(ingredientRepo.getByName).toHaveBeenCalledWith('Ing 2');
+  });
+  it('Should return an ingredient entity array filtering by ids', async () => {
+    // Arrange
+    jest.spyOn(ingredientRepo, 'getAllIngsByIds').mockResolvedValue(
+      Array.from({ length: 4 }).map((_, idx) => ({
+        icon: '🍪',
+        name: `Ing ${idx}`,
+        id: `123131131${idx}`,
+      })),
+    );
+    const data = ['1231311311', '1231311312', '1231311313', '1231311314'];
+
+    // Act
+    const ing = await ingredientService.getByManyByIds(data);
+
+    // Assert
+    expect(ing[0]).toBeInstanceOf(Ingredient);
+    expect(ing[0].id).toBeDefined();
+    expect(ing?.length).toBe(4);
+    expect(ingredientRepo.getAllIngsByIds).toHaveBeenCalledTimes(1);
+    expect(ingredientRepo.getAllIngsByIds).toHaveBeenCalledWith(data);
   });
 });

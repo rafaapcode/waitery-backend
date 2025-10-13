@@ -46,9 +46,9 @@ describe('Create Category UseCase', () => {
       CreateCategoryUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    categoryService = module.get<CategoryService>(ICATEGORY_CONTRACT);
+    categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
-    orgService = module.get<OrganizationService>(IORGANIZATION_CONTRACT);
+    orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
 
     const { id } = await prismaService.organization.create({

@@ -31,7 +31,7 @@ describe('Create Ingredient UseCase', () => {
       GetAllIngredientUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    ingredientService = module.get<IngredientService>(IINGREDIENT_CONTRACT);
+    ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
 
     await prismaService.ingredient.createMany({

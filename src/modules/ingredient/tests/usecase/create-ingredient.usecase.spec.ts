@@ -1,7 +1,10 @@
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
-import { Ingredient } from 'src/core/domain/entities/ingredient';
+import {
+  createIngredientEntity,
+  Ingredient,
+} from 'src/core/domain/entities/ingredient';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { IngredientService } from '../../ingredient.service';
@@ -31,7 +34,7 @@ describe('Create Ingredient UseCase', () => {
       CreateIngredientUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    ingredientService = module.get<IngredientService>(IINGREDIENT_CONTRACT);
+    ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
   });
 
@@ -58,10 +61,10 @@ describe('Create Ingredient UseCase', () => {
 
   it('Should create a new ingredient', async () => {
     // Arrage
-    const data: IIngredientContract.CreateParams = {
+    const data: IIngredientContract.CreateParams = createIngredientEntity({
       icon: '🥗',
       name: 'Ing 1',
-    };
+    });
 
     // Act
     const ing = await createIngredientUseCase.execute(data);
@@ -73,10 +76,10 @@ describe('Create Ingredient UseCase', () => {
 
   it('Should throw a Conflict error if the ingredient already exists', async () => {
     // Arrage
-    const data: IIngredientContract.CreateParams = {
+    const data: IIngredientContract.CreateParams = createIngredientEntity({
       icon: '🥗',
       name: 'Ing 1',
-    };
+    });
 
     // Assert
     await expect(createIngredientUseCase.execute(data)).rejects.toThrow(
@@ -86,10 +89,10 @@ describe('Create Ingredient UseCase', () => {
 
   it('Should normalize the name to lowercase when create a new ingredient', async () => {
     // Arrage
-    const data: IIngredientContract.CreateParams = {
+    const data: IIngredientContract.CreateParams = createIngredientEntity({
       icon: '🥗',
       name: 'Ing 2',
-    };
+    });
     jest.spyOn(ingredientService, 'create');
     jest.spyOn(ingredientService, 'getByName');
 

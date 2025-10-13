@@ -45,9 +45,9 @@ describe('Get All Orders UseCase', () => {
       GetAllOrdersOfOrgUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    orderService = module.get<OrderService>(IORDER_CONTRACT);
+    orderService = module.get<IOrderContract>(IORDER_CONTRACT);
     orderRepo = module.get<OrderRepository>(OrderRepository);
-    orgService = module.get<OrganizationService>(IORGANIZATION_CONTRACT);
+    orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
 
     const user = await prismaService.user.create({

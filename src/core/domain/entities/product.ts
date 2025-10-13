@@ -23,8 +23,8 @@ export class Product {
     this.price = data.price;
     this.ingredients = data.ingredients;
     this.category = data.category;
-    this.discounted_price = data.discounted_price;
-    this.discount = data.discount;
+    this.discounted_price = data.discounted_price ?? 0;
+    this.discount = data.discount ?? false;
   }
 
   static toCategoryIngredients(data: Prisma.JsonArray): string[] {
@@ -66,8 +66,8 @@ namespace Product {
     price: number;
     ingredients: string[];
     category: Category;
-    discounted_price: number;
-    discount: boolean;
+    discounted_price?: number;
+    discount?: boolean;
   };
 }
 

@@ -32,7 +32,7 @@ describe('Create Ingredient UseCase', () => {
       UpdateIngredientUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
-    ingredientService = module.get<IngredientService>(IINGREDIENT_CONTRACT);
+    ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
 
     const { id } = await prismaService.ingredient.create({

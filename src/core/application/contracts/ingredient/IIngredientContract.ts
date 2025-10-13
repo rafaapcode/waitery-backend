@@ -17,6 +17,10 @@ export interface IIngredientContract {
   getByName: (
     name: IIngredientContract.GetIngredientsByNameParams,
   ) => Promise<IIngredientContract.GetIngredientsByNameOutput>;
+
+  getByManyByIds: (
+    ing_ids: IIngredientContract.GetIngredientsByIdsParams,
+  ) => Promise<IIngredientContract.GetIngredientsByIdsOutput>;
 }
 
 export namespace IIngredientContract {
@@ -42,4 +46,7 @@ export namespace IIngredientContract {
 
   export type GetIngredientsByNameParams = string;
   export type GetIngredientsByNameOutput = Ingredient | null;
+
+  export type GetIngredientsByIdsParams = string[];
+  export type GetIngredientsByIdsOutput = Ingredient[];
 }

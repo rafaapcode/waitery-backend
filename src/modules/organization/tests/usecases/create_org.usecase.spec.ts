@@ -46,8 +46,8 @@ describe('Create Org UseCase', () => {
       ],
     }).compile();
 
-    orgService = module.get<OrganizationService>(IORGANIZATION_CONTRACT);
-    userService = module.get<UserService>(IUSER_CONTRACT);
+    orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
+    userService = module.get<IUserContract>(IUSER_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     userRepo = module.get<UserRepo>(UserRepo);
     hashService = module.get<HashService>(HashService);

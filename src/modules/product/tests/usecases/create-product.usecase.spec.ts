@@ -1,6 +1,8 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
+import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -8,9 +10,12 @@ import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
+import { OrganizationService } from 'src/modules/organization/organization.service';
+import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
   ICATEGORY_CONTRACT,
   IINGREDIENT_CONTRACT,
+  IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
 } from 'src/shared/constants';
 import { CreateProductDto } from '../../dto/create-product.dto';
@@ -23,6 +28,8 @@ describe('Create Product Usecase', () => {
   let productService: IProductContract;
   let catService: ICategoryContract;
   let catRepo: CategoryRepository;
+  let orgService: IOrganizationContract;
+  let orgRepo: OrganizationRepo;
   let ingService: IIngredientContract;
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
@@ -39,6 +46,7 @@ describe('Create Product Usecase', () => {
         CategoryRepository,
         ProductRepository,
         IngredientRepository,
+        OrganizationRepo,
         PrismaService,
         {
           provide: IPRODUCT_CONTRACT,
@@ -52,6 +60,10 @@ describe('Create Product Usecase', () => {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
         },
+        {
+          provide: IORGANIZATION_CONTRACT,
+          useClass: OrganizationService,
+        },
       ],
     }).compile();
 
@@ -64,6 +76,8 @@ describe('Create Product Usecase', () => {
     catRepo = modules.get<CategoryRepository>(CategoryRepository);
     ingService = modules.get<IngredientService>(IINGREDIENT_CONTRACT);
     ingRepo = modules.get<IngredientRepository>(IngredientRepository);
+    orgService = modules.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
+    orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
 
     const { id } = await prismaService.organization.create({
@@ -127,12 +141,13 @@ describe('Create Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.category.deleteMany({ where: { org_id } });
+    await prismaService.product.deleteMany({ where: { name: 'name' } });
+    await prismaService.category.deleteMany({ where: { name: 'Massas' } });
     await prismaService.ingredient.deleteMany({
       where: { icon: '🥗' },
     });
     await prismaService.organization.deleteMany({
-      where: { name: 'Restaurante Fogo de chão' },
+      where: { owner_id },
     });
   });
 
@@ -144,6 +159,8 @@ describe('Create Product Usecase', () => {
     expect(catRepo).toBeDefined();
     expect(ingService).toBeDefined();
     expect(ingRepo).toBeDefined();
+    expect(orgService).toBeDefined();
+    expect(orgRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
@@ -170,4 +187,76 @@ describe('Create Product Usecase', () => {
     expect(product.ingredients.length).toBe(4);
     expect(product.category.name).toBe('Massas');
   });
+
+  it('Should throw an error if the category does not exists', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: 'cat_id',
+      description: 'description',
+      image_url: 'image_url',
+      name: 'name',
+      ingredients: ing_ids,
+      org_id,
+      price: 120,
+    };
+
+    // Assert
+    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('Should throw an error if the ingredients doest not exists', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: 'cat_id',
+      description: 'description',
+      image_url: 'image_url',
+      name: 'name',
+      ingredients: [],
+      org_id,
+      price: 120,
+    };
+
+    // Assert
+    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('Should throw an error if the ingredients os greater then the ingredients on the db', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: 'cat_id',
+      description: 'description',
+      image_url: 'image_url',
+      name: 'name',
+      ingredients: [...ing_ids, 'ing_id'],
+      org_id,
+      price: 120,
+    };
+
+    // Assert
+    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  // it('Should throw an error if the org does not exists', async () => {
+  //   // Arrange
+  //   const data: CreateProductDto = {
+  //     category_id: cat_id,
+  //     description: 'description',
+  //     image_url: 'image_url',
+  //     name: 'name',
+  //     ingredients: ing_ids,
+  //     org_id: 'org_id',
+  //     price: 120,
+  //   };
+
+  //   // Assert
+  //   await expect(createProductUseCase.execute(data)).rejects.toThrow(
+  //     NotFoundException,
+  //   );
+  // });
 });

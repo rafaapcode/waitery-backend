@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
-import { Ingredient } from 'src/core/domain/entities/ingredient';
+import {
+  createIngredientEntity,
+  Ingredient,
+} from 'src/core/domain/entities/ingredient';
 import { IngredientRepository } from './repo/ingredient.repository';
 
 @Injectable()
@@ -48,5 +51,13 @@ export class IngredientService implements IIngredientContract {
     if (!ing) return null;
 
     return new Ingredient(ing);
+  }
+
+  async getByManyByIds(
+    ing_ids: IIngredientContract.GetIngredientsByIdsParams,
+  ): Promise<IIngredientContract.GetIngredientsByIdsOutput> {
+    const ings = await this.ingredientRepo.getAllIngsByIds(ing_ids);
+
+    return ings.map((ing) => createIngredientEntity(ing));
   }
 }
