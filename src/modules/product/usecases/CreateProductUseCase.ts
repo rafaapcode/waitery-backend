@@ -1,11 +1,18 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
+import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import {
   ICATEGORY_CONTRACT,
   IINGREDIENT_CONTRACT,
+  IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
 } from 'src/shared/constants';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -23,9 +30,19 @@ export class CreateProductUseCase implements ICreateProductUseCase {
     private readonly catService: ICategoryContract,
     @Inject(IINGREDIENT_CONTRACT)
     private readonly ingService: IIngredientContract,
+    @Inject(IORGANIZATION_CONTRACT)
+    private readonly orgService: IOrganizationContract,
   ) {}
 
   async execute(data: CreateProductDto): Promise<Product> {
+    const org = await this.orgService.get({
+      id: data.org_id,
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
+    }
+
     const category = await this.catService.getCategory(data.category_id);
 
     if (!category) {
@@ -41,6 +58,7 @@ export class CreateProductUseCase implements ICreateProductUseCase {
     ) {
       throw new BadRequestException('Ingredients not found or invalid');
     }
+
     const productEntity = createProductEntity({
       category: category,
       description: data.description,

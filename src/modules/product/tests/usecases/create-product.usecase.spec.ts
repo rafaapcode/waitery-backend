@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -242,21 +242,21 @@ describe('Create Product Usecase', () => {
     );
   });
 
-  // it('Should throw an error if the org does not exists', async () => {
-  //   // Arrange
-  //   const data: CreateProductDto = {
-  //     category_id: cat_id,
-  //     description: 'description',
-  //     image_url: 'image_url',
-  //     name: 'name',
-  //     ingredients: ing_ids,
-  //     org_id: 'org_id',
-  //     price: 120,
-  //   };
+  it('Should throw an error if the org does not exists', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: cat_id,
+      description: 'description',
+      image_url: 'image_url',
+      name: 'name',
+      ingredients: ing_ids,
+      org_id: 'org_id',
+      price: 120,
+    };
 
-  //   // Assert
-  //   await expect(createProductUseCase.execute(data)).rejects.toThrow(
-  //     NotFoundException,
-  //   );
-  // });
+    // Assert
+    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
 });
