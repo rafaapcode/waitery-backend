@@ -26,5 +26,11 @@ import { UpdateIngredientUseCase } from './usecases/UpdateIngredientUseCase';
       useClass: IngredientService,
     },
   ],
+  exports: [
+    {
+      provide: IINGREDIENT_CONTRACT,
+      useClass: IngredientService,
+    },
+  ],
 })
 export class IngredientModule {}

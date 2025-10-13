@@ -26,5 +26,11 @@ import { UpdateCategoryUseCase } from './usecases/UpdateCategoryUseCase';
       useClass: CategoryService,
     },
   ],
+  exports: [
+    {
+      provide: ICATEGORY_CONTRACT,
+      useClass: CategoryService,
+    },
+  ],
 })
 export class CategoryModule {}
