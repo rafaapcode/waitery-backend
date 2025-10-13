@@ -50,17 +50,21 @@ export class ProductRepository {
     });
   }
 
-  async delete(product_id: IProductContract.DeleteParams): Promise<void> {
+  async delete({
+    product_id,
+    org_id,
+  }: IProductContract.DeleteParams): Promise<void> {
     await this.prisma.product.delete({
-      where: { id: product_id },
+      where: { id: product_id, org_id },
     });
   }
 
-  async get(
-    product_id: IProductContract.GetParams,
-  ): Promise<ProductWithCategory | null> {
+  async get({
+    product_id,
+    org_id,
+  }: IProductContract.GetParams): Promise<ProductWithCategory | null> {
     const product = await this.prisma.product.findUnique({
-      where: { id: product_id },
+      where: { id: product_id, org_id },
       include: {
         category: true,
       },

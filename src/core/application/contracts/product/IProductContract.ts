@@ -11,7 +11,7 @@ export interface IProductContract {
   ): Promise<IProductContract.UpdateOutput>;
 
   delete(
-    product_id: IProductContract.DeleteParams,
+    params: IProductContract.DeleteParams,
   ): Promise<IProductContract.DeleteOutput>;
 
   get(
@@ -55,11 +55,17 @@ export namespace IProductContract {
 
   export type UpdateOutput = void;
 
-  export type DeleteParams = string;
+  export type DeleteParams = {
+    product_id: string;
+    org_id: string;
+  };
 
   export type DeleteOutput = void;
 
-  export type GetParams = string;
+  export type GetParams = {
+    product_id: string;
+    org_id: string;
+  };
 
   export type GetOutput = Product | null;
 

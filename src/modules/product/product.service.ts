@@ -46,15 +46,15 @@ export class ProductService implements IProductContract {
   }
 
   async delete(
-    product_id: IProductContract.DeleteParams,
+    params: IProductContract.DeleteParams,
   ): Promise<IProductContract.DeleteOutput> {
-    await this.productRepo.delete(product_id);
+    await this.productRepo.delete(params);
   }
 
   async get(
-    product_id: IProductContract.GetParams,
+    params: IProductContract.GetParams,
   ): Promise<IProductContract.GetOutput> {
-    const product = await this.productRepo.get(product_id);
+    const product = await this.productRepo.get(params);
 
     if (!product) return null;
 

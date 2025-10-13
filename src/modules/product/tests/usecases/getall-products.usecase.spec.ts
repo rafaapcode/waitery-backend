@@ -1,11 +1,10 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
@@ -34,10 +33,9 @@ describe('Delete Product Usecase', () => {
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
+  const owner_id = 'owner_id';
   let org_id: string;
   let org_id2: string;
-  let user_id: string;
-  let user_id2: string;
   let cat_id: string;
   let prod_id: string;
   let ing_ids: string[];
@@ -83,28 +81,6 @@ describe('Delete Product Usecase', () => {
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
-        role: UserRole.OWNER,
-      },
-    });
-
-    const user2 = await prismaService.user.create({
-      data: {
-        cpf: '33333333333',
-        name: 'rafael ap',
-        email: 'rafaap123@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
-        role: UserRole.ADMIN,
-      },
-    });
-
     const { id } = await prismaService.organization.create({
       data: {
         name: 'Restaurante Fogo de chão',
@@ -121,7 +97,7 @@ describe('Delete Product Usecase', () => {
         street: 'Rua da Bahia, 1200',
         lat: -19.92083,
         long: -43.937778,
-        owner_id: user.id,
+        owner_id,
       },
     });
 
@@ -141,7 +117,7 @@ describe('Delete Product Usecase', () => {
         street: 'Rua da Bahia, 1200',
         lat: -19.92083,
         long: -43.937778,
-        owner_id: user.id,
+        owner_id,
       },
     });
 
@@ -202,8 +178,6 @@ describe('Delete Product Usecase', () => {
     ing_ids = [ing1.id, ing2.id, ing3.id, ing4.id];
     cat_id = cat_id_db;
     org_id2 = org2_id;
-    user_id = user.id;
-    user_id2 = user2.id;
   });
 
   afterAll(async () => {
@@ -213,14 +187,7 @@ describe('Delete Product Usecase', () => {
       where: { icon: '🥗' },
     });
     await prismaService.organization.deleteMany({
-      where: {
-        name: {
-          in: ['Restaurante Fogo de chão', 'Restaurante Fogo de chão 2'],
-        },
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: { in: ['rafaap@gmail.com', 'rafaap123@gmail.com'] } },
+      where: { owner_id },
     });
   });
 
@@ -240,43 +207,27 @@ describe('Delete Product Usecase', () => {
     expect(prod_id).toBeDefined();
     expect(ing_ids.length).toBe(4);
     expect(org_id2).toBeDefined();
-    expect(user_id).toBeDefined();
-    expect(user_id2).toBeDefined();
   });
 
   it('Should throw an error if the product does not exist', async () => {
     // Assert
     await expect(
-      deleteProductUseCase.execute('prod_id', org_id, user_id, UserRole.OWNER),
+      deleteProductUseCase.execute('prod_id', org_id),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an error if the org does not exist', async () => {
     // Assert
     await expect(
-      deleteProductUseCase.execute(prod_id, 'org_id', user_id, UserRole.OWNER),
+      deleteProductUseCase.execute(prod_id, 'org_id'),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an error if the product is not related with the org', async () => {
     // Assert
     await expect(
-      deleteProductUseCase.execute(prod_id, org_id2, user_id, UserRole.OWNER),
+      deleteProductUseCase.execute(prod_id, org_id2),
     ).rejects.toThrow(NotFoundException);
-  });
-
-  it('Should throw an error if the user is not related with the org ADMIN', async () => {
-    // Assert
-    await expect(
-      deleteProductUseCase.execute(prod_id, org_id2, user_id2, UserRole.ADMIN),
-    ).rejects.toThrow(ConflictException);
-  });
-
-  it('Should throw an error if the user is not related with the org OWNER', async () => {
-    // Assert
-    await expect(
-      deleteProductUseCase.execute(prod_id, org_id2, user_id2, UserRole.OWNER),
-    ).rejects.toThrow(ConflictException);
   });
 
   it('Should delete a product', async () => {
@@ -286,12 +237,7 @@ describe('Delete Product Usecase', () => {
     });
 
     // Act
-    await deleteProductUseCase.execute(
-      prod_id,
-      org_id,
-      user_id,
-      UserRole.OWNER,
-    );
+    await deleteProductUseCase.execute(prod_id, org_id);
 
     const productDeleted = await prismaService.product.findUnique({
       where: { id: prod_id },
