@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -27,8 +23,8 @@ import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
 import { CreateProductUseCase } from '../../usecases/CreateProductUseCase';
 
-describe('Create Product Usecase', () => {
-  let createProductUseCase: CreateProductUseCase;
+describe('Delete Product Usecase', () => {
+  let deleteProductUseCase: CreateProductUseCase;
   let productService: IProductContract;
   let catService: ICategoryContract;
   let catRepo: CategoryRepository;
@@ -198,7 +194,7 @@ describe('Create Product Usecase', () => {
       category_id: 'cat_id',
       description: 'description',
       image_url: 'image_url',
-      name: 'name2',
+      name: 'name',
       ingredients: ing_ids,
       org_id,
       price: 120,
@@ -216,7 +212,7 @@ describe('Create Product Usecase', () => {
       category_id: 'cat_id',
       description: 'description',
       image_url: 'image_url',
-      name: 'name2',
+      name: 'name',
       ingredients: [],
       org_id,
       price: 120,
@@ -234,7 +230,7 @@ describe('Create Product Usecase', () => {
       category_id: 'cat_id',
       description: 'description',
       image_url: 'image_url',
-      name: 'name2',
+      name: 'name',
       ingredients: [...ing_ids, 'ing_id'],
       org_id,
       price: 120,
@@ -252,7 +248,7 @@ describe('Create Product Usecase', () => {
       category_id: cat_id,
       description: 'description',
       image_url: 'image_url',
-      name: 'name2',
+      name: 'name',
       ingredients: ing_ids,
       org_id: 'org_id',
       price: 120,
@@ -261,24 +257,6 @@ describe('Create Product Usecase', () => {
     // Assert
     await expect(createProductUseCase.execute(data)).rejects.toThrow(
       NotFoundException,
-    );
-  });
-
-  it('Should throw an error if the product already exists with the same name', async () => {
-    // Arrange
-    const data: CreateProductDto = {
-      category_id: cat_id,
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: ing_ids,
-      org_id,
-      price: 120,
-    };
-
-    // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
-      ConflictException,
     );
   });
 });

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -41,6 +42,17 @@ export class CreateProductUseCase implements ICreateProductUseCase {
 
     if (!org) {
       throw new NotFoundException('Organization not found');
+    }
+
+    const productAlreadyExists = await this.prodService.getProductByName({
+      name: data.name,
+      org_id: data.org_id,
+    });
+
+    if (productAlreadyExists) {
+      throw new ConflictException(
+        'Product with this name already exists in this organization',
+      );
     }
 
     const category = await this.catService.getCategory(data.category_id);
