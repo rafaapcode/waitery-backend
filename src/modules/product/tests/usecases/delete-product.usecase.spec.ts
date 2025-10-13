@@ -1,10 +1,9 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
-import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
@@ -18,13 +17,12 @@ import {
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
 } from 'src/shared/constants';
-import { CreateProductDto } from '../../dto/create-product.dto';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
-import { CreateProductUseCase } from '../../usecases/CreateProductUseCase';
+import { DeleteProductUseCase } from '../../usecases/DeleteProductUseCase';
 
 describe('Delete Product Usecase', () => {
-  let deleteProductUseCase: CreateProductUseCase;
+  let deleteProductUseCase: DeleteProductUseCase;
   let productService: IProductContract;
   let catService: ICategoryContract;
   let catRepo: CategoryRepository;
@@ -37,12 +35,13 @@ describe('Delete Product Usecase', () => {
   const owner_id = 'owner_id';
   let org_id: string;
   let cat_id: string;
+  let prod_id: string;
   let ing_ids: string[];
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
       providers: [
-        CreateProductUseCase,
+        DeleteProductUseCase,
         CategoryRepository,
         ProductRepository,
         IngredientRepository,
@@ -67,8 +66,8 @@ describe('Delete Product Usecase', () => {
       ],
     }).compile();
 
-    createProductUseCase =
-      modules.get<CreateProductUseCase>(CreateProductUseCase);
+    deleteProductUseCase =
+      modules.get<DeleteProductUseCase>(DeleteProductUseCase);
 
     productService = modules.get<ProductService>(IPRODUCT_CONTRACT);
     productRepo = modules.get<ProductRepository>(ProductRepository);
@@ -135,6 +134,24 @@ describe('Delete Product Usecase', () => {
       }),
     ]);
 
+    const prod = await prismaService.product.create({
+      data: {
+        name: 'name',
+        description: 'description',
+        image_url: 'image_url',
+        ingredients: [
+          ing1.name,
+          ing2.name,
+          ing3.name,
+          ing4.name,
+        ] as Prisma.JsonArray,
+        price: 120,
+        category_id: cat_id_db,
+        org_id: id,
+      },
+    });
+
+    prod_id = prod.id;
     org_id = id;
     ing_ids = [ing1.id, ing2.id, ing3.id, ing4.id];
     cat_id = cat_id_db;
@@ -152,7 +169,7 @@ describe('Delete Product Usecase', () => {
   });
 
   it('Should all services be defined', () => {
-    expect(createProductUseCase).toBeDefined();
+    expect(deleteProductUseCase).toBeDefined();
     expect(productService).toBeDefined();
     expect(productRepo).toBeDefined();
     expect(catService).toBeDefined();
@@ -164,99 +181,25 @@ describe('Delete Product Usecase', () => {
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
+    expect(prod_id).toBeDefined();
     expect(ing_ids.length).toBe(4);
   });
 
-  it('Should create a new product', async () => {
+  it('Should delete a product', async () => {
     // Arrange
-    const data: CreateProductDto = {
-      category_id: cat_id,
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: ing_ids,
-      org_id,
-      price: 120,
-    };
+    const product = await prismaService.product.findUnique({
+      where: { id: prod_id },
+    });
 
     // Act
-    const product = await createProductUseCase.execute(data);
+    await deleteProductUseCase.execute(prod_id, org_id);
+
+    const productDeleted = await prismaService.product.findUnique({
+      where: { id: prod_id },
+    });
 
     // Assert
-    expect(product).toBeInstanceOf(Product);
-    expect(product.ingredients.length).toBe(4);
-    expect(product.category.name).toBe('Massas');
-  });
-
-  it('Should throw an error if the category does not exists', async () => {
-    // Arrange
-    const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: ing_ids,
-      org_id,
-      price: 120,
-    };
-
-    // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
-      BadRequestException,
-    );
-  });
-
-  it('Should throw an error if the ingredients doest not exists', async () => {
-    // Arrange
-    const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: [],
-      org_id,
-      price: 120,
-    };
-
-    // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
-      BadRequestException,
-    );
-  });
-
-  it('Should throw an error if the ingredients os greater then the ingredients on the db', async () => {
-    // Arrange
-    const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: [...ing_ids, 'ing_id'],
-      org_id,
-      price: 120,
-    };
-
-    // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
-      BadRequestException,
-    );
-  });
-
-  it('Should throw an error if the org does not exists', async () => {
-    // Arrange
-    const data: CreateProductDto = {
-      category_id: cat_id,
-      description: 'description',
-      image_url: 'image_url',
-      name: 'name',
-      ingredients: ing_ids,
-      org_id: 'org_id',
-      price: 120,
-    };
-
-    // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
-      NotFoundException,
-    );
+    expect(product).toBeDefined();
+    expect(productDeleted).toBeNull();
   });
 });

@@ -11,10 +11,12 @@ export interface IProductContract {
   ): Promise<IProductContract.UpdateOutput>;
 
   delete(
-    params: IProductContract.DeleteParams,
+    product_id: IProductContract.DeleteParams,
   ): Promise<IProductContract.DeleteOutput>;
 
-  get(params: IProductContract.GetParams): Promise<IProductContract.GetOutput>;
+  get(
+    product_id: IProductContract.GetParams,
+  ): Promise<IProductContract.GetOutput>;
 
   getAll(
     params: IProductContract.GetAllParams,
