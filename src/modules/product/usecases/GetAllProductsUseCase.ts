@@ -1,8 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { Product } from 'src/core/domain/entities/product';
-import { UserRole } from 'src/core/domain/entities/user';
 import {
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
@@ -10,8 +9,6 @@ import {
 
 interface IGetAllProductUseCase {
   execute(
-    user_id: string,
-    role: UserRole,
     org_id: string,
     page?: number,
   ): Promise<{
@@ -36,6 +33,15 @@ export class GetAllProductUseCase implements IGetAllProductUseCase {
     has_next: boolean;
     products: Product[];
   }> {
-    throw new Error('Method not implemented.');
+    const org_exists = await this.orgService.get({ id: org_id });
+
+    if (!org_exists) throw new NotFoundException('Organization not found');
+
+    const products = await this.prodService.getAll({
+      org_id,
+      page,
+    });
+
+    return products;
   }
 }

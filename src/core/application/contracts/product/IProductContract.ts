@@ -23,8 +23,8 @@ export interface IProductContract {
   ): Promise<IProductContract.GetAllOutput>;
 
   getProductsByCategory(
-    params: IProductContract.GetAllParams,
-  ): Promise<IProductContract.GetAllOutput>;
+    params: IProductContract.GetProductsByCategoryParams,
+  ): Promise<IProductContract.GetProductsByCategoryOutput>;
 
   getProductByName(
     params: IProductContract.GetProductsByNameParams,
