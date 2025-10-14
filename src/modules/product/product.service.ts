@@ -37,7 +37,7 @@ export class ProductService implements IProductContract {
           discounted_price: data.discounted_price,
         }),
         ...(data.image_url && { image_url: data.image_url }),
-        ...(data.ingredients && { image_url: data.image_url }),
+        ...(data.ingredients && { ingredients: data.ingredients }),
         ...(data.name && { name: data.name }),
         ...(data.price && { price: data.price }),
       },

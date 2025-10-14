@@ -1,8 +1,9 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
-  IsNotEmpty,
+  IsBoolean,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
   IsUrl,
@@ -10,24 +11,33 @@ import {
 
 export class UpdateProductDto {
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsUrl({ protocols: ['https'] })
-  image_url: string;
+  image_url?: string;
 
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @IsNumber()
   @IsPositive()
-  price: number;
+  price?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  discount?: boolean;
+
+  @IsNumber()
+  @IsPositive()
+  discounted_price?: number;
 
   @IsString()
+  @IsOptional()
   @IsArray({ each: true })
   @Type(() => String)
-  ingredients: string[];
+  ingredients?: string[];
 }
