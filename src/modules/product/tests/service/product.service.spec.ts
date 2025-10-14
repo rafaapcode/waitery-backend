@@ -116,11 +116,17 @@ describe('Products Service', () => {
     jest.spyOn(prodcutRepo, 'delete').mockResolvedValue();
 
     // Act
-    await productService.delete(id);
+    await productService.delete({
+      org_id: id,
+      product_id: 'product_id',
+    });
 
     // Assert
     expect(prodcutRepo.delete).toHaveBeenCalledTimes(1);
-    expect(prodcutRepo.delete).toHaveBeenCalledWith(id);
+    expect(prodcutRepo.delete).toHaveBeenCalledWith({
+      org_id: id,
+      product_id: 'product_id',
+    });
   });
 
   it('Should get a product', async () => {
@@ -146,12 +152,18 @@ describe('Products Service', () => {
     });
 
     // Act
-    const product = await productService.get(id);
+    const product = await productService.get({
+      org_id: id,
+      product_id: 'product_id',
+    });
 
     // Assert
     expect(product).toBeInstanceOf(Product);
     expect(prodcutRepo.get).toHaveBeenCalledTimes(1);
-    expect(prodcutRepo.get).toHaveBeenCalledWith(id);
+    expect(prodcutRepo.get).toHaveBeenCalledWith({
+      org_id: id,
+      product_id: 'product_id',
+    });
   });
 
   it('Should  return null if a product does not exist', async () => {
@@ -160,12 +172,18 @@ describe('Products Service', () => {
     jest.spyOn(prodcutRepo, 'get').mockResolvedValue(null);
 
     // Act
-    const product = await productService.get(id);
+    const product = await productService.get({
+      org_id: id,
+      product_id: 'product_id',
+    });
 
     // Assert
     expect(product).toBeNull();
     expect(prodcutRepo.get).toHaveBeenCalledTimes(1);
-    expect(prodcutRepo.get).toHaveBeenCalledWith(id);
+    expect(prodcutRepo.get).toHaveBeenCalledWith({
+      org_id: id,
+      product_id: 'product_id',
+    });
   });
 
   it('Should return all products of a org of page 0', async () => {
