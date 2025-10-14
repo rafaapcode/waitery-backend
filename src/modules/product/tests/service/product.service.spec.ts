@@ -28,6 +28,7 @@ describe('Products Service', () => {
             verifyOrgById: jest.fn(),
             getByCategory: jest.fn(),
             getByName: jest.fn(),
+            verifyProdIsRelatedWithOrg: jest.fn(),
           },
         },
       ],
@@ -389,5 +390,52 @@ describe('Products Service', () => {
     expect(product).toBeNull();
     expect(prodcutRepo.getByName).toHaveBeenCalledTimes(1);
     expect(prodcutRepo.getByName).toHaveBeenCalledWith(data.name, data.org_id);
+  });
+
+  it('Should return true is the product is related with a org', async () => {
+    // Arrange
+    const data: IProductContract.VerifyProductIsRelatedWithOrgParams = {
+      org_id: 'org_id',
+      prod_id: 'nome teste 1',
+    };
+    jest.spyOn(prodcutRepo, 'verifyProdIsRelatedWithOrg').mockResolvedValue({
+      description: 'description',
+      discount: false,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 0,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+    });
+
+    // Act
+    const product = await productService.verifyProdIsRelatedWithOrg(data);
+
+    // Assert
+    expect(product).toBeTruthy();
+    expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledWith(data);
+  });
+
+  it('Should return false is the product is  not related with a org', async () => {
+    // Arrange
+    const data: IProductContract.VerifyProductIsRelatedWithOrgParams = {
+      org_id: 'org_id',
+      prod_id: 'nome teste 1',
+    };
+    jest
+      .spyOn(prodcutRepo, 'verifyProdIsRelatedWithOrg')
+      .mockResolvedValue(null);
+
+    // Act
+    const product = await productService.verifyProdIsRelatedWithOrg(data);
+
+    // Assert
+    expect(product).toBeFalsy();
+    expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledTimes(1);
+    expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledWith(data);
   });
 });

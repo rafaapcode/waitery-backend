@@ -152,4 +152,17 @@ export class ProductRepository {
 
     return product;
   }
+
+  async verifyProdIsRelatedWithOrg({
+    org_id,
+    prod_id,
+  }: IProductContract.VerifyProductIsRelatedWithOrgParams): Promise<Product | null> {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: prod_id,
+        org_id,
+      },
+    });
+    return product;
+  }
 }

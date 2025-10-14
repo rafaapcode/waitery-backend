@@ -33,6 +33,10 @@ export interface IProductContract {
   verifyOrgById(
     params: IProductContract.VerifyOrgsParamsById,
   ): Promise<IProductContract.VerifyOrgsOutput>;
+
+  verifyProdIsRelatedWithOrg(
+    params: IProductContract.VerifyProductIsRelatedWithOrgParams,
+  ): Promise<IProductContract.VerifyProductIsRelatedWithOrgOutput>;
 }
 
 export namespace IProductContract {
@@ -104,4 +108,11 @@ export namespace IProductContract {
   };
 
   export type GetProductsByNameOutput = Product | null;
+
+  export type VerifyProductIsRelatedWithOrgParams = {
+    prod_id: string;
+    org_id: string;
+  };
+
+  export type VerifyProductIsRelatedWithOrgOutput = boolean;
 }

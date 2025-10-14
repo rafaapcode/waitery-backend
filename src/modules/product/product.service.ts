@@ -8,7 +8,6 @@ import { ProductRepository } from './repo/product.repository';
 @Injectable()
 export class ProductService implements IProductContract {
   constructor(private readonly productRepo: ProductRepository) {}
-
   async create(
     params: IProductContract.CreateParams,
   ): Promise<IProductContract.CreateOutput> {
@@ -168,5 +167,13 @@ export class ProductService implements IProductContract {
         ...product.category,
       }),
     });
+  }
+
+  async verifyProdIsRelatedWithOrg(
+    params: IProductContract.VerifyProductIsRelatedWithOrgParams,
+  ): Promise<IProductContract.VerifyProductIsRelatedWithOrgOutput> {
+    const isRelated = await this.productRepo.verifyProdIsRelatedWithOrg(params);
+
+    return isRelated !== null;
   }
 }
