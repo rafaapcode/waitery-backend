@@ -49,4 +49,13 @@ export class CategoryService implements ICategoryContract {
 
     return cat ? createCategoryEntity(cat) : cat;
   }
+
+  async verifyCategoryIsRelatedWithOrg(
+    data: ICategoryContract.verifyCategoryIsRelatedWithOrgParams,
+  ): Promise<ICategoryContract.verifyCategoryIsRelatedWithOrgOutput> {
+    const isRelated =
+      await this.categoryRepo.verifyCategoryIsRelatedWithOrg(data);
+
+    return isRelated !== null;
+  }
 }

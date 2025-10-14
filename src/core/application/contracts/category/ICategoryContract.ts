@@ -22,6 +22,10 @@ export interface ICategoryContract {
   getCategoryByName: (
     data: ICategoryContract.GetCategoriesByNameParams,
   ) => Promise<ICategoryContract.GetCategoriesByNameOutput>;
+
+  verifyCategoryIsRelatedWithOrg: (
+    data: ICategoryContract.verifyCategoryIsRelatedWithOrgParams,
+  ) => Promise<ICategoryContract.verifyCategoryIsRelatedWithOrgOutput>;
 }
 
 export namespace ICategoryContract {
@@ -51,4 +55,10 @@ export namespace ICategoryContract {
     org_id: string;
   };
   export type GetCategoriesByNameOutput = Category | null;
+
+  export type verifyCategoryIsRelatedWithOrgParams = {
+    cat_id: string;
+    org_id: string;
+  };
+  export type verifyCategoryIsRelatedWithOrgOutput = boolean;
 }

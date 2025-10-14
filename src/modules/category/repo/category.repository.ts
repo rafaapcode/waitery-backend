@@ -65,4 +65,18 @@ export class CategoryRepository {
 
     return updated_category;
   }
+
+  async verifyCategoryIsRelatedWithOrg({
+    org_id,
+    cat_id,
+  }: ICategoryContract.verifyCategoryIsRelatedWithOrgParams): Promise<Category | null> {
+    const category = await this.prismaService.category.findFirst({
+      where: {
+        org_id,
+        id: cat_id,
+      },
+    });
+
+    return category;
+  }
 }

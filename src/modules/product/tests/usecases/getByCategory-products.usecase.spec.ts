@@ -31,6 +31,7 @@ describe('Get Products By Category Usecase', () => {
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
   let org_id: string;
+  let org_id2: string;
   let user_id: string;
   let cat_id: string;
   let cat_id2: string;
@@ -101,6 +102,26 @@ describe('Get Products By Category Usecase', () => {
       },
     });
 
+    const org2 = await prismaService.organization.create({
+      data: {
+        name: 'Restaurante Fogo de chão',
+        image_url: 'https://example.com/images/clinica.jpg',
+        email: 'contato@bemestar.com',
+        description:
+          'Clínica especializada em atendimento psicológico e terapias.',
+        location_code: 'BR-MG-015',
+        open_hour: 8,
+        close_hour: 18,
+        cep: '30130-010',
+        city: 'Belo Horizonte',
+        neighborhood: 'Funcionários',
+        street: 'Rua da Bahia, 1200',
+        lat: -19.92083,
+        long: -43.937778,
+        owner_id: user.id,
+      },
+    });
+
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
         icon: '🍏',
@@ -113,7 +134,7 @@ describe('Get Products By Category Usecase', () => {
       data: {
         icon: '🍏',
         name: 'Massas2',
-        org_id: id,
+        org_id: org2.id,
       },
     });
     await prismaService.product.createMany({
@@ -132,6 +153,7 @@ describe('Get Products By Category Usecase', () => {
     cat_id = cat_id_db;
     user_id = user.id;
     cat_id2 = cat_id_db2;
+    org_id2 = org2.id;
   });
 
   afterAll(async () => {
@@ -163,6 +185,7 @@ describe('Get Products By Category Usecase', () => {
     expect(catRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
+    expect(org_id2).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(user_id).toBeDefined();
   });
@@ -183,7 +206,7 @@ describe('Get Products By Category Usecase', () => {
 
   it('Should return 0 products if not found', async () => {
     // Act
-    const result = await getProductByCategoryUseCase.execute(org_id, cat_id2);
+    const result = await getProductByCategoryUseCase.execute(org_id2, cat_id2);
 
     // Assert
     expect(result.has_next).toBeFalsy();
@@ -239,5 +262,12 @@ describe('Get Products By Category Usecase', () => {
     expect(result.has_next).toBeFalsy();
     expect(result.products.length).toBe(0);
     expect(result.products[0]).toBeUndefined();
+  });
+
+  it('Should throw an error if the org_id is not related with the category', async () => {
+    // Assert
+    await expect(
+      getProductByCategoryUseCase.execute(org_id2, cat_id, 3),
+    ).rejects.toThrow(NotFoundException);
   });
 });

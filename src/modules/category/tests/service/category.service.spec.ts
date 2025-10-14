@@ -24,6 +24,7 @@ describe('Category Service', () => {
             getByName: jest.fn(),
             getById: jest.fn(),
             getAllCategories: jest.fn(),
+            verifyCategoryIsRelatedWithOrg: jest.fn(),
           },
         },
       ],
@@ -205,6 +206,57 @@ describe('Category Service', () => {
     expect(categoryRepo.getByName).toHaveBeenCalledTimes(1);
     expect(categoryRepo.getByName).toHaveBeenCalledWith({
       name: 'Massas',
+      org_id: 'org_id12312313',
+    });
+  });
+
+  it('Should return false if category is not related with a org', async () => {
+    // Arrange
+    jest
+      .spyOn(categoryRepo, 'verifyCategoryIsRelatedWithOrg')
+      .mockResolvedValue(null);
+
+    // Act
+    const res = await categoryService.verifyCategoryIsRelatedWithOrg({
+      cat_id: 'cat_id',
+      org_id: 'org_id12312313',
+    });
+
+    // Assert
+    expect(res).toBeFalsy();
+    expect(categoryRepo.verifyCategoryIsRelatedWithOrg).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(categoryRepo.verifyCategoryIsRelatedWithOrg).toHaveBeenCalledWith({
+      cat_id: 'cat_id',
+      org_id: 'org_id12312313',
+    });
+  });
+
+  it('Should return true if category is not related with a org', async () => {
+    // Arrange
+    jest
+      .spyOn(categoryRepo, 'verifyCategoryIsRelatedWithOrg')
+      .mockResolvedValue({
+        icon: '🍕',
+        name: 'Massas',
+        org_id: 'org_id12312313',
+        id: 'id_category',
+      });
+
+    // Act
+    const cat = await categoryService.verifyCategoryIsRelatedWithOrg({
+      cat_id: 'cat_id',
+      org_id: 'org_id12312313',
+    });
+
+    // Assert
+    expect(cat).toBeTruthy();
+    expect(categoryRepo.verifyCategoryIsRelatedWithOrg).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(categoryRepo.verifyCategoryIsRelatedWithOrg).toHaveBeenCalledWith({
+      cat_id: 'cat_id',
       org_id: 'org_id12312313',
     });
   });
