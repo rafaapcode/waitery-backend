@@ -127,7 +127,7 @@ export class UserService implements IUserContract {
 
     return {
       has_next,
-      users: users.slice(0, 10).map(
+      users: users.slice(0, LIMIT).map(
         (u) =>
           new User({
             ...u,
