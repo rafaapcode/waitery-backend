@@ -1,10 +1,17 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
 import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT } from 'src/shared/constants';
+import { OrganizationService } from 'src/modules/organization/organization.service';
+import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
+import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { CreateUserUseCase } from '../../usecases/CreateUserUseCase';
 import { UserService } from '../../user.service';
@@ -13,6 +20,8 @@ describe('Create User UseCase', () => {
   let createUserUseCase: CreateUserUseCase;
   let userService: IUserContract;
   let userRepo: UserRepo;
+  let organizationService: IOrganizationContract;
+  let organizationRepo: OrganizationRepo;
   let hashService: HashService;
   let prismaService: PrismaService;
   let org_id: string;
@@ -24,6 +33,7 @@ describe('Create User UseCase', () => {
         UserRepo,
         PrismaService,
         CreateUserUseCase,
+        OrganizationRepo,
         {
           provide: HashService,
           useValue: {
@@ -34,11 +44,19 @@ describe('Create User UseCase', () => {
           provide: IUSER_CONTRACT,
           useClass: UserService,
         },
+        {
+          provide: IORGANIZATION_CONTRACT,
+          useClass: OrganizationService,
+        },
       ],
     }).compile();
 
     userService = module.get<IUserContract>(IUSER_CONTRACT);
     userRepo = module.get<UserRepo>(UserRepo);
+    organizationService = module.get<IOrganizationContract>(
+      IORGANIZATION_CONTRACT,
+    );
+    organizationRepo = module.get<OrganizationRepo>(OrganizationRepo);
     hashService = module.get<HashService>(HashService);
     prismaService = module.get<PrismaService>(PrismaService);
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
@@ -117,6 +135,8 @@ describe('Create User UseCase', () => {
     expect(createUserUseCase).toBeDefined();
     expect(userService).toBeDefined();
     expect(userRepo).toBeDefined();
+    expect(organizationService).toBeDefined();
+    expect(organizationRepo).toBeDefined();
     expect(hashService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
@@ -227,6 +247,27 @@ describe('Create User UseCase', () => {
     expect(hashService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       ConflictException,
+    );
+  });
+
+  it('Should throw an error if the org does not exists', async () => {
+    // Arrange
+    const data: IUserContract.CreateParams = {
+      data: {
+        cpf: '55555555555',
+        name: 'rafael teste',
+        email: 'rafaap2013131@gmail.com',
+        password: 'qweasdzxc2003', // qweasdzxc2003
+        role: UserRole.ADMIN,
+      },
+      org_id: 'org_id123123',
+    };
+    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+
+    // Assert
+    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    await expect(createUserUseCase.execute(data)).rejects.toThrow(
+      NotFoundException,
     );
   });
 });

@@ -45,11 +45,11 @@ export class UserController {
   ) {}
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Post(':org_id')
-  async create(@Param('org_id') org_id: string, @Body() data: CreateUserDTO) {
+  @Post()
+  async create(@Body() data: CreateUserDTO) {
     const user = await this.createUserUseCase.execute({
       data,
-      org_id,
+      org_id: data.org_id,
     });
     return { user: user.fromEntity() };
   }
