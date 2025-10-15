@@ -9,6 +9,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { GetMe } from 'src/common/decorators/GetMe';
+import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
@@ -32,11 +33,13 @@ export class ProductController {
     private readonly getProductByCategoryProductUseCase: GetProductByCategoryUseCase,
   ) {}
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post()
   create(@Body() data: CreateProductDto) {
     return this.createProductUseCase.execute(data);
   }
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Put(':org_id/:product_id')
   async update(
     @Param('org_id', ParseULIDPipe) org_id: string,
@@ -47,6 +50,7 @@ export class ProductController {
     return { message: 'Product updated successfully' };
   }
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Delete(':org_id/:product_id')
   async delete(
     @GetMe() me: JwtPayload,
