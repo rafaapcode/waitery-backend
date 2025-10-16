@@ -259,7 +259,7 @@ describe('Create Order UseCase', () => {
     );
   });
 
-  it('Should throw a NotFoundException if the org not exist', async () => {
+  it('Should throw a NotFoundException if the org not exists', async () => {
     // Arrange
     const data: CreateOrderDto = {
       org_id: 'org_id',
