@@ -9,7 +9,11 @@ import { IORDER_CONTRACT } from 'src/shared/constants';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
 
 interface IUpdateOrderStatusUseCase {
-  execute(data: UpdateOrderStatusDto, org_id: string): Promise<void>;
+  execute(
+    data: UpdateOrderStatusDto,
+    org_id: string,
+    order_id: string,
+  ): Promise<void>;
 }
 
 @Injectable()
@@ -19,13 +23,17 @@ export class UpdateOrderStatusUseCase implements IUpdateOrderStatusUseCase {
     private readonly orderContract: IOrderContract,
   ) {}
 
-  async execute(data: UpdateOrderStatusDto, org_id: string): Promise<void> {
-    const order_exits = await this.orderContract.getOrder(data.order_id);
+  async execute(
+    data: UpdateOrderStatusDto,
+    org_id: string,
+    order_id: string,
+  ): Promise<void> {
+    const order_exits = await this.orderContract.getOrder(order_id);
 
     if (!order_exits) throw new NotFoundException('Order not found');
 
     const orgHasOrder = await this.orderContract.verifyOrderByOrg({
-      order_id: data.order_id,
+      order_id,
       org_id,
     });
 
@@ -37,6 +45,6 @@ export class UpdateOrderStatusUseCase implements IUpdateOrderStatusUseCase {
       );
     }
 
-    await this.orderContract.updateOrderStatus(data);
+    await this.orderContract.updateOrderStatus({ ...data, order_id });
   }
 }

@@ -139,9 +139,10 @@ export class OrderController {
   @HttpCode(HttpStatus.OK)
   async updateOrderStatus(
     @Body() data: UpdateOrderStatusDto,
+    @Param('order_id', ParseULIDPipe) order_id: string,
     @Param('org_id', ParseULIDPipe) org_id: string,
   ) {
-    await this.updateOrderStatusUseCase.execute(data, org_id);
+    await this.updateOrderStatusUseCase.execute(data, org_id, order_id);
     return { message: 'Order updated with success !' };
   }
 }
