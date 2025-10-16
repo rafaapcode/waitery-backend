@@ -47,6 +47,7 @@ export class DeleteProductUseCase implements IDeleteProductUseCase {
     }
 
     const org = await this.orgService.get({ id: org_id });
+
     if (!org) {
       throw new NotFoundException('Organization not found');
     }

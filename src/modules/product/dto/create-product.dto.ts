@@ -34,8 +34,7 @@ export class CreateProductDto {
   @Validate(CustomULIDValidation)
   category_id: string;
 
-  @IsString()
-  @IsArray({ each: true })
+  @IsArray()
   @Type(() => String)
   ingredients: string[];
 }

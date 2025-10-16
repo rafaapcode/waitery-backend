@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -50,15 +49,6 @@ export class UpdateProductUseCase implements IUpdateProductUseCase {
     });
 
     if (!productExists) throw new NotFoundException('Product not found');
-
-    if (
-      data.discount &&
-      (!data.discounted_price || data.discounted_price <= 0)
-    ) {
-      throw new ConflictException(
-        'Discounted price must be provided and greater than zero when discount is true',
-      );
-    }
 
     let ingredients: Ingredient[] = [];
     if (data.ingredients && data.ingredients.length > 0) {

@@ -1,7 +1,6 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
-  IsBoolean,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -25,19 +24,11 @@ export class UpdateProductDto {
 
   @IsNumber()
   @IsPositive()
+  @IsOptional()
   price?: number;
 
-  @IsBoolean()
-  @IsOptional()
-  discount?: boolean;
-
-  @IsNumber()
-  @IsPositive()
-  discounted_price?: number;
-
-  @IsString()
-  @IsOptional()
-  @IsArray({ each: true })
+  @IsArray()
   @Type(() => String)
+  @IsOptional()
   ingredients?: string[];
 }

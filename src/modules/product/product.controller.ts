@@ -58,27 +58,27 @@ export class ProductController {
     @Param('product_id', ParseULIDPipe) product_id: string,
   ) {
     await this.deleteProductUseCase.execute(
-      org_id,
       product_id,
+      org_id,
       me.id,
       me.role as UserRole,
     );
     return { message: 'Product deleted successfully' };
   }
 
-  @Get('all')
+  @Get('all/:org_id/:page')
   all(
     @Param('org_id', ParseULIDPipe) org_id: string,
-    @Param('page', ParseIntPipe) page: number,
+    @Param('page', ParseIntPipe) page?: number,
   ) {
     return this.getAllProductsProductUseCase.execute(org_id, page);
   }
 
-  @Get(':org_id/category/:category_id')
+  @Get(':org_id/category/:category_id/:page')
   getByCategory(
     @Param('org_id', ParseULIDPipe) org_id: string,
     @Param('category_id', ParseULIDPipe) category_id: string,
-    @Param('page', ParseIntPipe) page: number,
+    @Param('page', ParseIntPipe) page?: number,
   ) {
     return this.getProductByCategoryProductUseCase.execute(
       org_id,
