@@ -65,7 +65,7 @@ export class Order {
     return data.reduce(
       (acc, curr) => {
         acc.quantity += curr.quantity;
-        acc.total_price += curr.price;
+        acc.total_price += curr.price * curr.quantity;
         return acc;
       },
       { quantity: 0, total_price: 0 },
