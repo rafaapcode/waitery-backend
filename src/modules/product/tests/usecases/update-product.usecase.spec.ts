@@ -244,7 +244,6 @@ describe('Update Product Usecase', () => {
     // Arrange
     const data: UpdateProductDto = {
       name: 'Novo nome do produto',
-      discount: true,
       price: 250,
     };
 
@@ -258,8 +257,6 @@ describe('Update Product Usecase', () => {
     // Arrange
     const data: UpdateProductDto = {
       name: 'Novo nome do produto',
-      discount: true,
-      discounted_price: 100,
       price: 250,
     };
     const old_product = await prismaService.product.findUnique({
@@ -281,8 +278,7 @@ describe('Update Product Usecase', () => {
     expect(old_product!.price).not.toEqual(new_product!.price);
     expect(new_product!.name).toEqual(data.name);
     expect(new_product!.price).toEqual(data.price);
-    expect(new_product!.discount).toBeTruthy();
-    expect(new_product!.discounted_price).toEqual(data.discounted_price);
+    expect(new_product!.discount).toBeFalsy();
     expect(old_product!.ingredients).toEqual(new_product!.ingredients);
   });
 

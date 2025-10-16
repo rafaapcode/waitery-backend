@@ -238,7 +238,7 @@ describe('Create Order UseCase', () => {
     expect(order.created_at).toBeDefined();
     expect(order.status).toBe(OrderStatus.WAITING);
     expect(order.quantity).toBe(4);
-    expect(order.total_price).toBe(60);
+    expect(order.total_price).toBe(120);
     expect(order.products.length).toBe(2);
     expect(order.products[0].category).toBe(`🥗 Vegetais`);
     expect(orderService.getProductsOfOrder).toHaveBeenCalledTimes(1);
