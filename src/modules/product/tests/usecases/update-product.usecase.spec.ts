@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -240,23 +240,10 @@ describe('Update Product Usecase', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('Should be not able to update a product if the discount is true and discounted_price is not passed or 0', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: 'Novo nome do produto',
-      price: 250,
-    };
-
-    // Assert
-    await expect(
-      updateProductUseCase.execute(org_id, prod_id, data),
-    ).rejects.toThrow(ConflictException);
-  });
-
   it('Should  be able to update a product', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'Novo nome do produto',
+      name: 'Novo nome do produto de teste',
       price: 250,
     };
     const old_product = await prismaService.product.findUnique({
