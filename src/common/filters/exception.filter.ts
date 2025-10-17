@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { Request, Response } from 'express';
+import { env } from 'src/shared/config/env';
 
 @Catch(HttpException)
 export class ExceptionFilterWithSentry<T extends HttpException>
@@ -24,15 +25,17 @@ export class ExceptionFilterWithSentry<T extends HttpException>
         ? { message: exceptionResponse }
         : exceptionResponse;
 
-    if (statusCode >= 500) {
-      sentry.logger.error(
-        JSON.stringify({
-          ...err,
-          date: new Date().toISOString(),
-          url: req.url,
-          stack: exception.stack || 'No stack found',
-        }),
-      );
+    if (env.NODE_ENV === 'PROD') {
+      if (statusCode >= 500) {
+        sentry.logger.error(
+          JSON.stringify({
+            ...err,
+            date: new Date().toISOString(),
+            url: req.url,
+            stack: exception.stack || 'No stack found',
+          }),
+        );
+      }
     }
 
     res.status(statusCode).json({

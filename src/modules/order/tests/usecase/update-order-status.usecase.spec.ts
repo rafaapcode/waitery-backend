@@ -194,10 +194,10 @@ describe('Update Order Status UseCase', () => {
     // Act
     await updateOrderUseCase.execute(
       {
-        order_id,
         status: OrderStatus.IN_PRODUCTION,
       },
       org_id,
+      order_id,
     );
     const new_order = await prismaService.order.findUnique({
       where: { id: order_id },
@@ -212,10 +212,10 @@ describe('Update Order Status UseCase', () => {
     await expect(
       updateOrderUseCase.execute(
         {
-          order_id: 'order_id',
           status: OrderStatus.IN_PRODUCTION,
         },
         org_id,
+        'order_id',
       ),
     ).rejects.toThrow(NotFoundException);
   });
@@ -225,10 +225,10 @@ describe('Update Order Status UseCase', () => {
     await expect(
       updateOrderUseCase.execute(
         {
-          order_id,
           status: OrderStatus.IN_PRODUCTION,
         },
         'org_id',
+        order_id,
       ),
     ).rejects.toThrow(NotFoundException);
   });
@@ -238,10 +238,10 @@ describe('Update Order Status UseCase', () => {
     await expect(
       updateOrderUseCase.execute(
         {
-          order_id,
           status: OrderStatus.IN_PRODUCTION,
         },
         org_id2,
+        order_id,
       ),
     ).rejects.toThrow(NotFoundException);
   });
@@ -251,10 +251,10 @@ describe('Update Order Status UseCase', () => {
     await expect(
       updateOrderUseCase.execute(
         {
-          order_id,
           status: OrderStatus.IN_PRODUCTION,
         },
         org_id,
+        order_id,
       ),
     ).rejects.toThrow(ConflictException);
   });

@@ -28,7 +28,7 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
-  NODE_ENV: string;
+  NODE_ENV: 'DEV' | 'PROD';
 }
 
 export const env = plainToInstance(Env, {
