@@ -69,7 +69,6 @@ export class OrderController {
     return { message: 'Delete cancelled with success!' };
   }
 
-  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Get('get-all/today')
   @HttpCode(HttpStatus.OK)
   getAllOrdersToday(

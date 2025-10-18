@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { Category } from 'src/core/domain/entities/category';
@@ -106,6 +106,7 @@ describe('Update Category UseCase', () => {
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
+      org_id,
       data.category,
     );
 
@@ -131,6 +132,7 @@ describe('Update Category UseCase', () => {
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
+      org_id,
       data.category,
     );
 
@@ -157,6 +159,7 @@ describe('Update Category UseCase', () => {
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
+      org_id,
       data.category,
     );
 
@@ -180,7 +183,39 @@ describe('Update Category UseCase', () => {
 
     // Assert
     await expect(
-      updateCategoryUseCase.execute('data.id', data.category),
+      updateCategoryUseCase.execute('data.id', org_id, data.category),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw a NotFoundException if the category does not exist', async () => {
+    // Arrange
+    const data: ICategoryContract.UpdateParams = {
+      id: cat_id,
+      category: {
+        name: 'Saudável',
+        icon: '🍽️',
+      },
+    };
+
+    // Assert
+    await expect(
+      updateCategoryUseCase.execute('data.id', org_id, data.category),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw a BadRequestException if the organization does not match', async () => {
+    // Arrange
+    const data: ICategoryContract.UpdateParams = {
+      id: cat_id,
+      category: {
+        name: 'Saudável',
+        icon: '🍽️',
+      },
+    };
+
+    // Assert
+    await expect(
+      updateCategoryUseCase.execute(data.id, 'Wrong_org_id', data.category),
+    ).rejects.toThrow(BadRequestException);
   });
 });

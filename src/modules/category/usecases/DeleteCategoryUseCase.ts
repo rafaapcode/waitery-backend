@@ -1,9 +1,14 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { ICATEGORY_CONTRACT } from 'src/shared/constants';
 
 interface IDeleteCategoryUseCase {
-  execute(id: string): Promise<void>;
+  execute(id: string, org_id: string): Promise<void>;
 }
 
 @Injectable()
@@ -12,10 +17,18 @@ export class DeleteCategoryUseCase implements IDeleteCategoryUseCase {
     @Inject(ICATEGORY_CONTRACT)
     private readonly catContract: ICategoryContract,
   ) {}
-  async execute(id: string): Promise<void> {
+  async execute(id: string, org_id: string): Promise<void> {
     const catExists = await this.catContract.getCategory(id);
 
     if (!catExists) throw new NotFoundException('Category not found');
+
+    const belongsToOrg = catExists.org_id === org_id;
+
+    if (!belongsToOrg) {
+      throw new BadRequestException(
+        'Category does not belong to this organization',
+      );
+    }
 
     await this.catContract.delete(id);
   }

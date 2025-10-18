@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -85,6 +85,20 @@ describe('Delete Category UseCase', () => {
     expect(category_id).toBeDefined();
   });
 
+  it('Should throw an error if the category does not exists', async () => {
+    //Assert
+    await expect(
+      deleteCategoryUseCAse.execute('category_id', org_id),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw an error if the organization does not match', async () => {
+    //Assert
+    await expect(
+      deleteCategoryUseCAse.execute(category_id, 'wrong_org_id'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
   it('Should delete a category', async () => {
     // Arrange
     const old_cat = await prismaService.category.findUnique({
@@ -92,7 +106,7 @@ describe('Delete Category UseCase', () => {
     });
 
     // Act
-    await deleteCategoryUseCAse.execute(category_id);
+    await deleteCategoryUseCAse.execute(category_id, org_id);
     const actual_cat = await prismaService.category.findUnique({
       where: { id: category_id },
     });
@@ -100,12 +114,5 @@ describe('Delete Category UseCase', () => {
     //Assert
     expect(old_cat).toBeDefined();
     expect(actual_cat).toBeNull();
-  });
-
-  it('Should throw an error if the category does not exists', async () => {
-    //Assert
-    await expect(deleteCategoryUseCAse.execute(category_id)).rejects.toThrow(
-      NotFoundException,
-    );
   });
 });

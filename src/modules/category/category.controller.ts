@@ -55,20 +55,24 @@ export class CategoryController {
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Patch(':id')
+  @Patch(':id/:org_id')
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id', ParseULIDPipe) id: string,
+    @Param('org_id', ParseULIDPipe) org_id: string,
     @Body() data: UpdateCategoryDto,
   ) {
-    return this.updateCategoryUseCase.execute(id, data);
+    return this.updateCategoryUseCase.execute(id, org_id, data);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Delete(':id')
+  @Delete(':id/:org_id')
   @HttpCode(HttpStatus.OK)
-  async delete(@Param('id', ParseULIDPipe) id: string) {
-    await this.deleteCategoryUseCase.execute(id);
+  async delete(
+    @Param('id', ParseULIDPipe) id: string,
+    @Param('org_id', ParseULIDPipe) org_id: string,
+  ) {
+    await this.deleteCategoryUseCase.execute(id, org_id);
     return { message: 'Category deleted with success !' };
   }
 }
