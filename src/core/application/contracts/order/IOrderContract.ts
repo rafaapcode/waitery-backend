@@ -18,6 +18,7 @@ export interface IOrderContract {
   ) => Promise<IOrderContract.GetOrderOutput>;
   getProductsOfOrder: (
     products_info: IOrderContract.GetProductsOfOrdersParams,
+    org_id: string,
   ) => Promise<IOrderContract.GetProductsOfOrdersOutput>;
   getAllOrders: (
     params: IOrderContract.GetAllOrdersOfOrgParams,

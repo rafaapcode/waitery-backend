@@ -119,9 +119,10 @@ export class OrderService implements IOrderContract {
 
   async getProductsOfOrder(
     products_info: IOrderContract.GetProductsOfOrdersParams,
+    org_id: string,
   ): Promise<IOrderContract.GetProductsOfOrdersOutput> {
     const products = (
-      await this.orderRepo.getProductsOfOrder(products_info)
+      await this.orderRepo.getProductsOfOrder(products_info, org_id)
     ).map((p) =>
       createProductEntity({
         ...p,

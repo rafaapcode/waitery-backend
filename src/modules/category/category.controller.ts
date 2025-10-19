@@ -48,10 +48,13 @@ export class CategoryController {
     return this.getAllCategoryUseCase.execute(org_id);
   }
 
-  @Get(':id')
+  @Get(':id/:org_id')
   @HttpCode(HttpStatus.OK)
-  getById(@Param('id', ParseULIDPipe) id: string) {
-    return this.getByIdCategoryUseCase.execute(id);
+  getById(
+    @Param('id', ParseULIDPipe) id: string,
+    @Param('org_id', ParseULIDPipe) org_id: string,
+  ) {
+    return this.getByIdCategoryUseCase.execute(id, org_id);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

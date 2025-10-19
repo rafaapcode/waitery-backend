@@ -42,7 +42,14 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       product_id: p.product_id,
       quantity: p.quantity,
     }));
-    const products = await this.orderContract.getProductsOfOrder(products_info);
+    const products = await this.orderContract.getProductsOfOrder(
+      products_info,
+      data.org_id,
+    );
+
+    if (products.length === 0) {
+      throw new BadRequestException('No valid products found for the order');
+    }
 
     const order = createOrderEntity({
       org_id: data.org_id,

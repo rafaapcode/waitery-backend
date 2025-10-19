@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { Category } from 'src/core/domain/entities/category';
@@ -93,7 +93,7 @@ describe('Get Category by Id UseCase', () => {
 
   it('Should get the category by id', async () => {
     // Act
-    const cat = await getByIdCategoryUseCase.execute(cat_id);
+    const cat = await getByIdCategoryUseCase.execute(cat_id, org_id);
 
     // Assert
     expect(cat).toBeInstanceOf(Category);
@@ -103,8 +103,15 @@ describe('Get Category by Id UseCase', () => {
 
   it('Should throw an NotFoundException if the category does not exists', async () => {
     // Assert
-    await expect(getByIdCategoryUseCase.execute('cat_id')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      getByIdCategoryUseCase.execute('cat_id', org_id),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('Should throw an ConflicException if the org does not match', async () => {
+    // Assert
+    await expect(
+      getByIdCategoryUseCase.execute(cat_id, 'org_id'),
+    ).rejects.toThrow(ConflictException);
   });
 });

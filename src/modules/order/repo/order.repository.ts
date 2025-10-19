@@ -91,12 +91,14 @@ export class OrderRepository {
       product_id: string;
       quantity: number;
     }[],
+    org_id: string,
   ): Promise<GetProductsOfOrder[]> {
     const products = await this.prismaService.product.findMany({
       where: {
         id: {
           in: products_info.map((p) => p.product_id),
         },
+        org_id,
       },
       include: {
         category: {

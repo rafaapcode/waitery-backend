@@ -284,4 +284,30 @@ describe('Create Order UseCase', () => {
       NotFoundException,
     );
   });
+
+  it('Should throw a BadRequestException if the products is not found for the order', async () => {
+    // Arrange
+    const data: CreateOrderDto = {
+      org_id: org_id2,
+      user_id,
+      table: 'Mesa 15',
+      products: [
+        {
+          price: 30,
+          product_id: products_ids[0],
+          quantity: 2,
+        },
+        {
+          price: 30,
+          product_id: products_ids[1],
+          quantity: 2,
+        },
+      ],
+    };
+
+    // Assert
+    await expect(createOrderUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
 });
