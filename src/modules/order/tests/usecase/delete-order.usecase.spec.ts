@@ -137,17 +137,6 @@ describe('Delete Order UseCase', () => {
     expect(orgRepo).toBeDefined();
   });
 
-  it('Should delete a order', async () => {
-    // Arrange
-    jest.spyOn(orderService, 'deleteOrder');
-
-    // Assert
-    await deleteOrderUseCase.execute(order_id, org_id);
-
-    expect(orderService.deleteOrder).toHaveBeenCalledTimes(1);
-    expect(orderService.deleteOrder).toHaveBeenCalledWith(order_id);
-  });
-
   it('Should throw an error if the org does not exist', async () => {
     // Assert
     await expect(
@@ -160,5 +149,16 @@ describe('Delete Order UseCase', () => {
     await expect(deleteOrderUseCase.execute(order_id, org_id2)).rejects.toThrow(
       ConflictException,
     );
+  });
+
+  it('Should delete a order', async () => {
+    // Arrange
+    jest.spyOn(orderService, 'deleteOrder');
+
+    // Assert
+    await deleteOrderUseCase.execute(order_id, org_id);
+
+    expect(orderService.deleteOrder).toHaveBeenCalledTimes(1);
+    expect(orderService.deleteOrder).toHaveBeenCalledWith(order_id);
   });
 });
