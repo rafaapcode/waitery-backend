@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -27,6 +28,17 @@ export class DeleteCategoryUseCase implements IDeleteCategoryUseCase {
     if (!belongsToOrg) {
       throw new BadRequestException(
         'Category does not belong to this organization',
+      );
+    }
+
+    const hasProducts = await this.catContract.isBeingUsed({
+      cat_id: id,
+      org_id,
+    });
+
+    if (hasProducts) {
+      throw new ConflictException(
+        'Category is being used by products and cannot be deleted',
       );
     }
 

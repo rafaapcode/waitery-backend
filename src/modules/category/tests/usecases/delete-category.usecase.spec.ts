@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -64,6 +68,18 @@ describe('Delete Category UseCase', () => {
       },
     });
 
+    await prismaService.product.create({
+      data: {
+        name: 'name',
+        description: 'description',
+        image_url: 'image_url',
+        ingredients: ['Ingrediente 1'],
+        price: 120,
+        category_id: cat_id_db,
+        org_id: org_id_db,
+      },
+    });
+
     org_id = org_id_db;
     category_id = cat_id_db;
   });
@@ -99,7 +115,18 @@ describe('Delete Category UseCase', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
+  it('Should throw an error if the category is being used by a product', async () => {
+    //Assert
+    await expect(
+      deleteCategoryUseCAse.execute(category_id, org_id),
+    ).rejects.toThrow(ConflictException);
+  });
+
   it('Should delete a category', async () => {
+    await prismaService.product.deleteMany({
+      where: { org_id },
+    });
+
     // Arrange
     const old_cat = await prismaService.category.findUnique({
       where: { id: category_id },

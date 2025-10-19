@@ -66,17 +66,16 @@ export class CategoryRepository {
     return updated_category;
   }
 
-  async verifyCategoryIsRelatedWithOrg({
-    org_id,
-    cat_id,
-  }: ICategoryContract.verifyCategoryIsRelatedWithOrgParams): Promise<Category | null> {
-    const category = await this.prismaService.category.findFirst({
+  async isBeingUsed(
+    data: ICategoryContract.categoryIsBeingUsedParams,
+  ): Promise<boolean> {
+    const productUsingCategory = await this.prismaService.product.findFirst({
       where: {
-        org_id,
-        id: cat_id,
+        org_id: data.org_id,
+        category_id: data.cat_id,
       },
     });
 
-    return category;
+    return productUsingCategory !== null;
   }
 }

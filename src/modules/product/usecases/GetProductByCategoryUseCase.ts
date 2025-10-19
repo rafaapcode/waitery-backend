@@ -49,10 +49,7 @@ export class GetProductByCategoryUseCase
 
     if (!cat_exists) throw new NotFoundException('Category not found');
 
-    const isRelated = await this.catService.verifyCategoryIsRelatedWithOrg({
-      cat_id: category_id,
-      org_id,
-    });
+    const isRelated = cat_exists.org_id === org_id;
 
     if (!isRelated) throw new NotFoundException('Category not found');
 
