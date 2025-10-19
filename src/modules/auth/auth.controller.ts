@@ -20,7 +20,7 @@ export class AuthController {
   async signin(@Body() data: SignInAuthDTO) {
     const { user, access_token } = await this.signInUseCase.execute(data);
     return {
-      user: user.fromEntity(),
+      ...user.fromEntity(),
       access_token,
     };
   }
@@ -29,7 +29,7 @@ export class AuthController {
   async signup(@Body() data: SignUpAuthDTO) {
     const { user, access_token } = await this.signUpUseCase.execute(data);
     return {
-      user: user.fromEntity(),
+      ...user.fromEntity(),
       access_token,
     };
   }
