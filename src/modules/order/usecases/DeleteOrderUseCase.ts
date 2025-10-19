@@ -28,10 +28,13 @@ export class DeleteOrderUseCase implements IDeleteOrderUseCase {
       throw new NotFoundException('Organization not found');
     }
 
-    const orgIsLinkedWithOrder = await this.orderContract.verifyOrderByOrg({
-      order_id,
-      org_id,
-    });
+    const order = await this.orderContract.getOrder(order_id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const orgIsLinkedWithOrder = order.org_id === org_id;
 
     if (!orgIsLinkedWithOrder) {
       throw new ConflictException('Order is not linked with the org');

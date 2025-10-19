@@ -32,10 +32,13 @@ export class UpdateOrderStatusUseCase implements IUpdateOrderStatusUseCase {
 
     if (!order_exits) throw new NotFoundException('Order not found');
 
-    const orgHasOrder = await this.orderContract.verifyOrderByOrg({
-      order_id,
-      org_id,
-    });
+    const order = await this.orderContract.getOrder(order_id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const orgHasOrder = order.org_id === org_id;
 
     if (!orgHasOrder) throw new NotFoundException('Order not found');
 

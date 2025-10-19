@@ -107,16 +107,6 @@ export class OrderService implements IOrderContract {
     );
   }
 
-  async verifyOrderByOrg(
-    params: IOrderContract.VerifyOrgOrderParams,
-  ): Promise<IOrderContract.VerifyOrgOrdersOutput> {
-    const order = await this.orderRepo.verifyOrder(params.order_id, {
-      org_id: params.org_id,
-    });
-
-    return order !== null;
-  }
-
   async verifyOrderByUser(
     params: IOrderContract.VerifyUserOrderParams,
   ): Promise<IOrderContract.VerifyUserOrdersOutput> {
@@ -183,10 +173,3 @@ export class OrderService implements IOrderContract {
     };
   }
 }
-
-// image_url?: string;
-//   name: string;
-//   quantity: number;
-//   price: number;
-//   category: string;
-//   discount: boolean;

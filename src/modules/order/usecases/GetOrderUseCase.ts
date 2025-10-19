@@ -15,10 +15,12 @@ export class GetOrderUseCase implements IGetOrderUseCase {
   ) {}
 
   async execute(order_id: string, org_id: string): Promise<Order> {
-    const orgHasOrder = await this.orderContract.verifyOrderByOrg({
-      order_id,
-      org_id,
-    });
+    const orderExists = await this.orderContract.getOrder(order_id);
+
+    if (!orderExists) {
+      throw new NotFoundException('Order not found');
+    }
+    const orgHasOrder = orderExists.org_id === org_id;
 
     if (!orgHasOrder) {
       throw new NotFoundException('Orders is not from this org');

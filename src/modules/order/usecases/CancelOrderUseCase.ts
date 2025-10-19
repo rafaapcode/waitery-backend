@@ -14,10 +14,12 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
   ) {}
 
   async execute(order_id: string, org_id: string): Promise<void> {
-    const orderIsLinkedWithOrg = await this.orderContract.verifyOrderByOrg({
-      order_id,
-      org_id,
-    });
+    const order = await this.orderContract.getOrder(order_id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    const orderIsLinkedWithOrg = order.org_id === org_id;
 
     if (!orderIsLinkedWithOrg) {
       throw new NotFoundException('Order is not from this org');

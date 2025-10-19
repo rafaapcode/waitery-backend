@@ -337,53 +337,6 @@ describe('Order Service', () => {
     });
   });
 
-  it('Should return true if the order of a org exists', async () => {
-    // Arrange
-    jest.spyOn(orderRepo, 'verifyOrder').mockResolvedValue({
-      org_id: '1231231',
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
-      created_at: new Date(),
-      deleted_at: null,
-      id: '1231321',
-      products: [],
-    });
-
-    // Act
-    const isOrderOfOrg = await orderService.verifyOrderByOrg({
-      order_id: '1231321',
-      org_id: '1231231',
-    });
-
-    // Assert
-    expect(isOrderOfOrg).toBeTruthy();
-    expect(orderRepo.verifyOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.verifyOrder).toHaveBeenCalledWith('1231321', {
-      org_id: '1231231',
-    });
-  });
-
-  it('Should return false if the order of a org does not exists', async () => {
-    // Arrange
-    jest.spyOn(orderRepo, 'verifyOrder').mockResolvedValue(null);
-
-    // Act
-    const isOrderOfOrg = await orderService.verifyOrderByOrg({
-      order_id: '1231321',
-      org_id: '1231231',
-    });
-
-    // Assert
-    expect(isOrderOfOrg).toBeFalsy();
-    expect(orderRepo.verifyOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.verifyOrder).toHaveBeenCalledWith('1231321', {
-      org_id: '1231231',
-    });
-  });
-
   it('Should return true if the order of a user exists', async () => {
     // Arrange
     jest.spyOn(orderRepo, 'verifyOrder').mockResolvedValue({
