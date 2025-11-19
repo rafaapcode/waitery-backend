@@ -5,14 +5,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GetMe } from 'src/common/decorators/GetMe';
+import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
-import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
 import { CreateOrganizationDTO } from './dto/create-organization.dto';
@@ -57,32 +56,26 @@ export class OrganizationController {
 
   // Params
   @Roles(UserRole.OWNER)
-  @Delete(':id')
+  @Delete()
   @HttpCode(HttpStatus.OK)
-  async delete(
-    @Param('id', ParseULIDPipe) org_id: string,
-    @GetMe() me: JwtPayload,
-  ) {
+  async delete(@GetOrgId() org_id: string, @GetMe() me: JwtPayload) {
     await this.deleteOrgUseCase.execute(org_id, me.id);
     return { message: 'Organization deleted with success' };
   }
 
   @Roles(UserRole.OWNER)
-  @Get(':id')
+  @Get()
   @HttpCode(HttpStatus.OK)
-  async get(
-    @Param('id', ParseULIDPipe) org_id: string,
-    @GetMe() me: JwtPayload,
-  ) {
+  async get(@GetOrgId() org_id: string, @GetMe() me: JwtPayload) {
     const org = await this.getOrgUseCase.execute(org_id, me.id);
     return { org: org.fromEntity() };
   }
 
   @Roles(UserRole.OWNER)
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   async update(
-    @Param('id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Body() data: UpdateOrganizationDTO,
     @GetMe() me: JwtPayload,
   ) {

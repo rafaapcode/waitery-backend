@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GetMe } from 'src/common/decorators/GetMe';
+import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -75,7 +76,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async getAll(
     @GetMe() me: JwtPayload,
-    @Query('org_id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Query('page', ParseIntPipe) page: number,
   ) {
     const { has_next, users } = await this.getAllUserUseCase.execute({

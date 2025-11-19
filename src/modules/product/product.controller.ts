@@ -9,6 +9,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { GetMe } from 'src/common/decorators/GetMe';
+import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -40,9 +41,9 @@ export class ProductController {
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Put(':org_id/:product_id')
+  @Put(':product_id')
   async update(
-    @Param('org_id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Param('product_id', ParseULIDPipe) product_id: string,
     @Body() data: UpdateProductDto,
   ) {
@@ -51,10 +52,10 @@ export class ProductController {
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Delete(':org_id/:product_id')
+  @Delete(':product_id')
   async delete(
     @GetMe() me: JwtPayload,
-    @Param('org_id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Param('product_id', ParseULIDPipe) product_id: string,
   ) {
     await this.deleteProductUseCase.execute(
@@ -66,17 +67,14 @@ export class ProductController {
     return { message: 'Product deleted successfully' };
   }
 
-  @Get('all/:org_id/:page')
-  all(
-    @Param('org_id', ParseULIDPipe) org_id: string,
-    @Param('page', ParseIntPipe) page?: number,
-  ) {
+  @Get('all/:page')
+  all(@GetOrgId() org_id: string, @Param('page', ParseIntPipe) page?: number) {
     return this.getAllProductsProductUseCase.execute(org_id, page);
   }
 
-  @Get(':org_id/category/:category_id/:page')
+  @Get('category/:category_id/:page')
   getByCategory(
-    @Param('org_id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Param('category_id', ParseULIDPipe) category_id: string,
     @Param('page', ParseIntPipe) page?: number,
   ) {
@@ -87,9 +85,9 @@ export class ProductController {
     );
   }
 
-  @Get(':org_id/:product_id')
+  @Get(':product_id')
   getProduct(
-    @Param('org_id', ParseULIDPipe) org_id: string,
+    @GetOrgId() org_id: string,
     @Param('product_id', ParseULIDPipe) product_id: string,
   ) {
     return this.GetProductProductUseCase.execute(org_id, product_id);
