@@ -19,7 +19,7 @@ import {
 import { CreateProductDto } from '../dto/create-product.dto';
 
 interface ICreateProductUseCase {
-  execute(product: CreateProductDto): Promise<Product>;
+  execute(product: CreateProductDto, org_id: string): Promise<Product>;
 }
 
 @Injectable()
@@ -35,9 +35,9 @@ export class CreateProductUseCase implements ICreateProductUseCase {
     private readonly orgService: IOrganizationContract,
   ) {}
 
-  async execute(data: CreateProductDto): Promise<Product> {
+  async execute(data: CreateProductDto, org_id: string): Promise<Product> {
     const org = await this.orgService.get({
-      id: data.org_id,
+      id: org_id,
     });
 
     if (!org) {
@@ -46,7 +46,7 @@ export class CreateProductUseCase implements ICreateProductUseCase {
 
     const productAlreadyExists = await this.prodService.getProductByName({
       name: data.name,
-      org_id: data.org_id,
+      org_id,
     });
 
     if (productAlreadyExists) {
@@ -71,13 +71,15 @@ export class CreateProductUseCase implements ICreateProductUseCase {
       throw new BadRequestException('Ingredients not found or invalid');
     }
 
+    // fazer o upload da imagem se tiver imagem
+
     const productEntity = createProductEntity({
       category: category,
       description: data.description,
-      image_url: data.image_url,
+      image_url: '',
       ingredients: ingredients.map((ing) => ing.formatToString()),
       name: data.name,
-      org_id: data.org_id,
+      org_id,
       price: data.price,
     });
 

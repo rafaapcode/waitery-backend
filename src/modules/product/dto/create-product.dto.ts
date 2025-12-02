@@ -5,23 +5,14 @@ import {
   IsNumber,
   IsPositive,
   IsString,
-  IsUrl,
   Validate,
 } from 'class-validator';
 import { CustomULIDValidation } from 'src/modules/order/dto/create-order.dto';
 
 export class CreateProductDto {
-  @Validate(CustomULIDValidation)
-  org_id: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsUrl({ protocols: ['https'] })
-  image_url: string;
 
   @IsString()
   @IsNotEmpty()

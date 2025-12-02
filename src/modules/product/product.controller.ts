@@ -36,8 +36,8 @@ export class ProductController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post()
-  create(@Body() data: CreateProductDto) {
-    return this.createProductUseCase.execute(data);
+  create(@Body() data: CreateProductDto, @GetOrgId() org_id: string) {
+    return this.createProductUseCase.execute(data, org_id);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

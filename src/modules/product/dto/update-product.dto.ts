@@ -5,18 +5,12 @@ import {
   IsOptional,
   IsPositive,
   IsString,
-  IsUrl,
 } from 'class-validator';
 
 export class UpdateProductDto {
   @IsString()
   @IsOptional()
   name?: string;
-
-  @IsString()
-  @IsOptional()
-  @IsUrl({ protocols: ['https'] })
-  image_url?: string;
 
   @IsString()
   @IsOptional()
