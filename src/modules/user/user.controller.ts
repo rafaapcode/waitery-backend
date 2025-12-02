@@ -86,7 +86,7 @@ export class UserController {
     });
 
     return {
-      users: users.map((u) => u.fromEntity()),
+      users: users.filter((u) => u.id !== me.id).map((u) => u.fromEntity()),
       has_next,
     };
   }
