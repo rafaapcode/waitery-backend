@@ -40,7 +40,7 @@ model UserOrg {
   org    Organization @relation(fields: [org_id], references: [id])
   org_id String
 
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id String
 
   @@id([org_id, user_id])
