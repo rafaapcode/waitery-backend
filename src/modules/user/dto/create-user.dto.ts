@@ -4,10 +4,8 @@ import {
   IsNotEmpty,
   IsString,
   MinLength,
-  Validate,
 } from 'class-validator';
 import { UserRole } from 'src/core/domain/entities/user';
-import { CustomULIDValidation } from 'src/modules/order/dto/create-order.dto';
 
 export class CreateUserDTO {
   @IsString()
@@ -33,7 +31,4 @@ export class CreateUserDTO {
   @IsNotEmpty()
   @MinLength(11, { message: '"cpf" must be at least 11 characters' })
   cpf: string;
-
-  @Validate(CustomULIDValidation)
-  org_id: string;
 }
