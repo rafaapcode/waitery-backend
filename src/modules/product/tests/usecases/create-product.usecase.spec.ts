@@ -176,15 +176,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: cat_id,
       description: 'description',
-      image_url: 'image_url',
       name: 'name',
       ingredients: ing_ids,
-      org_id,
       price: 120,
     };
 
     // Act
-    const product = await createProductUseCase.execute(data);
+    const product = await createProductUseCase.execute(data, org_id);
 
     // Assert
     expect(product).toBeInstanceOf(Product);
@@ -197,15 +195,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: 'cat_id',
       description: 'description',
-      image_url: 'image_url',
       name: 'name2',
       ingredients: ing_ids,
-      org_id,
       price: 120,
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
       BadRequestException,
     );
   });
@@ -215,15 +211,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: 'cat_id',
       description: 'description',
-      image_url: 'image_url',
       name: 'name2',
       ingredients: [],
-      org_id,
       price: 120,
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
       BadRequestException,
     );
   });
@@ -233,15 +227,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: 'cat_id',
       description: 'description',
-      image_url: 'image_url',
       name: 'name2',
       ingredients: [...ing_ids, 'ing_id'],
-      org_id,
       price: 120,
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
       BadRequestException,
     );
   });
@@ -251,15 +243,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: cat_id,
       description: 'description',
-      image_url: 'image_url',
       name: 'name2',
       ingredients: ing_ids,
-      org_id: 'org_id',
       price: 120,
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+    await expect(createProductUseCase.execute(data, 'org_id')).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -269,15 +259,13 @@ describe('Create Product Usecase', () => {
     const data: CreateProductDto = {
       category_id: cat_id,
       description: 'description',
-      image_url: 'image_url',
       name: 'name',
       ingredients: ing_ids,
-      org_id,
       price: 120,
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data)).rejects.toThrow(
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
       ConflictException,
     );
   });
