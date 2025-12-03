@@ -6,6 +6,7 @@ import {
   createOrderEntity,
   Order,
   OrderStatus,
+  ProductsOrder,
 } from 'src/core/domain/entities/order';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { OrderRepository } from './repo/order.repository';
@@ -84,7 +85,7 @@ export class OrderService implements IOrderContract {
         createOrderEntity({
           ...order,
           status: order.status as OrderStatus,
-          products: [],
+          products: order.products as ProductsOrder[],
           deleted_at: order.deleted_at ?? undefined,
         }),
       ),
@@ -101,7 +102,7 @@ export class OrderService implements IOrderContract {
       createOrderEntity({
         ...order,
         status: order.status as OrderStatus,
-        products: [],
+        products: order.products as ProductsOrder[],
         deleted_at: order.deleted_at ?? undefined,
       }),
     );
