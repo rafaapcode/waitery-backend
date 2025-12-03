@@ -9,7 +9,7 @@ export class Product {
   readonly description: string;
   readonly image_url: string;
   readonly price: number;
-  readonly ingredients: string[];
+  readonly ingredients: { value: string; label: string }[];
   readonly category: Category;
   readonly discounted_price: number;
   readonly discount: boolean;
@@ -27,14 +27,16 @@ export class Product {
     this.discount = data.discount ?? false;
   }
 
-  static toCategoryIngredients(data: Prisma.JsonArray): string[] {
+  static toCategoryIngredients(
+    data: Prisma.JsonArray,
+  ): { value: string; label: string }[] {
     if (
       data &&
       typeof data === 'object' &&
       Array.isArray(data) &&
       data.length > 0
     ) {
-      return data as string[];
+      return data as { value: string; label: string }[];
     }
 
     return [];
@@ -64,7 +66,7 @@ namespace Product {
     description: string;
     image_url: string;
     price: number;
-    ingredients: string[];
+    ingredients: { value: string; label: string }[];
     category: Category;
     discounted_price?: number;
     discount?: boolean;

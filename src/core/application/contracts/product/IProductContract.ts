@@ -53,7 +53,7 @@ export namespace IProductContract {
       price?: number;
       discounted_price?: number;
       discount?: boolean;
-      ingredients?: string[];
+      ingredients?: { value: string; label: string }[];
     };
   };
 

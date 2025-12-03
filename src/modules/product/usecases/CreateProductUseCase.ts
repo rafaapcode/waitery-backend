@@ -77,7 +77,10 @@ export class CreateProductUseCase implements ICreateProductUseCase {
       category: category,
       description: data.description,
       image_url: '',
-      ingredients: ingredients.map((ing) => ing.formatToString()),
+      ingredients: ingredients.map((ing) => ({
+        value: ing.id || '',
+        label: ing.formatToString(),
+      })),
       name: data.name,
       org_id,
       price: data.price,
