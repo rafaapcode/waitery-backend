@@ -14,6 +14,7 @@ import { IngredientModule } from './modules/ingredient/ingredient.module';
 import { CategoryModule } from './modules/category/category.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
+import { WsModule } from './modules/ws/ws.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ProductModule } from './modules/product/product.module';
     CategoryModule,
     OrderModule,
     ProductModule,
+    WsModule,
   ],
   controllers: [AppController],
   providers: [

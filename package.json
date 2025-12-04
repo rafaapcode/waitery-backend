@@ -26,6 +26,8 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.9",
+    "@nestjs/websockets": "^11.1.9",
     "@prisma/client": "^6.15.0",
     "@sentry/cli": "^2.56.0",
     "@sentry/nestjs": "^10.16.0",

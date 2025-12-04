@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
@@ -9,11 +11,15 @@ import {
   ProductsOrder,
 } from 'src/core/domain/entities/order';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
+import WsGateway from '../ws/ws.gateway';
 import { OrderRepository } from './repo/order.repository';
 
 @Injectable()
 export class OrderService implements IOrderContract {
-  constructor(private readonly orderRepo: OrderRepository) {}
+  constructor(
+    private readonly orderRepo: OrderRepository,
+    private readonly wsGateway: WsGateway,
+  ) {}
 
   async restartsTheOrdersOfDay(org_id: string): Promise<void> {
     await this.orderRepo.restartsTheOrdersOfDay(org_id);
@@ -36,7 +42,7 @@ export class OrderService implements IOrderContract {
   ): Promise<IOrderContract.CreateOutput> {
     const order = await this.orderRepo.create(data);
 
-    return createOrderEntity({
+    const orderersponse = createOrderEntity({
       ...order,
       products: Order.productsFromPrismaJson(
         order.products as Prisma.JsonArray,
@@ -44,6 +50,13 @@ export class OrderService implements IOrderContract {
       status: order.status as OrderStatus,
       deleted_at: order.deleted_at ?? undefined,
     });
+
+    this.wsGateway.server.emit(`order-org-${orderersponse.org_id}`, {
+      action: 'new_order',
+      order: orderersponse,
+    });
+
+    return orderersponse;
   }
 
   async updateOrderStatus(
