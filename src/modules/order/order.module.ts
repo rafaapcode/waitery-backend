@@ -13,6 +13,7 @@ import { GetAllOrdersOfOrgUseCase } from './usecases/GetAllOrdersUseCase';
 import { GetMyOrderUseCase } from './usecases/GetMyOrdersUseCase';
 import { GetOrdersOfUserUseCase } from './usecases/GetOrdersOfUserUseCase';
 import { GetOrderUseCase } from './usecases/GetOrderUseCase';
+import { RestartOrdersOfDayUseCase } from './usecases/RestartOrdersOfDay';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
 @Module({
@@ -29,6 +30,7 @@ import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
     UpdateOrderStatusUseCase,
     GetMyOrderUseCase,
     GetOrdersOfUserUseCase,
+    RestartOrdersOfDayUseCase,
     {
       provide: IORDER_CONTRACT,
       useClass: OrderService,

@@ -28,6 +28,7 @@ import { GetAllOrdersOfOrgUseCase } from './usecases/GetAllOrdersUseCase';
 import { GetMyOrderUseCase } from './usecases/GetMyOrdersUseCase';
 import { GetOrdersOfUserUseCase } from './usecases/GetOrdersOfUserUseCase';
 import { GetOrderUseCase } from './usecases/GetOrderUseCase';
+import { RestartOrdersOfDayUseCase } from './usecases/RestartOrdersOfDay';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
 @Controller('order')
@@ -42,11 +43,19 @@ export class OrderController {
     private readonly getOrdersOfUserUseCase: GetOrdersOfUserUseCase,
     private readonly getOrderUseCase: GetOrderUseCase,
     private readonly updateOrderStatusUseCase: UpdateOrderStatusUseCase,
+    private readonly restartOrdersOfDayUseCase: RestartOrdersOfDayUseCase,
   ) {}
 
   @Post()
   create(@Body() data: CreateOrderDto) {
     return this.createOrderUseCase.execute(data);
+  }
+
+  @Patch('restart')
+  @HttpCode(HttpStatus.OK)
+  async restartDay(@GetOrgId() org_id: string) {
+    await this.restartOrdersOfDayUseCase.execute(org_id);
+    return { message: 'Day restarted with success!' };
   }
 
   @Patch('cancel/:order_id')

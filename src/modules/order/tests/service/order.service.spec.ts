@@ -29,6 +29,7 @@ describe('Order Service', () => {
             linkOrderToProduct: jest.fn(),
             updateOrder: jest.fn(),
             verifyOrder: jest.fn(),
+            restartsTheOrdersOfDay: jest.fn(),
           },
         },
       ],
@@ -382,5 +383,17 @@ describe('Order Service', () => {
     expect(orderRepo.verifyOrder).toHaveBeenCalledWith('1231321', {
       user_id: '1231231',
     });
+  });
+
+  it('Should restart the orders of the day', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'restartsTheOrdersOfDay').mockResolvedValue();
+
+    // Act
+    await orderService.restartsTheOrdersOfDay('org_123123');
+
+    // Assert
+    expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledTimes(1);
+    expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledWith('org_123123');
   });
 });

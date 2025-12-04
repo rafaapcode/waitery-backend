@@ -32,6 +32,7 @@ export interface IOrderContract {
   getOrderOfUser: (
     user_id: IOrderContract.GetOrdersOfUserParams,
   ) => Promise<IOrderContract.GetOrdersOfUserOutput>;
+  restartsTheOrdersOfDay: (org_id: string) => Promise<void>;
 }
 
 export namespace IOrderContract {

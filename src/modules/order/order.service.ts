@@ -15,6 +15,10 @@ import { OrderRepository } from './repo/order.repository';
 export class OrderService implements IOrderContract {
   constructor(private readonly orderRepo: OrderRepository) {}
 
+  async restartsTheOrdersOfDay(org_id: string): Promise<void> {
+    await this.orderRepo.restartsTheOrdersOfDay(org_id);
+  }
+
   async cancelOrder(
     order_id: IOrderContract.DeleteParams,
   ): Promise<IOrderContract.DeleteOutput> {

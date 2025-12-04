@@ -142,16 +142,11 @@ export class OrderRepository {
     org_id,
     orders_canceled,
   }: IOrderContract.GetAllOrdersOfTodayOfOrgParams): Promise<Order[]> {
-    const date = new Date();
-    const todayDay = date.getDate();
-    const actualMonth = date.getMonth();
-    const actualYear = date.getFullYear();
-
     const orders = await this.prismaService.order.findMany({
       where: {
         org_id,
         created_at: {
-          gt: new Date(actualYear, actualMonth, todayDay, 0, 0),
+          gt: this.getTodayDate(),
         },
         ...(!orders_canceled && { deleted_at: null }),
       },
@@ -175,5 +170,30 @@ export class OrderRepository {
       },
     });
     return order;
+  }
+
+  async restartsTheOrdersOfDay(org: string): Promise<void> {
+    await this.prismaService.order.updateMany({
+      where: {
+        created_at: {
+          gt: this.getTodayDate(),
+        },
+        org_id: org,
+        deleted_at: null,
+      },
+      data: {
+        deleted_at: new Date(),
+        status: OrderStatus.CANCELED,
+      },
+    });
+  }
+
+  private getTodayDate(): Date {
+    const date = new Date();
+    const todayDay = date.getDate();
+    const actualMonth = date.getMonth();
+    const actualYear = date.getFullYear();
+
+    return new Date(actualYear, actualMonth, todayDay, 0, 0);
   }
 }
