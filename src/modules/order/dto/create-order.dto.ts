@@ -32,9 +32,6 @@ class OrdersDto {
 
   @IsNumber()
   quantity: number;
-
-  @IsNumber()
-  price: number;
 }
 
 export class CreateOrderDto {

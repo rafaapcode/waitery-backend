@@ -34,14 +34,11 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       throw new BadRequestException('Products are required');
     }
 
-    const { quantity, total_price } = Order.totalQuantityAndPrice(
-      data.products,
-    );
-
     const products_info = data.products.map((p) => ({
       product_id: p.product_id,
       quantity: p.quantity,
     }));
+
     const products = await this.orderContract.getProductsOfOrder(
       products_info,
       data.org_id,
@@ -50,6 +47,13 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
     if (products.length === 0) {
       throw new BadRequestException('No valid products found for the order');
     }
+
+    const { quantity, total_price } = Order.totalQuantityAndPrice(
+      products.map((product) => ({
+        quantity: product.quantity,
+        price: product.price,
+      })),
+    );
 
     const order = createOrderEntity({
       org_id: data.org_id,
