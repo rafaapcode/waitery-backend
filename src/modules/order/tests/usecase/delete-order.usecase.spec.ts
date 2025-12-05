@@ -2,13 +2,17 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
+import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
-import WsGateway from 'src/modules/ws/ws.gateway';
-import { IORDER_CONTRACT, IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import {
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  IORGANIZATION_CONTRACT,
+} from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 import { DeleteOrderUseCase } from '../../usecases/DeleteOrderUseCase';
@@ -24,7 +28,7 @@ describe('Delete Order UseCase', () => {
   let org_id: string;
   let org_id2: string;
   let user_id: string;
-  let wsGateway: WsGateway;
+  let wsGateway: IOrderWSContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,11 +46,9 @@ describe('Delete Order UseCase', () => {
           useClass: OrganizationService,
         },
         {
-          provide: WsGateway,
+          provide: IORDER_WS_CONTRACT,
           useValue: {
-            server: {
-              emit: jest.fn(),
-            },
+            emitCreateOrder: jest.fn(),
           },
         },
       ],
@@ -58,7 +60,7 @@ describe('Delete Order UseCase', () => {
     orderRepo = module.get<OrderRepository>(OrderRepository);
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
-    wsGateway = module.get<WsGateway>(WsGateway);
+    wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
 
     const user = await prismaService.user.create({
       data: {

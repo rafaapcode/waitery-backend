@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
   createOrderEntity,
@@ -6,14 +7,14 @@ import {
   OrderStatus,
 } from 'src/core/domain/entities/order';
 import { createProductEntity } from 'src/core/domain/entities/product';
-import WsGateway from 'src/modules/ws/ws.gateway';
+import { IORDER_WS_CONTRACT } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 
 describe('Order Service', () => {
   let orderService: OrderService;
   let orderRepo: OrderRepository;
-  let wsGateway: WsGateway;
+  let wsGateway: IOrderWSContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -35,11 +36,9 @@ describe('Order Service', () => {
           },
         },
         {
-          provide: WsGateway,
+          provide: IORDER_WS_CONTRACT,
           useValue: {
-            server: {
-              emit: jest.fn(),
-            },
+            emitCreateOrder: jest.fn(),
           },
         },
       ],
@@ -47,7 +46,7 @@ describe('Order Service', () => {
 
     orderService = module.get<OrderService>(OrderService);
     orderRepo = module.get<OrderRepository>(OrderRepository);
-    wsGateway = module.get<WsGateway>(WsGateway);
+    wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
   });
 
   beforeEach(() => jest.clearAllMocks());
@@ -87,7 +86,14 @@ describe('Order Service', () => {
 
     // Assert
     expect(order).toBeInstanceOf(Order);
-    expect(wsGateway.server.emit).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledWith({
+      event: 'order-org-1231231',
+      data: {
+        action: 'new_order',
+        order: order,
+      },
+    });
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
   });
@@ -141,7 +147,14 @@ describe('Order Service', () => {
 
     // Assert
     expect(order).toBeInstanceOf(Order);
-    expect(wsGateway.server.emit).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledWith({
+      event: 'order-org-1231231',
+      data: {
+        action: 'new_order',
+        order: order,
+      },
+    });
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
   });

@@ -2,14 +2,18 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
+import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { Order, OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
-import WsGateway from 'src/modules/ws/ws.gateway';
-import { IORDER_CONTRACT, IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import {
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  IORGANIZATION_CONTRACT,
+} from 'src/shared/constants';
 import { CreateOrderDto } from '../../dto/create-order.dto';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
@@ -29,7 +33,7 @@ describe('Create Order UseCase', () => {
   let cat_id: string;
   let cat_id2: string;
   let products_ids: string[];
-  let wsGateway: WsGateway;
+  let wsGateway: IOrderWSContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -47,11 +51,9 @@ describe('Create Order UseCase', () => {
           useClass: OrganizationService,
         },
         {
-          provide: WsGateway,
+          provide: IORDER_WS_CONTRACT,
           useValue: {
-            server: {
-              emit: jest.fn(),
-            },
+            emitCreateOrder: jest.fn(),
           },
         },
       ],
@@ -63,7 +65,7 @@ describe('Create Order UseCase', () => {
     orderRepo = module.get<OrderRepository>(OrderRepository);
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
-    wsGateway = module.get<WsGateway>(WsGateway);
+    wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
 
     const user = await prismaService.user.create({
       data: {
@@ -244,7 +246,14 @@ describe('Create Order UseCase', () => {
 
     // Assert
     expect(order).toBeInstanceOf(Order);
-    expect(wsGateway.server.emit).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledTimes(1);
+    expect(wsGateway.emitCreateOrder).toHaveBeenCalledWith({
+      event: `order-org-${org_id}`,
+      data: {
+        action: 'new_order',
+        order: order,
+      },
+    });
     expect(order.id).toBeDefined();
     expect(order.created_at).toBeDefined();
     expect(order.status).toBe(OrderStatus.WAITING);

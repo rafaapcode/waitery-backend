@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
-import { IORDER_CONTRACT } from 'src/shared/constants';
+import { IORDER_CONTRACT, IORDER_WS_CONTRACT } from 'src/shared/constants';
 import { OrganizationModule } from '../organization/organization.module';
+import WsGateway from '../ws/ws.gateway';
 import { WsModule } from '../ws/ws.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
@@ -35,6 +36,10 @@ import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
     {
       provide: IORDER_CONTRACT,
       useClass: OrderService,
+    },
+    {
+      provide: IORDER_WS_CONTRACT,
+      useClass: WsGateway,
     },
   ],
 })

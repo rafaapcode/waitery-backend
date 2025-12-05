@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
+import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
   createOrderEntity,
@@ -9,14 +10,15 @@ import {
   ProductsOrder,
 } from 'src/core/domain/entities/order';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
-import WsGateway from '../ws/ws.gateway';
+import { IORDER_WS_CONTRACT } from 'src/shared/constants';
 import { OrderRepository } from './repo/order.repository';
 
 @Injectable()
 export class OrderService implements IOrderContract {
   constructor(
     private readonly orderRepo: OrderRepository,
-    private readonly wsGateway: WsGateway,
+    @Inject(IORDER_WS_CONTRACT)
+    private readonly wsGateway: IOrderWSContract,
   ) {}
 
   async restartsTheOrdersOfDay(org_id: string): Promise<void> {
@@ -49,9 +51,12 @@ export class OrderService implements IOrderContract {
       deleted_at: order.deleted_at ?? undefined,
     });
 
-    this.wsGateway.server.emit(`order-org-${orderersponse.org_id}`, {
-      action: 'new_order',
-      order: orderersponse,
+    this.wsGateway.emitCreateOrder({
+      event: `order-org-${orderersponse.org_id}`,
+      data: {
+        action: 'new_order',
+        order: orderersponse,
+      },
     });
 
     return orderersponse;
