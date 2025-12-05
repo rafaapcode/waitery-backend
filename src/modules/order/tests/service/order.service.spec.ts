@@ -6,12 +6,14 @@ import {
   OrderStatus,
 } from 'src/core/domain/entities/order';
 import { createProductEntity } from 'src/core/domain/entities/product';
+import WsGateway from 'src/modules/ws/ws.gateway';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 
 describe('Order Service', () => {
   let orderService: OrderService;
   let orderRepo: OrderRepository;
+  let wsGateway: WsGateway;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -32,11 +34,20 @@ describe('Order Service', () => {
             restartsTheOrdersOfDay: jest.fn(),
           },
         },
+        {
+          provide: WsGateway,
+          useValue: {
+            server: {
+              emit: jest.fn(),
+            },
+          },
+        },
       ],
     }).compile();
 
     orderService = module.get<OrderService>(OrderService);
     orderRepo = module.get<OrderRepository>(OrderRepository);
+    wsGateway = module.get<WsGateway>(WsGateway);
   });
 
   beforeEach(() => jest.clearAllMocks());
@@ -44,6 +55,7 @@ describe('Order Service', () => {
   it('Should all services be defined', () => {
     expect(orderService).toBeDefined();
     expect(orderRepo).toBeDefined();
+    expect(wsGateway).toBeDefined();
   });
 
   it('Should create a new order', async () => {
@@ -75,6 +87,7 @@ describe('Order Service', () => {
 
     // Assert
     expect(order).toBeInstanceOf(Order);
+    expect(wsGateway.server.emit).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
   });
@@ -128,6 +141,7 @@ describe('Order Service', () => {
 
     // Assert
     expect(order).toBeInstanceOf(Order);
+    expect(wsGateway.server.emit).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledTimes(1);
     expect(orderRepo.create).toHaveBeenCalledWith(data);
   });

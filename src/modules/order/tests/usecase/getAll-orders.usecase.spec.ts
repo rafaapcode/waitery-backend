@@ -8,6 +8,7 @@ import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
+import WsGateway from 'src/modules/ws/ws.gateway';
 import { IORDER_CONTRACT, IORGANIZATION_CONTRACT } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
@@ -22,6 +23,7 @@ describe('Get All Orders UseCase', () => {
   let prismaService: PrismaService;
   let org_id: string;
   let user_id: string;
+  let wsGateway: WsGateway;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +40,14 @@ describe('Get All Orders UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: WsGateway,
+          useValue: {
+            server: {
+              emit: jest.fn(),
+            },
+          },
+        },
       ],
     }).compile();
 
@@ -49,6 +59,7 @@ describe('Get All Orders UseCase', () => {
     orderRepo = module.get<OrderRepository>(OrderRepository);
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
+    wsGateway = module.get<WsGateway>(WsGateway);
 
     const user = await prismaService.user.create({
       data: {
@@ -111,6 +122,7 @@ describe('Get All Orders UseCase', () => {
     expect(user_id).toBeDefined();
     expect(orgService).toBeDefined();
     expect(orgRepo).toBeDefined();
+    expect(wsGateway).toBeDefined();
   });
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {
