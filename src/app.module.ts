@@ -5,16 +5,17 @@ import { SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { ExceptionFilterWithSentry } from './common/filters/exception.filter';
 import { AuthGuard } from './common/guards/auth-guard.guard';
-import { HashService } from './hash.service';
 import { AuthModule } from './modules/auth/auth.module';
-import { OrganizationModule } from './modules/organization/organization.module';
-import { UserModule } from './modules/user/user.module';
-import { env } from './shared/config/env';
-import { IngredientModule } from './modules/ingredient/ingredient.module';
 import { CategoryModule } from './modules/category/category.module';
+import { IngredientModule } from './modules/ingredient/ingredient.module';
 import { OrderModule } from './modules/order/order.module';
+import { OrganizationModule } from './modules/organization/organization.module';
 import { ProductModule } from './modules/product/product.module';
+import { UserModule } from './modules/user/user.module';
 import { WsModule } from './modules/ws/ws.module';
+import { env } from './shared/config/env';
+import { IUTILS_SERVICE } from './shared/constants';
+import { UtilsService } from './utils.service';
 
 @Module({
   imports: [
@@ -43,8 +44,8 @@ import { WsModule } from './modules/ws/ws.module';
       provide: APP_FILTER,
       useClass: ExceptionFilterWithSentry,
     },
-    HashService,
+    { provide: IUTILS_SERVICE, useClass: UtilsService },
   ],
-  exports: [HashService],
+  exports: [{ provide: IUTILS_SERVICE, useClass: UtilsService }],
 })
 export class AppModule {}

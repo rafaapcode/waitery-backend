@@ -1,11 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationRepo } from './repo/organization.repo';
 
 @Injectable()
 export class OrganizationService implements IOrganizationContract {
-  constructor(private readonly orgRepo: OrganizationRepo) {}
+  constructor(
+    private readonly orgRepo: OrganizationRepo,
+    @Inject(IUTILS_SERVICE)
+    private readonly utilsService: IUtilsContract,
+  ) {}
+
+  verifyCep(
+    params: IOrganizationContract.VerifyCepParams,
+  ): Promise<IOrganizationContract.VerifyCepOutput> {
+    return this.utilsService.verifyCepService(params);
+  }
 
   async create(
     params: IOrganizationContract.CreateParams,

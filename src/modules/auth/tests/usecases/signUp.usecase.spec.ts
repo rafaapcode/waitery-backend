@@ -3,9 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
 import { User } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IAUTH_CONTRACT } from 'src/shared/constants';
+import { HashService } from 'src/utils.service';
 import { AuthService } from '../../auth.service';
 import { SignUpUseCase } from '../../usecases/SignUpUseCase';
 

@@ -39,5 +39,3 @@ describe('UpdateOrganizationDTO', () => {
     expect(ok.length).toBe(0);
   });
 });
-
-

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { HashService } from 'src/hash.service';
 import {
-  COMPARE_HASH,
   IORGANIZATION_CONTRACT,
   IUSER_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { UtilsService } from 'src/utils.service';
 import { OrganizationService } from '../organization/organization.service';
 import { OrganizationRepo } from '../organization/repo/organization.repo';
 import { DatabaseModule } from './../../infra/database/database.module';
@@ -35,7 +35,6 @@ import { UserService } from './user.service';
     UpdateMeUseCase,
     GetAllUserUseCase,
     GetOrgsOfUserUseCase,
-    HashService,
     {
       provide: IUSER_CONTRACT,
       useClass: UserService,
@@ -45,9 +44,8 @@ import { UserService } from './user.service';
       useClass: OrganizationService,
     },
     {
-      provide: COMPARE_HASH,
-      useFactory: (hashService: HashService) => hashService.validateHash,
-      inject: [HashService],
+      provide: IUTILS_SERVICE,
+      useClass: UtilsService,
     },
   ],
   exports: [UserService, UserRepo],

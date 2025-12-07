@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
-import { HashService } from 'src/hash.service';
 import { DatabaseModule } from 'src/infra/database/database.module';
-import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
+import { UtilsService } from 'src/utils.service';
 import { UserRepo } from '../user/repo/user.repository';
 import { UserService } from '../user/user.service';
 import { OrganizationController } from './organization.controller';
@@ -24,7 +28,6 @@ import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase'
     UpdateOrganizationUseCase,
     GetAllOrganizationUseCase,
     UserRepo,
-    HashService,
     {
       provide: IORGANIZATION_CONTRACT,
       useClass: OrganizationService,
@@ -32,6 +35,10 @@ import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase'
     {
       provide: IUSER_CONTRACT,
       useClass: UserService,
+    },
+    {
+      provide: IUTILS_SERVICE,
+      useClass: UtilsService,
     },
   ],
   exports: [

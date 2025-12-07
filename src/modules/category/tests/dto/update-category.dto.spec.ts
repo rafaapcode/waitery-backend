@@ -27,5 +27,3 @@ describe('UpdateCategoryDto', () => {
     expect(errors.length).toBe(0);
   });
 });
-
-

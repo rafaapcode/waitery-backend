@@ -5,7 +5,9 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { UtilsService } from 'src/utils.service';
 import { CategoryService } from '../category/category.service';
 import { CategoryRepository } from '../category/repo/category.repository';
 import { IngredientService } from '../ingredient/ingredient.service';
@@ -51,6 +53,10 @@ import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
     {
       provide: IORGANIZATION_CONTRACT,
       useClass: OrganizationService,
+    },
+    {
+      provide: IUTILS_SERVICE,
+      useClass: UtilsService,
     },
   ],
 })

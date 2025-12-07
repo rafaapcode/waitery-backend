@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
-import { COMPARE_HASH, IUSER_CONTRACT } from 'src/shared/constants';
+import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { UpdateMeUseCase } from '../../usecases/UpdateMeUseCase';
 import { UserService } from '../../user.service';
@@ -18,7 +18,7 @@ describe('Update the current user UseCase', () => {
   let userService: IUserContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   let user_id: string;
 
   beforeAll(async () => {
@@ -32,16 +32,11 @@ describe('Update the current user UseCase', () => {
           useClass: UserService,
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
             validateHash: jest.fn(),
           },
-        },
-        {
-          provide: COMPARE_HASH,
-          useFactory: (hash: HashService) => hash.validateHash,
-          inject: [HashService],
         },
       ],
     }).compile();
@@ -50,7 +45,7 @@ describe('Update the current user UseCase', () => {
     userRepo = module.get<UserRepo>(UserRepo);
     prismaService = module.get<PrismaService>(PrismaService);
     updateMeUseCase = module.get<UpdateMeUseCase>(UpdateMeUseCase);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -79,7 +74,7 @@ describe('Update the current user UseCase', () => {
     expect(userService).toBeDefined();
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
   });
 
@@ -180,8 +175,8 @@ describe('Update the current user UseCase', () => {
         password: 'qweasdzxc2003',
       },
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_pasword');
-    jest.spyOn(hashService, 'validateHash').mockResolvedValue(true);
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_pasword');
+    jest.spyOn(utilsService, 'validateHash').mockResolvedValue(true);
 
     // Act
     const updatedUser = await updateMeUseCase.execute(data);

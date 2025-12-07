@@ -26,10 +26,7 @@ describe('CreateCategoryDto', () => {
   });
 
   it('should require icon as non-empty string', async () => {
-    const cases = [
-      { icon: undefined as unknown as string },
-      { icon: '' },
-    ];
+    const cases = [{ icon: undefined as unknown as string }, { icon: '' }];
     for (const c of cases) {
       const dto = new CreateCategoryDto();
       dto.name = 'Food';
@@ -39,5 +36,3 @@ describe('CreateCategoryDto', () => {
     }
   });
 });
-
-

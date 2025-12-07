@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT } from 'src/shared/constants';
+import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { GetOrgsOfUserUseCase } from '../../usecases/GetOrgsOfUserUseCase';
 import { UserService } from '../../user.service';
@@ -14,7 +14,7 @@ describe('Get Orgs Of Users UseCase', () => {
   let userService: IUserContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   let user_id: string;
 
   beforeAll(async () => {
@@ -28,7 +28,7 @@ describe('Get Orgs Of Users UseCase', () => {
           useClass: UserService,
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
             validateHash: jest.fn(),
@@ -42,7 +42,7 @@ describe('Get Orgs Of Users UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     getOrgsOfUserUsecase =
       module.get<GetOrgsOfUserUseCase>(GetOrgsOfUserUseCase);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -97,7 +97,7 @@ describe('Get Orgs Of Users UseCase', () => {
     expect(userService).toBeDefined();
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
   });
 

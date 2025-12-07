@@ -27,5 +27,3 @@ describe('UpdateIngredientDto', () => {
     expect(errors.length).toBe(0);
   });
 });
-
-

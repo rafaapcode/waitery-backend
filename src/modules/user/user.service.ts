@@ -1,15 +1,17 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { UserRepo } from './repo/user.repository';
 
 @Injectable()
 export class UserService implements IUserContract {
   constructor(
     private readonly userRepo: UserRepo,
-    private readonly hashService: HashService,
+    @Inject(IUTILS_SERVICE)
+    private readonly utilsService: IUtilsContract,
   ) {}
 
   async create({
@@ -24,7 +26,7 @@ export class UserService implements IUserContract {
       org_id: org_id,
     });
 
-    user.password = await this.hashService.generateHash(data.password);
+    user.password = await this.utilsService.generateHash(data.password);
 
     const userCreated = await this.userRepo.create({
       ...user,
@@ -45,7 +47,7 @@ export class UserService implements IUserContract {
     let hashPwd: string | undefined = undefined;
 
     if (data.password) {
-      hashPwd = await this.hashService.generateHash(data.password);
+      hashPwd = await this.utilsService.generateHash(data.password);
     }
 
     const userUpdated = await this.userRepo.update({
@@ -74,7 +76,7 @@ export class UserService implements IUserContract {
     let hashPwd: string | undefined = undefined;
 
     if (data.new_password) {
-      hashPwd = await this.hashService.generateHash(data.new_password);
+      hashPwd = await this.utilsService.generateHash(data.new_password);
     }
 
     const userUpdated = await this.userRepo.updateMe({

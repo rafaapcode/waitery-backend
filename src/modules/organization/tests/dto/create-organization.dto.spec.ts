@@ -74,5 +74,3 @@ describe('CreateOrganizationDTO', () => {
     expect(props.has('long')).toBe(true);
   });
 });
-
-

@@ -2,10 +2,9 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { Organization } from 'src/core/domain/entities/organization';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { GetOrganizationUseCase } from '../../usecases/GetOrganizationUseCase';
@@ -27,7 +26,7 @@ describe('Get Org UseCase', () => {
         OrganizationRepo,
         PrismaService,
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
           },

@@ -28,6 +28,10 @@ export interface IOrganizationContract {
   verifyOrgByName(
     params: IOrganizationContract.VerifyOrgsParamsByName,
   ): Promise<IOrganizationContract.VerifyOrgsOutput>;
+
+  verifyCep(
+    params: IOrganizationContract.VerifyCepParams,
+  ): Promise<IOrganizationContract.VerifyCepOutput>;
 }
 
 export namespace IOrganizationContract {
@@ -102,4 +106,8 @@ export namespace IOrganizationContract {
   };
 
   export type VerifyOrgsOutput = boolean;
+
+  export type VerifyCepParams = string;
+
+  export type VerifyCepOutput = boolean;
 }

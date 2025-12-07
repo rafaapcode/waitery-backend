@@ -1,21 +1,24 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 
 @Injectable()
 export class AuthService implements IAuthContract {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,
-    private readonly hashService: HashService,
+    @Inject(IUTILS_SERVICE)
+    private readonly utilsService: IUtilsContract,
   ) {}
 
   async signIn(
@@ -29,7 +32,7 @@ export class AuthService implements IAuthContract {
       throw new NotFoundException('User not found');
     }
 
-    const pwdIsValid = await this.hashService.validateHash(
+    const pwdIsValid = await this.utilsService.validateHash(
       getUser.password,
       data.password,
     );
@@ -73,7 +76,7 @@ export class AuthService implements IAuthContract {
       role: UserRole.OWNER,
     });
 
-    const hashPwd = await this.hashService.generateHash(data.password);
+    const hashPwd = await this.utilsService.generateHash(data.password);
     user.password = hashPwd;
 
     const userCreated = await this.prismaService.user.create({

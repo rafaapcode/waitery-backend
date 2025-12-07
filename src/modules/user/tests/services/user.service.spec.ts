@@ -1,15 +1,16 @@
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { UserService } from '../../user.service';
 
 describe('UserService', () => {
   let userService: UserService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   let userRepo: UserRepo;
 
   beforeEach(async () => {
@@ -34,7 +35,7 @@ describe('UserService', () => {
           },
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
           },
@@ -43,12 +44,12 @@ describe('UserService', () => {
     }).compile();
     userService = module.get<UserService>(UserService);
     userRepo = module.get<UserRepo>(UserRepo);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(userService).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(userRepo).toBeDefined();
   });
 
@@ -64,7 +65,7 @@ describe('UserService', () => {
       },
       org_id: 'org_id',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
     jest.spyOn(userRepo, 'create').mockResolvedValue({
       name: 'Rafael',
       id: '12313131adada',
@@ -83,8 +84,8 @@ describe('UserService', () => {
     // Assert
     expect(userCreated).toBeDefined();
     expect(userCreated.password).toBe('hash_bcrypt');
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
-    expect(hashService.generateHash).toHaveBeenCalledWith(data.data.password);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledWith(data.data.password);
     expect(userRepo.create).toHaveBeenCalledTimes(1);
     expect(userRepo.create).toHaveBeenCalledWith({
       ...data.data,
@@ -105,7 +106,7 @@ describe('UserService', () => {
       },
       id: '12313131adada',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
     jest.spyOn(userRepo, 'update').mockResolvedValue({
       name: 'Rafael Ap',
       id: '12313131adada',
@@ -123,7 +124,7 @@ describe('UserService', () => {
     // Assert
     expect(userUpdated).toBeInstanceOf(User);
     expect(userUpdated.password).toBeUndefined();
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(userRepo.update).toHaveBeenCalledTimes(1);
     expect(userRepo.update).toHaveBeenCalledWith({
       id: data.id,
@@ -145,7 +146,7 @@ describe('UserService', () => {
       },
       id: '12313131adada',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
     jest.spyOn(userRepo, 'update').mockResolvedValue({
       name: 'Rafael Ap',
       id: '12313131adada',
@@ -163,7 +164,7 @@ describe('UserService', () => {
     // Assert
     expect(userUpdated).toBeInstanceOf(User);
     expect(userUpdated.password).toBeUndefined();
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(userRepo.update).toHaveBeenCalledTimes(1);
     expect(userRepo.update).toHaveBeenCalledWith({
       id: data.id,
@@ -183,7 +184,7 @@ describe('UserService', () => {
       },
       id: '12313131adada',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
     jest.spyOn(userRepo, 'updateMe').mockResolvedValue({
       name: 'Rafael Ap',
       id: '12313131adada',
@@ -201,7 +202,7 @@ describe('UserService', () => {
     // Assert
     expect(userUpdated).toBeInstanceOf(User);
     expect(userUpdated.password).toBeUndefined();
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(userRepo.updateMe).toHaveBeenCalledTimes(1);
     expect(userRepo.updateMe).toHaveBeenCalledWith({
       id: data.id,
@@ -221,7 +222,7 @@ describe('UserService', () => {
       },
       id: '12313131adada',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
     jest.spyOn(userRepo, 'updateMe').mockResolvedValue({
       name: 'Rafael Ap',
       id: '12313131adada',
@@ -239,7 +240,7 @@ describe('UserService', () => {
     // Assert
     expect(userUpdated).toBeInstanceOf(User);
     expect(userUpdated.password).toBeUndefined();
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(userRepo.updateMe).toHaveBeenCalledTimes(1);
     expect(userRepo.updateMe).toHaveBeenCalledWith({
       id: data.id,

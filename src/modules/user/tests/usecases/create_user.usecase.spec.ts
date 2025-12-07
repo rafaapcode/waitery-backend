@@ -6,12 +6,16 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
-import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { CreateUserUseCase } from '../../usecases/CreateUserUseCase';
 import { UserService } from '../../user.service';
@@ -22,7 +26,7 @@ describe('Create User UseCase', () => {
   let userRepo: UserRepo;
   let organizationService: IOrganizationContract;
   let organizationRepo: OrganizationRepo;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let org_id: string;
   let user_id: string;
@@ -35,7 +39,7 @@ describe('Create User UseCase', () => {
         CreateUserUseCase,
         OrganizationRepo,
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
           },
@@ -57,7 +61,7 @@ describe('Create User UseCase', () => {
       IORGANIZATION_CONTRACT,
     );
     organizationRepo = module.get<OrganizationRepo>(OrganizationRepo);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     prismaService = module.get<PrismaService>(PrismaService);
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
 
@@ -137,7 +141,7 @@ describe('Create User UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(organizationService).toBeDefined();
     expect(organizationRepo).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(user_id).toBeDefined();
@@ -155,14 +159,14 @@ describe('Create User UseCase', () => {
       },
       org_id,
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Act
     const user = await createUserUseCase.execute(data);
 
     // Assert
     expect(user).toBeInstanceOf(User);
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(user.password).toBe('hash_password');
   });
 
@@ -178,10 +182,10 @@ describe('Create User UseCase', () => {
       },
       org_id,
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );
@@ -199,10 +203,10 @@ describe('Create User UseCase', () => {
       },
       org_id,
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );
@@ -220,10 +224,10 @@ describe('Create User UseCase', () => {
       },
       org_id: '',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       BadRequestException,
     );
@@ -241,10 +245,10 @@ describe('Create User UseCase', () => {
       },
       org_id,
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );
@@ -262,10 +266,10 @@ describe('Create User UseCase', () => {
       },
       org_id: 'org_id123123',
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createUserUseCase.execute(data)).rejects.toThrow(
       NotFoundException,
     );

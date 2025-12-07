@@ -2,12 +2,16 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
-import { HashService } from 'src/hash.service';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import { UserService } from 'src/modules/user/user.service';
-import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { CreateOrganizationUseCase } from '../../usecases/CreateOrganizationUseCase';
@@ -18,7 +22,7 @@ describe('Create Org UseCase', () => {
   let userService: IUserContract;
   let orgRepo: OrganizationRepo;
   let userRepo: UserRepo;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let owner_id: string;
 
@@ -30,7 +34,7 @@ describe('Create Org UseCase', () => {
         OrganizationRepo,
         PrismaService,
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
             generateHash: jest.fn(),
           },
@@ -50,7 +54,7 @@ describe('Create Org UseCase', () => {
     userService = module.get<IUserContract>(IUSER_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     userRepo = module.get<UserRepo>(UserRepo);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     prismaService = module.get<PrismaService>(PrismaService);
     createOrgUseCase = module.get<CreateOrganizationUseCase>(
       CreateOrganizationUseCase,
@@ -80,7 +84,7 @@ describe('Create Org UseCase', () => {
     expect(userService).toBeDefined();
     expect(orgRepo).toBeDefined();
     expect(userRepo).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(owner_id).toBeDefined();
   });
@@ -106,13 +110,13 @@ describe('Create Org UseCase', () => {
         long: -43.937778,
       },
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     // Act
     const newOrg = await createOrgUseCase.execute(data);
 
     //Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(newOrg).toBeInstanceOf(Organization);
     expect(newOrg.owner_id).toBe(owner_id);
   });
@@ -138,10 +142,10 @@ describe('Create Org UseCase', () => {
         long: -43.937778,
       },
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     //Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createOrgUseCase.execute(data)).rejects.toThrow(
       NotFoundException,
     );
@@ -168,10 +172,10 @@ describe('Create Org UseCase', () => {
         long: -43.937778,
       },
     };
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
 
     //Assert
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     await expect(createOrgUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );

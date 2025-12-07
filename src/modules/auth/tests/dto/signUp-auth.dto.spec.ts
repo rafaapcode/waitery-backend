@@ -82,5 +82,3 @@ describe('SignUpAuthDTO', () => {
     }
   });
 });
-
-

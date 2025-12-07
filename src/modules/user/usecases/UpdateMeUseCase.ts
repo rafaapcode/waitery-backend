@@ -6,9 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
-import { COMPARE_HASH, IUSER_CONTRACT } from 'src/shared/constants';
-
-type CompareFn = (hashPwd: string, pwd: string) => Promise<boolean>;
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
+import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 
 interface IUpdateMeUseCase {
   execute(
@@ -20,7 +19,7 @@ interface IUpdateMeUseCase {
 export class UpdateMeUseCase implements IUpdateMeUseCase {
   constructor(
     @Inject(IUSER_CONTRACT) private readonly userContract: IUserContract,
-    @Inject(COMPARE_HASH) private readonly compareHash: CompareFn,
+    @Inject(IUTILS_SERVICE) private readonly utilsService: IUtilsContract,
   ) {}
 
   async execute({
@@ -59,6 +58,6 @@ export class UpdateMeUseCase implements IUpdateMeUseCase {
   }
 
   private async validateHash(hashPwd: string, pwd: string): Promise<boolean> {
-    return await this.compareHash(hashPwd, pwd);
+    return await this.utilsService.validateHash(hashPwd, pwd);
   }
 }

@@ -1,9 +1,8 @@
 import { validate } from 'class-validator';
 import { CreateOrderDto } from 'src/modules/order/dto/create-order.dto';
-import { ulid } from "ulid";
+import { ulid } from 'ulid';
 
 const VALID_ULID = ulid();
-
 
 describe('CreateOrderDto', () => {
   it('should be valid with correct fields and products', async () => {
@@ -26,7 +25,10 @@ describe('CreateOrderDto', () => {
     dto.table = 'A1';
     dto.products = [] as any;
     const errors = await validate(dto);
-    const props = errors.flatMap((e) => [e.property, ...(e.children ?? []).map((c) => c.property)]);
+    const props = errors.flatMap((e) => [
+      e.property,
+      ...(e.children ?? []).map((c) => c.property),
+    ]);
     expect(props).toContain('org_id');
     expect(props).toContain('user_id');
   });
@@ -44,5 +46,3 @@ describe('CreateOrderDto', () => {
     }
   });
 });
-
-
