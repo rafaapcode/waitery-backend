@@ -14,6 +14,7 @@ export type ProductsOrder = {
   price: number;
   category: string;
   discount: boolean;
+  discount_price?: number;
 };
 
 export class Order {

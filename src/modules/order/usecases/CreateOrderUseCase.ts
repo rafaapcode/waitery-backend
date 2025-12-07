@@ -51,7 +51,9 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
     const { quantity, total_price } = Order.totalQuantityAndPrice(
       products.map((product) => ({
         quantity: product.quantity,
-        price: product.price,
+        price: product.discount
+          ? (product.discount_price ?? product.price)
+          : product.price,
       })),
     );
 
