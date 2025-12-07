@@ -15,10 +15,11 @@ import { IUTILS_SERVICE } from 'src/shared/constants';
 @Injectable()
 export class AuthService implements IAuthContract {
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly prismaService: PrismaService,
     @Inject(IUTILS_SERVICE)
     private readonly utilsService: IUtilsContract,
+
+    private readonly jwtService: JwtService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async signIn(

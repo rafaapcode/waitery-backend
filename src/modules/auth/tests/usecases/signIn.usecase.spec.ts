@@ -6,6 +6,7 @@ import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContr
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import { UtilsService } from 'src/utils.service';
 import { AuthService } from '../../auth.service';
 import { SignInUseCase } from '../../usecases/SignInUseCase';
 
@@ -33,11 +34,7 @@ describe('SignIn UseCase', () => {
         },
         {
           provide: IUTILS_SERVICE,
-          useValue: {
-            verifyCepService: jest.fn(),
-            validateHash: jest.fn(),
-            generateHash: jest.fn(),
-          },
+          useClass: UtilsService,
         },
       ],
     }).compile();
