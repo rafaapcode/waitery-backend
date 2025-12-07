@@ -23,7 +23,7 @@ import { GetProductByCategoryUseCase } from './usecases/GetProductByCategoryUseC
 import { GetProductUseCase } from './usecases/GetProductUseCase';
 import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
 
-@Controller('product')
+@Controller('products')
 export class ProductController {
   constructor(
     private readonly createProductUseCase: CreateProductUseCase,

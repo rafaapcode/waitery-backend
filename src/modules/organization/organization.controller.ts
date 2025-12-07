@@ -24,7 +24,7 @@ import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase'
 
 @ApiTags('Organization')
 @ApiBearerAuth()
-@Controller('organization')
+@Controller('organizations')
 export class OrganizationController {
   constructor(
     private readonly createOrgUseCase: CreateOrganizationUseCase,

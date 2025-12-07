@@ -21,7 +21,7 @@ import { GetAllCategoryUseCase } from './usecases/GetAllCategoryUseCase';
 import { GetByIdCategoryUseCase } from './usecases/GetByIdCategoryUseCase';
 import { UpdateCategoryUseCase } from './usecases/UpdateCategoryUseCase';
 
-@Controller('category')
+@Controller('categories')
 export class CategoryController {
   constructor(
     private readonly createCategoryUseCase: CreateCategoryUseCase,

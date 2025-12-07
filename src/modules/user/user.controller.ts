@@ -32,7 +32,7 @@ import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
 
 @ApiTags('User')
 @ApiBearerAuth()
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,

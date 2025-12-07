@@ -21,7 +21,7 @@ import { GetIngredientUseCase } from './usecases/GetIngredientUseCase';
 import { UpdateIngredientUseCase } from './usecases/UpdateIngredientUseCase';
 
 @ApiTags('Ingredients')
-@Controller('ingredient')
+@Controller('ingredients')
 export class IngredientController {
   constructor(
     private readonly createIngredientUseCase: CreateIngredientUseCase,

@@ -31,7 +31,7 @@ import { GetOrderUseCase } from './usecases/GetOrderUseCase';
 import { RestartOrdersOfDayUseCase } from './usecases/RestartOrdersOfDay';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
-@Controller('order')
+@Controller('orders')
 export class OrderController {
   constructor(
     private readonly createOrderUseCase: CreateOrderUseCase,
