@@ -4,6 +4,7 @@ import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -13,6 +14,7 @@ import {
   IORDER_CONTRACT,
   IORDER_WS_CONTRACT,
   IORGANIZATION_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
@@ -24,6 +26,7 @@ describe('Restart Order UseCase', () => {
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
   let orderRepo: OrderRepository;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let order_id: string;
   let org_id: string;
@@ -51,6 +54,14 @@ describe('Restart Order UseCase', () => {
             emitCreateOrder: jest.fn(),
           },
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -63,6 +74,7 @@ describe('Restart Order UseCase', () => {
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -128,6 +140,7 @@ describe('Restart Order UseCase', () => {
     expect(org_id).toBeDefined();
     expect(user_id).toBeDefined();
     expect(wsGateway).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should restart the day', async () => {

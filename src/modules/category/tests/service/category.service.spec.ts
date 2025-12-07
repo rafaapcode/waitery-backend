@@ -1,15 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import {
   Category,
   createCategoryEntity,
 } from 'src/core/domain/entities/category';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 
 describe('Category Service', () => {
   let categoryService: CategoryService;
   let categoryRepo: CategoryRepository;
+  let utilsService: IUtilsContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,11 +30,18 @@ describe('Category Service', () => {
             isBeingUsed: jest.fn(),
           },
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     categoryService = module.get<CategoryService>(CategoryService);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
   beforeEach(() => jest.clearAllMocks());
@@ -39,6 +49,7 @@ describe('Category Service', () => {
   it('Shoudl be all sevices defined', () => {
     expect(categoryService).toBeDefined();
     expect(categoryRepo).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should create a new category', async () => {

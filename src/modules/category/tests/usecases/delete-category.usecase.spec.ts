@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
-import { ICATEGORY_CONTRACT } from 'src/shared/constants';
+import { ICATEGORY_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 import { DeleteCategoryUseCase } from '../../usecases/DeleteCategoryUseCase';
@@ -15,6 +16,7 @@ describe('Delete Category UseCase', () => {
   let deleteCategoryUseCAse: DeleteCategoryUseCase;
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   const owner_id = 'testestes123131';
   let org_id: string;
@@ -30,6 +32,14 @@ describe('Delete Category UseCase', () => {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -39,6 +49,7 @@ describe('Delete Category UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id: org_id_db } = await prismaService.organization.create({
       data: {
@@ -99,6 +110,7 @@ describe('Delete Category UseCase', () => {
     expect(categoryRepo).toBeDefined();
     expect(org_id).toBeDefined();
     expect(category_id).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should throw an error if the category does not exists', async () => {

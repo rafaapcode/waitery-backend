@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
@@ -9,6 +10,7 @@ import { OrganizationRepo } from 'src/modules/organization/repo/organization.rep
 import {
   ICATEGORY_CONTRACT,
   IORGANIZATION_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
@@ -20,6 +22,7 @@ describe('Create Category UseCase', () => {
   let categoryRepo: CategoryRepository;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   const owner_id = 'testestes123131';
   let org_id: string;
@@ -39,6 +42,14 @@ describe('Create Category UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -50,6 +61,7 @@ describe('Create Category UseCase', () => {
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -94,6 +106,7 @@ describe('Create Category UseCase', () => {
     expect(org_id).toBeDefined();
     expect(orgService).toBeDefined();
     expect(orgRepo).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should create a new category', async () => {

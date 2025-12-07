@@ -4,6 +4,7 @@ import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -13,6 +14,7 @@ import {
   IORDER_CONTRACT,
   IORDER_WS_CONTRACT,
   IORGANIZATION_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
@@ -24,6 +26,7 @@ describe('Update Order Status UseCase', () => {
   let orderRepo: OrderRepository;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let order_id: string;
   let org_id: string;
@@ -54,6 +57,14 @@ describe('Update Order Status UseCase', () => {
             emitCreateOrder: jest.fn(),
           },
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -66,6 +77,7 @@ describe('Update Order Status UseCase', () => {
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -197,6 +209,7 @@ describe('Update Order Status UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(order_id).toBeDefined();
     expect(wsGateway).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should update a status of an order', async () => {

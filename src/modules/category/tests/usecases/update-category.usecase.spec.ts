@@ -1,9 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
-import { ICATEGORY_CONTRACT } from 'src/shared/constants';
+import { ICATEGORY_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 import { UpdateCategoryUseCase } from '../../usecases/UpdateCategoryUseCase';
@@ -13,6 +14,7 @@ describe('Update Category UseCase', () => {
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
   let prismaService: PrismaService;
+  let utilsService: IUtilsContract;
   const owner_id = 'testestes123131';
   let org_id: string;
   let cat_id: string;
@@ -27,6 +29,14 @@ describe('Update Category UseCase', () => {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -36,6 +46,7 @@ describe('Update Category UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -89,6 +100,7 @@ describe('Update Category UseCase', () => {
     expect(categoryRepo).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should update ONLY THE ICON of a category', async () => {
