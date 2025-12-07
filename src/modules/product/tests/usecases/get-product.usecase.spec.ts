@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -12,6 +13,7 @@ import { OrganizationRepo } from 'src/modules/organization/repo/organization.rep
 import {
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
@@ -24,6 +26,7 @@ describe('Get Product Usecase', () => {
   let orgRepo: OrganizationRepo;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
+  let utilsService: IUtilsContract;
   let org_id: string;
   let user_id: string;
   let cat_id: string;
@@ -45,6 +48,14 @@ describe('Get Product Usecase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -54,6 +65,7 @@ describe('Get Product Usecase', () => {
     orgService = modules.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
+    utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -156,6 +168,7 @@ describe('Get Product Usecase', () => {
     expect(orgService).toBeDefined();
     expect(orgRepo).toBeDefined();
     expect(prismaService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(user_id).toBeDefined();

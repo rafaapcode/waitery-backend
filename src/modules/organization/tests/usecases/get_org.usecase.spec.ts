@@ -28,6 +28,8 @@ describe('Get Org UseCase', () => {
         {
           provide: IUTILS_SERVICE,
           useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
             generateHash: jest.fn(),
           },
         },

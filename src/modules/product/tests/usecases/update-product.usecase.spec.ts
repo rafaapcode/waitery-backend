@@ -4,6 +4,7 @@ import { Prisma } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
@@ -14,6 +15,7 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { UpdateProductDto } from '../../dto/update-product.dto';
 import { ProductService } from '../../product.service';
@@ -25,6 +27,7 @@ describe('Update Product Usecase', () => {
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
   let ingService: IIngredientContract;
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
@@ -56,6 +59,14 @@ describe('Update Product Usecase', () => {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -68,6 +79,7 @@ describe('Update Product Usecase', () => {
     ingService = modules.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingRepo = modules.get<IngredientRepository>(IngredientRepository);
     prismaService = modules.get<PrismaService>(PrismaService);
+    utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -200,6 +212,7 @@ describe('Update Product Usecase', () => {
     expect(user_id).toBeDefined();
     expect(prod_id).toBeDefined();
     expect(ing_ids).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should not be able to update a product if organization does not exist', async () => {

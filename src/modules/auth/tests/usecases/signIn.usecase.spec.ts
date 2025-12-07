@@ -2,10 +2,10 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IAUTH_CONTRACT } from 'src/shared/constants';
-import { HashService } from 'src/utils.service';
+import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { AuthService } from '../../auth.service';
 import { SignInUseCase } from '../../usecases/SignInUseCase';
 
@@ -14,14 +14,13 @@ describe('SignIn UseCase', () => {
   let authService: IAuthContract;
   let jwtService: JwtService;
   let prismaService: PrismaService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SignInUseCase,
         PrismaService,
-        HashService,
         {
           provide: IAUTH_CONTRACT,
           useClass: AuthService,
@@ -32,13 +31,21 @@ describe('SignIn UseCase', () => {
             sign: jest.fn(),
           },
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     authService = module.get<AuthService>(IAUTH_CONTRACT);
     jwtService = module.get<JwtService>(JwtService);
     prismaService = module.get<PrismaService>(PrismaService);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signInUseCase = module.get<SignInUseCase>(SignInUseCase);
 
     await prismaService.user.create({
@@ -65,7 +72,7 @@ describe('SignIn UseCase', () => {
   }, 15000);
 
   it('Should all services be defined', () => {
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();

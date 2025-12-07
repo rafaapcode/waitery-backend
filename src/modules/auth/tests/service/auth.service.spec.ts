@@ -6,16 +6,17 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { HashService } from 'src/utils.service';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { AuthService } from '../../auth.service';
 
 describe('AuthService - SignIn', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   const token: string =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30';
 
@@ -32,9 +33,11 @@ describe('AuthService - SignIn', () => {
           },
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
+            verifyCepService: jest.fn(),
             validateHash: jest.fn(),
+            generateHash: jest.fn(),
           },
         },
         {
@@ -49,14 +52,14 @@ describe('AuthService - SignIn', () => {
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should signIn a valid user', async () => {
@@ -75,14 +78,14 @@ describe('AuthService - SignIn', () => {
       created_at: new Date(),
       updated_at: new Date(),
     });
-    jest.spyOn(hashService, 'validateHash').mockResolvedValue(true);
+    jest.spyOn(utilsService, 'validateHash').mockResolvedValue(true);
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Act
     const signInUser = await authService.signIn(data);
 
     // Assert
-    expect(hashService.validateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.validateHash).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledWith(signInUser.user.fromEntity());
     expect(signInUser.user).toBeDefined();
@@ -118,7 +121,7 @@ describe('AuthService - SignIn', () => {
       created_at: new Date(),
       updated_at: new Date(),
     });
-    jest.spyOn(hashService, 'validateHash').mockResolvedValue(false);
+    jest.spyOn(utilsService, 'validateHash').mockResolvedValue(false);
 
     // Assert
     await expect(authService.signIn(data)).rejects.toThrow(BadRequestException);
@@ -129,7 +132,7 @@ describe('AuthService - SignUp', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
   const token: string =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30';
   const hashBcrypt: string =
@@ -148,8 +151,10 @@ describe('AuthService - SignUp', () => {
           },
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
             generateHash: jest.fn(),
           },
         },
@@ -165,14 +170,14 @@ describe('AuthService - SignUp', () => {
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should signUp a valid user', async () => {
@@ -194,7 +199,7 @@ describe('AuthService - SignUp', () => {
       created_at: new Date(),
       updated_at: new Date(),
     });
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue(hashBcrypt);
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Act
@@ -210,8 +215,8 @@ describe('AuthService - SignUp', () => {
         role: UserRole.OWNER,
       },
     });
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
-    expect(hashService.generateHash).toHaveBeenCalledWith(data.password);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledWith(data.password);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledWith(signUpUser.user.fromEntity());
     expect(signUpUser.user).toBeDefined();

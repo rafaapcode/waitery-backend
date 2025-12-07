@@ -5,6 +5,7 @@ import { ICategoryContract } from 'src/core/application/contracts/category/ICate
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
@@ -18,6 +19,7 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
@@ -34,6 +36,7 @@ describe('Delete Product Usecase', () => {
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
+  let utilsService: IUtilsContract;
   let org_id: string;
   let org_id2: string;
   let user_id: string;
@@ -67,6 +70,14 @@ describe('Delete Product Usecase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -82,6 +93,7 @@ describe('Delete Product Usecase', () => {
     orgService = modules.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
+    utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -242,6 +254,7 @@ describe('Delete Product Usecase', () => {
     expect(org_id2).toBeDefined();
     expect(user_id).toBeDefined();
     expect(user_id2).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should throw an error if the product does not exist', async () => {

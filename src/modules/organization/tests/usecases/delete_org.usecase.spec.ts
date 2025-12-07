@@ -1,9 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { DeleteOrganizationUseCase } from '../../usecases/DeleteOrganizationUseCase';
@@ -12,6 +13,7 @@ describe('Delete Org UseCase', () => {
   let deleteOrgUseCase: DeleteOrganizationUseCase;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
   let org_id: string;
@@ -28,6 +30,14 @@ describe('Delete Org UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -38,6 +48,7 @@ describe('Delete Org UseCase', () => {
     deleteOrgUseCase = module.get<DeleteOrganizationUseCase>(
       DeleteOrganizationUseCase,
     );
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -67,6 +78,7 @@ describe('Delete Org UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should delete a organization', async () => {

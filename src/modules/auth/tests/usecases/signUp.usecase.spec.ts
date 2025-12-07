@@ -2,10 +2,10 @@ import { ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IAUTH_CONTRACT } from 'src/shared/constants';
-import { HashService } from 'src/utils.service';
+import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { AuthService } from '../../auth.service';
 import { SignUpUseCase } from '../../usecases/SignUpUseCase';
 
@@ -14,7 +14,7 @@ describe('SignUp UseCase', () => {
   let authService: IAuthContract;
   let jwtService: JwtService;
   let prismaService: PrismaService;
-  let hashService: HashService;
+  let utilsService: IUtilsContract;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -32,8 +32,10 @@ describe('SignUp UseCase', () => {
           },
         },
         {
-          provide: HashService,
+          provide: IUTILS_SERVICE,
           useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
             generateHash: jest.fn(),
           },
         },
@@ -43,7 +45,7 @@ describe('SignUp UseCase', () => {
     authService = module.get<AuthService>(IAUTH_CONTRACT);
     jwtService = module.get<JwtService>(JwtService);
     prismaService = module.get<PrismaService>(PrismaService);
-    hashService = module.get<HashService>(HashService);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signUpUseCase = module.get<SignUpUseCase>(SignUpUseCase);
   });
 
@@ -58,7 +60,7 @@ describe('SignUp UseCase', () => {
   });
 
   it('Should all services be defined', () => {
-    expect(hashService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
@@ -73,7 +75,7 @@ describe('SignUp UseCase', () => {
       cpf: '12345678910',
     };
     jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('bcrypt_hash');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('bcrypt_hash');
 
     // Act
     const newUser = await signUpUseCase.execute(data);
@@ -85,8 +87,8 @@ describe('SignUp UseCase', () => {
     expect(newUser.user.password).toBe('bcrypt_hash');
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledWith(newUser.user.fromEntity());
-    expect(hashService.generateHash).toHaveBeenCalledTimes(1);
-    expect(hashService.generateHash).toHaveBeenCalledWith(data.password);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
+    expect(utilsService.generateHash).toHaveBeenCalledWith(data.password);
   });
 
   it('Should throw an Conflict Error when try to signUp a existent user', async () => {
@@ -98,13 +100,13 @@ describe('SignUp UseCase', () => {
       cpf: '12345678910',
     };
     jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
-    jest.spyOn(hashService, 'generateHash').mockResolvedValue('bcrypt_hash');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('bcrypt_hash');
 
     // Assert
     await expect(signUpUseCase.execute(data)).rejects.toThrow(
       ConflictException,
     );
     expect(jwtService.sign).toHaveBeenCalledTimes(0);
-    expect(hashService.generateHash).toHaveBeenCalledTimes(0);
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
   });
 });

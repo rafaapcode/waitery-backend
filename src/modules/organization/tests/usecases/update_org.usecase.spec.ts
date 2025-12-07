@@ -1,10 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { UpdateOrganizationUseCase } from '../../usecases/UpdateOrganizationUseCase';
@@ -13,6 +14,7 @@ describe('Update a Org UseCase', () => {
   let updateOrgUseCase: UpdateOrganizationUseCase;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
   const owner_id = 'testestes123131';
@@ -29,6 +31,14 @@ describe('Update a Org UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -39,6 +49,7 @@ describe('Update a Org UseCase', () => {
     updateOrgUseCase = module.get<UpdateOrganizationUseCase>(
       UpdateOrganizationUseCase,
     );
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -78,6 +89,7 @@ describe('Update a Org UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should update a organization', async () => {

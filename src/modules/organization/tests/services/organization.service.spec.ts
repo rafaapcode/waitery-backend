@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
+import { IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 
 describe('OrganizationService', () => {
   let orgService: OrganizationService;
   let orgrepo: OrganizationRepo;
+  let utilsService: IUtilsContract;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,16 +27,26 @@ describe('OrganizationService', () => {
             verifyOrgByName: jest.fn(),
           },
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     orgService = module.get<OrganizationService>(OrganizationService);
     orgrepo = module.get<OrganizationRepo>(OrganizationRepo);
+    utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(orgService).toBeDefined();
     expect(orgrepo).toBeDefined();
+    expect(utilsService).toBeDefined();
   });
 
   it('Should create an organization', async () => {

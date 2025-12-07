@@ -4,6 +4,7 @@ import { Prisma } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -16,6 +17,7 @@ import {
   ICATEGORY_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
@@ -29,6 +31,7 @@ describe('Get Products By Category Usecase', () => {
   let catService: ICategoryContract;
   let catRepo: CategoryRepository;
   let productRepo: ProductRepository;
+  let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let org_id: string;
   let org_id2: string;
@@ -57,6 +60,14 @@ describe('Get Products By Category Usecase', () => {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -70,6 +81,7 @@ describe('Get Products By Category Usecase', () => {
     catService = modules.get<ICategoryContract>(ICATEGORY_CONTRACT);
     catRepo = modules.get<CategoryRepository>(CategoryRepository);
     prismaService = modules.get<PrismaService>(PrismaService);
+    utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -184,6 +196,7 @@ describe('Get Products By Category Usecase', () => {
     expect(catService).toBeDefined();
     expect(catRepo).toBeDefined();
     expect(prismaService).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(org_id2).toBeDefined();
     expect(cat_id).toBeDefined();

@@ -8,6 +8,7 @@ import { ICategoryContract } from 'src/core/application/contracts/category/ICate
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
@@ -21,6 +22,7 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { CreateProductDto } from '../../dto/create-product.dto';
 import { ProductService } from '../../product.service';
@@ -36,6 +38,7 @@ describe('Create Product Usecase', () => {
   let orgRepo: OrganizationRepo;
   let ingService: IIngredientContract;
   let ingRepo: IngredientRepository;
+  let utilsService: IUtilsContract;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
   const owner_id = 'owner_id';
@@ -68,6 +71,14 @@ describe('Create Product Usecase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: IUTILS_SERVICE,
+          useValue: {
+            verifyCepService: jest.fn(),
+            validateHash: jest.fn(),
+            generateHash: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -83,6 +94,7 @@ describe('Create Product Usecase', () => {
     orgService = modules.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
+    utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -168,6 +180,7 @@ describe('Create Product Usecase', () => {
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
+    expect(utilsService).toBeDefined();
     expect(ing_ids.length).toBe(4);
   });
 
