@@ -28,6 +28,10 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
+  CEP_SERVICE_API_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
   NODE_ENV: 'DEV' | 'PROD';
 }
 
@@ -36,6 +40,7 @@ export const env = plainToInstance(Env, {
   REFRESH_JWT_SECRET: process.env.REFRESH_JWT_SECRET,
   PORT: process.env.PORT,
   DATABASE_URL: process.env.DATABASE_URL,
+  CEP_SERVICE_API_URL: process.env.CEP_SERVICE_API_URL,
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
 });
 

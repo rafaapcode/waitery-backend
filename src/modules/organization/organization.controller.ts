@@ -7,8 +7,12 @@ import {
   HttpStatus,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
@@ -36,14 +40,24 @@ export class OrganizationController {
 
   @Roles(UserRole.OWNER)
   @Post()
-  async create(@GetMe() me: JwtPayload, @Body() data: CreateOrganizationDTO) {
-    const org = await this.createOrgUseCase.execute({
-      data,
-      owner_id: me.id,
-    });
-    return {
-      org,
-    };
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @UploadedFile() file: Express.Multer.File,
+    @GetMe() me: JwtPayload,
+    @Body() data: string,
+  ) {
+    const parsedData = plainToInstance(CreateOrganizationDTO, data);
+
+    console.log(parsedData);
+    return { ok: true };
+
+    // const org = await this.createOrgUseCase.execute({
+    //   data,
+    //   owner_id: me.id,
+    // });
+    // return {
+    //   org: org.fromEntity(),
+    // };
   }
 
   @Roles(UserRole.OWNER)

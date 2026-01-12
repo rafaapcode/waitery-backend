@@ -1,4 +1,5 @@
 import { Organization } from 'src/core/domain/entities/organization';
+import { GetAddressInfoOutput } from '../utils/IUtilsContract';
 
 export interface IOrganizationContract {
   create(
@@ -32,6 +33,10 @@ export interface IOrganizationContract {
   verifyCep(
     params: IOrganizationContract.VerifyCepParams,
   ): Promise<IOrganizationContract.VerifyCepOutput>;
+
+  getAddressInformation(
+    params: string,
+  ): Promise<IOrganizationContract.GetAddressInformationOutput | null>;
 }
 
 export namespace IOrganizationContract {
@@ -39,7 +44,6 @@ export namespace IOrganizationContract {
     owner_id: string;
     data: {
       name: string;
-      image_url: string;
       email: string;
       description: string;
       location_code: string;
@@ -51,6 +55,7 @@ export namespace IOrganizationContract {
       street: string;
       lat: number;
       long: number;
+      image_url: string;
     };
   };
 
@@ -110,4 +115,6 @@ export namespace IOrganizationContract {
   export type VerifyCepParams = string;
 
   export type VerifyCepOutput = boolean;
+
+  export type GetAddressInformationOutput = GetAddressInfoOutput;
 }

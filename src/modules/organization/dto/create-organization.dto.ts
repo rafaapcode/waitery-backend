@@ -14,10 +14,6 @@ export class CreateOrganizationDTO {
 
   @IsString()
   @IsNotEmpty()
-  image_url: string;
-
-  @IsString()
-  @IsNotEmpty()
   @IsEmail()
   email: string;
 
@@ -41,24 +37,4 @@ export class CreateOrganizationDTO {
   @IsString()
   @IsNotEmpty()
   cep: string;
-
-  @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  neighborhood: string;
-
-  @IsString()
-  @IsNotEmpty()
-  street: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  lat: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  long: number;
 }

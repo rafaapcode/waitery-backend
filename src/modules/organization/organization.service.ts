@@ -13,6 +13,12 @@ export class OrganizationService implements IOrganizationContract {
     private readonly utilsService: IUtilsContract,
   ) {}
 
+  async getAddressInformation(
+    cep: string,
+  ): Promise<IOrganizationContract.GetAddressInformationOutput | null> {
+    return this.utilsService.getCepAddressInformations(cep);
+  }
+
   verifyCep(
     params: IOrganizationContract.VerifyCepParams,
   ): Promise<IOrganizationContract.VerifyCepOutput> {

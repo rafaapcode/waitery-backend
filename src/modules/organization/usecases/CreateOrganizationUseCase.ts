@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -8,11 +10,16 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { createOganizationEntity } from 'src/core/domain/entities/organization';
 import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
+import { CreateOrganizationDTO } from '../dto/create-organization.dto';
+
+type CreateParams = {
+  owner_id: string;
+  data: CreateOrganizationDTO;
+  image_file?: Express.Multer.File;
+};
 
 interface ICreateOrganizationUseCase {
-  execute(
-    params: IOrganizationContract.CreateParams,
-  ): Promise<IOrganizationContract.CreateOutput>;
+  execute(params: CreateParams): Promise<IOrganizationContract.CreateOutput>;
 }
 
 @Injectable()
@@ -27,10 +34,39 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
   async execute({
     data,
     owner_id,
-  }: IOrganizationContract.CreateParams): Promise<IOrganizationContract.CreateOutput> {
+    image_file,
+  }: CreateParams): Promise<IOrganizationContract.CreateOutput> {
+    const cepIsValid = await this.orgService.verifyCep(data.cep);
+
+    if (!cepIsValid) {
+      throw new BadRequestException('CEP not found');
+    }
+
+    const getAddressInformation = await this.orgService.getAddressInformation(
+      data.cep,
+    );
+
+    if (!getAddressInformation) {
+      console.log('Address information not found for CEP:', data.cep);
+    }
+
+    console.log('Address information:', getAddressInformation);
+
+    const image_url = '';
+    if (image_file) {
+      console.log('Uploading file...', image_file.originalname);
+    }
     const organization = createOganizationEntity({
       ...data,
+      close_hour: Number(data.close_hour),
+      open_hour: Number(data.open_hour),
       owner_id,
+      city: '',
+      neighborhood: '',
+      street: '',
+      lat: 0,
+      long: 0,
+      image_url,
     });
 
     const [org, owner] = await Promise.all([

@@ -7,14 +7,16 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
-import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductUseCase } from './usecases/CreateProductUseCase';
 import { DeleteProductUseCase } from './usecases/DeleteProductUseCase';
@@ -36,8 +38,18 @@ export class ProductController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post()
-  create(@Body() data: CreateProductDto, @GetOrgId() org_id: string) {
-    return this.createProductUseCase.execute(data, org_id);
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() data: string,
+    @GetOrgId() org_id: string,
+  ) {
+    console.log(file);
+    console.log(data, org_id);
+    return {
+      ok: true,
+    };
+    // return this.createProductUseCase.execute(data, org_id);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
