@@ -41,23 +41,21 @@ export class OrganizationController {
   @Roles(UserRole.OWNER)
   @Post()
   @UseInterceptors(FileInterceptor('image'))
-  create(
+  async create(
     @UploadedFile() file: Express.Multer.File,
     @GetMe() me: JwtPayload,
     @Body() data: string,
   ) {
     const parsedData = plainToInstance(CreateOrganizationDTO, data);
+    const org = await this.createOrgUseCase.execute({
+      data: parsedData,
+      owner_id: me.id,
+      image_file: file,
+    });
 
-    console.log(parsedData);
-    return { ok: true };
-
-    // const org = await this.createOrgUseCase.execute({
-    //   data,
-    //   owner_id: me.id,
-    // });
-    // return {
-    //   org: org.fromEntity(),
-    // };
+    return {
+      org: org.fromEntity(),
+    };
   }
 
   @Roles(UserRole.OWNER)

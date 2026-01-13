@@ -21,5 +21,7 @@ export interface IUtilsContract {
 
   verifyCepService(cep: string): Promise<boolean>;
 
-  getCepAddressInformations(cep: string): Promise<GetAddressInfoOutput | null>;
+  getCepAddressInformations(
+    cep: string,
+  ): Promise<GetAddressInfoOutput | null | { erro: string }>;
 }

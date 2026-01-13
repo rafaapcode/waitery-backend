@@ -16,7 +16,10 @@ export class OrganizationService implements IOrganizationContract {
   async getAddressInformation(
     cep: string,
   ): Promise<IOrganizationContract.GetAddressInformationOutput | null> {
-    return this.utilsService.getCepAddressInformations(cep);
+    const address = await this.utilsService.getCepAddressInformations(cep);
+    if (!address) return null;
+
+    return 'erro' in address ? null : address;
   }
 
   verifyCep(

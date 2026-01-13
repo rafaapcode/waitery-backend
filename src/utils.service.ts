@@ -12,19 +12,19 @@ import { env } from './shared/config/env';
 export class UtilsService implements IUtilsContract {
   async getCepAddressInformations(
     cep: string,
-  ): Promise<GetAddressInfoOutput | null> {
+  ): Promise<GetAddressInfoOutput | null | { erro: string }> {
     try {
       const { body, statusCode } = await request(
         `${env.CEP_SERVICE_API_URL}/${cep}/json/`,
       );
       if (statusCode !== 200) {
-        return null;
+        return { erro: 'true' };
       }
       const data = await body.json();
       return data as GetAddressInfoOutput;
     } catch (error) {
       console.log('Error fetching CEP information:', error);
-      return null;
+      return { erro: 'true' };
     }
   }
 

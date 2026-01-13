@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
-  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { createOganizationEntity } from 'src/core/domain/entities/organization';
@@ -36,34 +35,29 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     owner_id,
     image_file,
   }: CreateParams): Promise<IOrganizationContract.CreateOutput> {
-    const cepIsValid = await this.orgService.verifyCep(data.cep);
-
-    if (!cepIsValid) {
-      throw new BadRequestException('CEP not found');
-    }
-
     const getAddressInformation = await this.orgService.getAddressInformation(
       data.cep,
     );
 
-    if (!getAddressInformation) {
-      console.log('Address information not found for CEP:', data.cep);
+    if (!getAddressInformation || 'erro' in getAddressInformation) {
+      sentry.logger.warn(`Address information not found for CEP: ${data.cep}`);
     }
-
-    console.log('Address information:', getAddressInformation);
 
     const image_url = '';
     if (image_file) {
       console.log('Uploading file...', image_file.originalname);
     }
+
     const organization = createOganizationEntity({
       ...data,
       close_hour: Number(data.close_hour),
       open_hour: Number(data.open_hour),
       owner_id,
-      city: '',
-      neighborhood: '',
-      street: '',
+      city: getAddressInformation
+        ? `${getAddressInformation.localidade}-${getAddressInformation.uf}`
+        : '',
+      neighborhood: getAddressInformation ? getAddressInformation.bairro : '',
+      street: getAddressInformation ? getAddressInformation.logradouro : '',
       lat: 0,
       long: 0,
       image_url,
