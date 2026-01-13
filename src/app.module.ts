@@ -16,6 +16,7 @@ import { WsModule } from './modules/ws/ws.module';
 import { env } from './shared/config/env';
 import { IUTILS_SERVICE } from './shared/constants';
 import { UtilsService } from './utils.service';
+import { StorageModule } from './infra/storage/storage.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { UtilsService } from './utils.service';
     OrderModule,
     ProductModule,
     WsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [

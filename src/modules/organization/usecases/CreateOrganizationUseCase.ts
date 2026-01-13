@@ -6,9 +6,14 @@ import {
 } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { createOganizationEntity } from 'src/core/domain/entities/organization';
-import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+} from 'src/shared/constants';
 import { CreateOrganizationDTO } from '../dto/create-organization.dto';
 
 type CreateParams = {
@@ -28,6 +33,8 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly orgService: IOrganizationContract,
     @Inject(IUSER_CONTRACT)
     private readonly userService: IUserContract,
+    @Inject(ISTORAGE_SERVICE)
+    private readonly storageService: IStorageGw,
   ) {}
 
   async execute({
@@ -50,6 +57,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
 
     const organization = createOganizationEntity({
       ...data,
+      id: Crypto.randomUUID(),
       close_hour: Number(data.close_hour),
       open_hour: Number(data.open_hour),
       owner_id,

@@ -55,7 +55,7 @@ export class Organization {
 
 namespace Organization {
   export type Attr = {
-    id?: string;
+    id: string;
     owner_id: string;
     name: string;
     image_url: string;

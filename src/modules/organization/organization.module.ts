@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { StorageModule } from 'src/infra/storage/storage.module';
+import { StorageService } from 'src/infra/storage/storage.service';
 import {
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
@@ -18,7 +21,7 @@ import { GetOrganizationUseCase } from './usecases/GetOrganizationUseCase';
 import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, StorageModule],
   controllers: [OrganizationController],
   providers: [
     OrganizationRepo,
@@ -39,6 +42,10 @@ import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase'
     {
       provide: IUTILS_SERVICE,
       useClass: UtilsService,
+    },
+    {
+      provide: ISTORAGE_SERVICE,
+      useClass: StorageService,
     },
   ],
   exports: [

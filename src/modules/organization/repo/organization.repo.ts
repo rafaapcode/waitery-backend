@@ -13,6 +13,7 @@ export class OrganizationRepo {
   }: IOrganizationContract.CreateParams): Promise<Organization> {
     const org = await this.prisma.organization.create({
       data: {
+        id: data.id,
         cep: data.cep,
         city: data.city,
         close_hour: data.close_hour,
