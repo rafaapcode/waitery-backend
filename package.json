@@ -21,6 +21,7 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org rafaapcode --project node-nestjs ./dist && sentry-cli sourcemaps upload --org rafaapcode --project node-nestjs ./dist"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.969.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
