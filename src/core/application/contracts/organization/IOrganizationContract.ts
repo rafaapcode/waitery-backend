@@ -43,6 +43,7 @@ export namespace IOrganizationContract {
   export type CreateParams = {
     owner_id: string;
     data: {
+      id: string;
       name: string;
       email: string;
       description: string;

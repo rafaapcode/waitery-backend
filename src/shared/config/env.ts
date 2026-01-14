@@ -36,6 +36,10 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
+  CDN_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
   NODE_ENV: 'DEV' | 'PROD';
 }
 
@@ -46,6 +50,7 @@ export const env = plainToInstance(Env, {
   DATABASE_URL: process.env.DATABASE_URL,
   CEP_SERVICE_API_URL: process.env.CEP_SERVICE_API_URL,
   PRESIGNED_URL_SERVICE_API_URL: process.env.PRESIGNED_URL_SERVICE_API_URL,
+  CDN_URL: process.env.CDN_URL,
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
 });
 

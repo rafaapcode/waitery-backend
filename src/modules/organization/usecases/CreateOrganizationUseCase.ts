@@ -50,14 +50,8 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
       sentry.logger.warn(`Address information not found for CEP: ${data.cep}`);
     }
 
-    const image_url = '';
-    if (image_file) {
-      console.log('Uploading file...', image_file.originalname);
-    }
-
     const organization = createOganizationEntity({
       ...data,
-      id: Crypto.randomUUID(),
       close_hour: Number(data.close_hour),
       open_hour: Number(data.open_hour),
       owner_id,
@@ -68,7 +62,6 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
       street: getAddressInformation ? getAddressInformation.logradouro : '',
       lat: 0,
       long: 0,
-      image_url,
     });
 
     const [org, owner] = await Promise.all([
@@ -89,9 +82,35 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
       );
     }
 
-    return await this.orgService.create({
-      data: organization,
-      owner_id: organization.owner_id,
-    });
+    if (image_file) {
+      const input_key = this.storageService.getFileKey({
+        filename: image_file.originalname,
+        orgId: organization.id,
+      });
+
+      const { fileKey } = await this.storageService.saveFile({
+        fileBuffer: image_file.buffer,
+        key: input_key,
+        contentType: image_file.mimetype,
+        size: image_file.size,
+        orgId: organization.id,
+      });
+
+      if (!fileKey) {
+        sentry.logger.error('Error uploading organization image file');
+        console.log('Nada foi criado');
+      } else {
+        console.log('FILE KEY:', fileKey);
+        organization.setNewImageUrl(fileKey);
+        console.log('ORGANIZATION AFTER SET IMAGE:', organization.image_url);
+      }
+    }
+
+    // await this.orgService.create({
+    //   data: organization,
+    //   owner_id: organization.owner_id,
+    // });
+
+    return organization;
   }
 }

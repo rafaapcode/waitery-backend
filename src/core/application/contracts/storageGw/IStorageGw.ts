@@ -20,7 +20,7 @@ export namespace IStorageGw {
     productId?: string;
   };
   export type SaveFileOutput = {
-    fileUrl: string;
+    fileKey: string;
   };
   export type DeleteFileParams = {
     key: string;

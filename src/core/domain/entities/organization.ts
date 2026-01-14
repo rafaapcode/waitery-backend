@@ -1,8 +1,11 @@
+import { env } from 'src/shared/config/env';
+import { v7 as uuidv7 } from 'uuid';
+
 export class Organization {
-  readonly id?: string;
+  readonly id: string;
   readonly owner_id: string;
   readonly name: string;
-  readonly image_url: string;
+  image_url: string;
   readonly email: string;
   readonly description: string;
   readonly location_code: string;
@@ -16,10 +19,14 @@ export class Organization {
   readonly long: number;
 
   constructor(data: Organization.Attr) {
-    if (data.id) this.id = data.id;
+    if (data.id) {
+      this.id = data.id;
+    } else {
+      this.id = uuidv7();
+    }
     this.owner_id = data.owner_id;
     this.name = data.name;
-    this.image_url = data.image_url;
+    this.image_url = data.image_url || '';
     this.email = data.email;
     this.description = data.description;
     this.location_code = data.location_code;
@@ -51,14 +58,18 @@ export class Organization {
       long: this.long,
     };
   }
+
+  setNewImageUrl(file_key: string) {
+    this.image_url = `${env.CDN_URL}/${file_key}`;
+  }
 }
 
 namespace Organization {
   export type Attr = {
-    id: string;
+    id?: string;
     owner_id: string;
     name: string;
-    image_url: string;
+    image_url?: string;
     email: string;
     description: string;
     location_code: string;
