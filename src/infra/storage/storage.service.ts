@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { env } from 'src/shared/config/env';
-import { request } from 'undici';
+import { FormData, request } from 'undici';
 
 @Injectable()
 export class StorageService implements IStorageGw {
@@ -20,9 +20,36 @@ export class StorageService implements IStorageGw {
     return key;
   }
 
-  async getUploadPresignedUrl(
-    file: IStorageGw.GetUploadPresignedUrlParams,
-  ): Promise<{ url: string; fileKey: string }> {
+  async uploadFile(
+    file: IStorageGw.UploadFileParams,
+  ): Promise<IStorageGw.UploadFileOutput> {
+    const data = await this.getUploadPresignedUrl(file);
+    const formData = new FormData();
+    formData.append('file', file.fileBuffer);
+
+    const { statusCode } = await request(data.url, {
+      method: 'PUT',
+      body: formData,
+    });
+
+    if (statusCode !== 200 && statusCode !== 201) {
+      sentry.logger.error('Failed to upload file to storage', { statusCode });
+      return {
+        fileKey: '',
+      };
+    }
+
+    return {
+      fileKey: data.fileKey,
+    };
+  }
+
+  private async getUploadPresignedUrl(
+    file: IStorageGw.UploadFileParams,
+  ): Promise<{
+    url: string;
+    fileKey: string;
+  }> {
     const body_req = {
       key: file.key,
       content_type: file.contentType,

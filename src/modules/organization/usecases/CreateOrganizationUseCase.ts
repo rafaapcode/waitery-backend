@@ -88,7 +88,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
         orgId: organization.id,
       });
 
-      const { fileKey } = await this.storageService.saveFile({
+      const { fileKey } = await this.storageService.uploadFile({
         fileBuffer: image_file.buffer,
         key: input_key,
         contentType: image_file.mimetype,

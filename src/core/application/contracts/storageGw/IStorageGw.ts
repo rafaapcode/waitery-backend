@@ -1,7 +1,7 @@
 export interface IStorageGw {
-  getUploadPresignedUrl: (
-    file: IStorageGw.GetUploadPresignedUrlParams,
-  ) => Promise<IStorageGw.GetUploadPresignedUrlOutput>;
+  uploadFile: (
+    file: IStorageGw.UploadFileParams,
+  ) => Promise<IStorageGw.UploadFileOutput>;
   deleteFile: (
     filePath: IStorageGw.DeleteFileParams,
   ) => Promise<IStorageGw.DeleteFileOutput>;
@@ -11,15 +11,16 @@ export interface IStorageGw {
 }
 
 export namespace IStorageGw {
-  export type GetUploadPresignedUrlParams = {
+  export type UploadFileParams = {
+    fileBuffer: Buffer;
     key: string;
     contentType: string;
     size: number;
     orgId: string;
     productId?: string;
   };
-  export type GetUploadPresignedUrlOutput = {
-    url: string;
+  export type UploadFileOutput = {
+    fileKey: string;
   };
   export type DeleteFileParams = {
     key: string;
