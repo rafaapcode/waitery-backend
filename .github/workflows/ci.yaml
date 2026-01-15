@@ -49,6 +49,12 @@ jobs:
         run: |
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/waitery" >> $GITHUB_ENV
           echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo "PORT=3001" >> $GITHUB_ENV
+          echo "JWT_SECRET=jwt_secret" >> $GITHUB_ENV
+          echo "REFRESH_JWT_SECRET=refresh_jwt_secret" >> $GITHUB_ENV
+          echo "CEP_SERVICE_API_URL=https://service.test" >> $GITHUB_ENV
+          echo "CDN_URL=https://cdn.waitery.app" >> $GITHUB_ENV
+          echo "BUCKET_NAME=bucket_name" >> $GITHUB_ENV
 
       - name: Run database migrations
         run: npx prisma migrate dev
