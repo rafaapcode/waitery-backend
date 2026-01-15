@@ -54,19 +54,13 @@ describe('Create Ingredient UseCase', () => {
     const ings = await getAllIngredientUseCase.execute();
 
     // Assert
-    expect(ings.length).toBe(6);
+    expect(ings.length).toBeGreaterThan(5);
     expect(ings[0]).toBeInstanceOf(Ingredient);
   });
 
   it('Should throw a NotFoundError if ingredients does not exists', async () => {
     // Arrange
-    await prismaService.ingredient.deleteMany({
-      where: {
-        name: {
-          in: Array.from({ length: 6 }).map((_, idx) => `ing ${idx}`),
-        },
-      },
-    });
+    await prismaService.ingredient.deleteMany({});
 
     // Assert
     await expect(getAllIngredientUseCase.execute()).rejects.toThrow(

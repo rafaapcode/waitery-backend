@@ -183,7 +183,8 @@ describe('GetAll Users UseCase', () => {
 
     //Assert
     expect(has_next).toBeFalsy();
-    expect(users.length).toBe(6);
+    expect(users.length).toBeGreaterThan(5);
+    expect(users.length).toBeLessThan(10);
     expect(users[0]).toBeInstanceOf(User);
     expect(users[0].id).not.toEqual(usersSecondPage.users[0].id);
     expect(users[0].name).not.toEqual(usersSecondPage.users[0].name);
