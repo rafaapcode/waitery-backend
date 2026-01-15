@@ -1,6 +1,21 @@
+// Mock do módulo env ANTES de qualquer import que o utilize
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
@@ -9,6 +24,7 @@ import { UserRepo } from 'src/modules/user/repo/user.repository';
 import { UserService } from 'src/modules/user/user.service';
 import {
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
@@ -20,6 +36,7 @@ import { CreateOrganizationUseCase } from '../../usecases/CreateOrganizationUseC
 describe('Create Org UseCase', () => {
   let createOrgUseCase: CreateOrganizationUseCase;
   let orgService: IOrganizationContract;
+  let storageService: IStorageGw;
   let userService: IUserContract;
   let orgRepo: OrganizationRepo;
   let userRepo: UserRepo;
@@ -40,6 +57,7 @@ describe('Create Org UseCase', () => {
             verifyCepService: jest.fn(),
             validateHash: jest.fn(),
             generateHash: jest.fn(),
+            getCepAddressInformations: jest.fn(),
           },
         },
         {
@@ -50,11 +68,20 @@ describe('Create Org UseCase', () => {
           provide: IUSER_CONTRACT,
           useClass: UserService,
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     userService = module.get<IUserContract>(IUSER_CONTRACT);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     userRepo = module.get<UserRepo>(UserRepo);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
@@ -89,6 +116,7 @@ describe('Create Org UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(prismaService).toBeDefined();
+    expect(storageService).toBeDefined();
     expect(owner_id).toBeDefined();
   });
 
@@ -115,12 +143,35 @@ describe('Create Org UseCase', () => {
       },
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'getCepAddressInformations').mockResolvedValue({
+      cep: '12345-678',
+      logradouro: 'Rua Exemplo',
+      complemento: 'Apto 101',
+      unidade: '',
+      bairro: 'Centro',
+      localidade: 'São Paulo',
+      uf: 'SP',
+      estado: 'São Paulo',
+      regiao: 'Sudeste',
+      ibge: '3550308',
+      gia: '1004',
+      ddd: '11',
+      siafi: '7107',
+    });
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'file_key' });
 
     // Act
     const newOrg = await createOrgUseCase.execute(data);
 
     //Assert
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
+      data.data.cep,
+    );
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
+    expect(storageService.uploadFile).toHaveBeenCalledTimes(0);
     expect(newOrg).toBeInstanceOf(Organization);
     expect(newOrg.owner_id).toBe(owner_id);
   });
