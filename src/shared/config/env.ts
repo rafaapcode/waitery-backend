@@ -36,6 +36,10 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
+  BUCKET_NAME: string;
+
+  @IsString()
+  @IsNotEmpty()
   NODE_ENV: 'DEV' | 'PROD';
 }
 
@@ -47,6 +51,7 @@ export const env = plainToInstance(Env, {
   CEP_SERVICE_API_URL: process.env.CEP_SERVICE_API_URL,
   CDN_URL: process.env.CDN_URL,
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
+  BUCKET_NAME: process.env.BUCKET_NAME,
 });
 
 const errors = validateSync(env);

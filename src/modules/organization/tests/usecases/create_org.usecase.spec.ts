@@ -12,6 +12,7 @@ import {
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { ulid } from 'ulid';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { CreateOrganizationUseCase } from '../../usecases/CreateOrganizationUseCase';
@@ -96,6 +97,7 @@ describe('Create Org UseCase', () => {
     const data: IOrganizationContract.CreateParams = {
       owner_id,
       data: {
+        id: ulid(),
         name: 'Restaurante Fogo de chão',
         image_url: 'https://example.com/images/clinica.jpg',
         email: 'contato@bemestar.com',
@@ -128,6 +130,7 @@ describe('Create Org UseCase', () => {
     const data: IOrganizationContract.CreateParams = {
       owner_id: '1231313',
       data: {
+        id: ulid(),
         name: 'Restaurante Fogo de chão123123',
         image_url: 'https://example.com/images/clinica.jpg',
         email: 'contato@bemestar.com',
@@ -158,6 +161,7 @@ describe('Create Org UseCase', () => {
     const data: IOrganizationContract.CreateParams = {
       owner_id,
       data: {
+        id: ulid(),
         name: 'Restaurante Fogo de chão',
         image_url: 'https://example.com/images/clinica.jpg',
         email: 'contato@bemestar.com',

@@ -98,18 +98,15 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
 
       if (!fileKey) {
         sentry.logger.error('Error uploading organization image file');
-        console.log('Nada foi criado');
       } else {
-        console.log('FILE KEY:', fileKey);
         organization.setNewImageUrl(fileKey);
-        console.log('ORGANIZATION AFTER SET IMAGE:', organization.image_url);
       }
     }
 
-    // await this.orgService.create({
-    //   data: organization,
-    //   owner_id: organization.owner_id,
-    // });
+    await this.orgService.create({
+      data: organization,
+      owner_id: organization.owner_id,
+    });
 
     return organization;
   }

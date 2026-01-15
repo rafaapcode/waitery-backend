@@ -3,6 +3,7 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { IUTILS_SERVICE } from 'src/shared/constants';
+import { ulid } from 'ulid';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 
@@ -33,6 +34,7 @@ describe('OrganizationService', () => {
             verifyCepService: jest.fn(),
             validateHash: jest.fn(),
             generateHash: jest.fn(),
+            getCepAddressInformations: jest.fn(),
           },
         },
       ],
@@ -53,6 +55,7 @@ describe('OrganizationService', () => {
     // Arrange
     const orgData: IOrganizationContract.CreateParams = {
       data: {
+        id: ulid(),
         cep: '12345678',
         city: 'City',
         close_hour: 23,
@@ -366,5 +369,70 @@ describe('OrganizationService', () => {
     expect(orgrepo.verifyOrgByName).toHaveBeenCalledTimes(1);
     expect(orgrepo.verifyOrgByName).toHaveBeenCalledWith(orgData);
     expect(org).toBeFalsy();
+  });
+
+  it('Should return informations about the CEP', async () => {
+    // Arrange
+    const cep = '12345678';
+
+    jest.spyOn(utilsService, 'getCepAddressInformations').mockResolvedValue({
+      cep: '12345-678',
+      logradouro: 'Rua Exemplo',
+      complemento: 'Apto 101',
+      unidade: '',
+      bairro: 'Centro',
+      localidade: 'São Paulo',
+      uf: 'SP',
+      estado: 'São Paulo',
+      regiao: 'Sudeste',
+      ibge: '3550308',
+      gia: '1004',
+      ddd: '11',
+      siafi: '7107',
+    });
+
+    // Act
+    const result = await orgService.getAddressInformation(cep);
+
+    // Assert
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
+    expect(result).toHaveProperty('cep', '12345-678');
+    expect(result).toHaveProperty('localidade', 'São Paulo');
+    expect(result).toHaveProperty('uf', 'SP');
+  });
+
+  it('Should return null if the CEP is invalid', async () => {
+    // Arrange
+    const cep = '12345678';
+
+    jest
+      .spyOn(utilsService, 'getCepAddressInformations')
+      .mockResolvedValue(null);
+
+    // Act
+    const result = await orgService.getAddressInformation(cep);
+
+    // Assert
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
+    expect(result).toBeNull();
+  });
+
+  it('Should return error if occur some error on the CEP service', async () => {
+    // Arrange
+    const cep = '12345678';
+
+    jest
+      .spyOn(utilsService, 'getCepAddressInformations')
+      .mockResolvedValue({ erro: 'true' });
+
+    // Act
+    const result = await orgService.getAddressInformation(cep);
+
+    // Assert
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
+    expect(result).toHaveProperty('erro', 'true');
   });
 });

@@ -1,5 +1,5 @@
 import { env } from 'src/shared/config/env';
-import { v7 as uuidv7 } from 'uuid';
+import { ulid } from 'ulid';
 
 export class Organization {
   readonly id: string;
@@ -22,7 +22,7 @@ export class Organization {
     if (data.id) {
       this.id = data.id;
     } else {
-      this.id = uuidv7();
+      this.id = ulid();
     }
     this.owner_id = data.owner_id;
     this.name = data.name;
