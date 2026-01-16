@@ -1,6 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
-import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
+import { IORGANIZATION_CONTRACT, ISTORAGE_SERVICE } from 'src/shared/constants';
 
 interface IDeleteOrganizationUseCase {
   execute(id: string, owner_id: string): Promise<void>;
@@ -11,6 +13,8 @@ export class DeleteOrganizationUseCase implements IDeleteOrganizationUseCase {
   constructor(
     @Inject(IORGANIZATION_CONTRACT)
     private readonly orgService: IOrganizationContract,
+    @Inject(ISTORAGE_SERVICE)
+    private readonly storageService: IStorageGw,
   ) {}
 
   async execute(id: string, owner_id: string): Promise<void> {
@@ -29,6 +33,21 @@ export class DeleteOrganizationUseCase implements IDeleteOrganizationUseCase {
       throw new NotFoundException('Organization Not Found');
     }
 
+    this.storageService
+      .deleteFile({
+        key: this.getImageKeyFromUrl(org.image_url),
+      })
+      .catch((err) =>
+        sentry.logger.error(
+          `Error deleting organization image file ${JSON.stringify(err)}`,
+        ),
+      );
+
     await this.orgService.delete({ id });
+  }
+
+  private getImageKeyFromUrl(url: string): string {
+    const urlObj = new URL(url);
+    return urlObj.pathname.slice(1);
   }
 }

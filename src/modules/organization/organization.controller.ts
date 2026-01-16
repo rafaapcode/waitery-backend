@@ -85,13 +85,21 @@ export class OrganizationController {
 
   @Roles(UserRole.OWNER)
   @Patch()
+  @UseInterceptors(FileInterceptor('image'))
   @HttpCode(HttpStatus.OK)
   async update(
     @GetOrgId() org_id: string,
-    @Body() data: UpdateOrganizationDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() data: string,
     @GetMe() me: JwtPayload,
   ) {
-    const org = await this.updateOrgUseCase.execute(org_id, me.id, data);
+    const parsedData = plainToInstance(UpdateOrganizationDTO, data);
+    const org = await this.updateOrgUseCase.execute({
+      id: org_id,
+      owner_id: me.id,
+      data: parsedData,
+      image_file: file,
+    });
     return { org: org.fromEntity() };
   }
 }
