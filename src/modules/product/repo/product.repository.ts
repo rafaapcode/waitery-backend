@@ -22,6 +22,7 @@ export class ProductRepository {
   ): Promise<ProductWithCategory> {
     const product = await this.prisma.product.create({
       data: {
+        ...(data.id && { id: data.id }),
         description: data.description,
         image_url: data.image_url,
         ingredients: data.ingredientsCategoryToPrismaJson(),

@@ -57,6 +57,9 @@ export class DeleteProductUseCase implements IDeleteProductUseCase {
       throw new NotFoundException('Product not found');
     }
 
+    if (product.image_url) {
+      // await this.prodService.deleteFile({});
+    }
     await this.prodService.delete({ product_id, org_id });
   }
 }

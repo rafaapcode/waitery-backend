@@ -37,6 +37,14 @@ export interface IOrganizationContract {
   getAddressInformation(
     params: string,
   ): Promise<IOrganizationContract.GetAddressInformationOutput | null>;
+
+  uploadFile(
+    params: IOrganizationContract.UploadFileParams,
+  ): Promise<IOrganizationContract.UploadFileOutput>;
+
+  deleteFile(
+    params: IOrganizationContract.DeleteFileParams,
+  ): Promise<IOrganizationContract.DeleteFileOutput>;
 }
 
 export namespace IOrganizationContract {
@@ -118,4 +126,15 @@ export namespace IOrganizationContract {
   export type VerifyCepOutput = boolean;
 
   export type GetAddressInformationOutput = GetAddressInfoOutput;
+
+  export type UploadFileParams = {
+    file: Express.Multer.File;
+    org: Organization;
+  };
+  export type UploadFileOutput = Organization;
+
+  export type DeleteFileParams = {
+    key: string;
+  };
+  export type DeleteFileOutput = boolean;
 }

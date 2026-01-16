@@ -14,10 +14,15 @@ jest.mock('src/shared/config/env', () => ({
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { GetAllOrganizationUseCase } from '../../usecases/GetAllOrganizationUseCase';
@@ -25,6 +30,7 @@ import { GetAllOrganizationUseCase } from '../../usecases/GetAllOrganizationUseC
 describe('GetAll Orgs UseCase', () => {
   let getAllOrgUsecase: GetAllOrganizationUseCase;
   let orgService: IOrganizationContract;
+  let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
@@ -50,6 +56,14 @@ describe('GetAll Orgs UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -60,6 +74,7 @@ describe('GetAll Orgs UseCase', () => {
     getAllOrgUsecase = module.get<GetAllOrganizationUseCase>(
       GetAllOrganizationUseCase,
     );
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     await prismaService.organization.createMany({
       data: Array.from({ length: 3 }).map((_, idx) => ({
@@ -96,6 +111,7 @@ describe('GetAll Orgs UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should get all organizations', async () => {

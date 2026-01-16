@@ -62,6 +62,7 @@ export class UpdateProductUseCase implements IUpdateProductUseCase {
         throw new BadRequestException('Ingredients not found or invalid');
       }
     }
+
     await this.prodService.update({
       id: product_id,
       data: {

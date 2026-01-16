@@ -62,6 +62,10 @@ export class Organization {
   setNewImageUrl(file_key: string) {
     this.image_url = `${env.CDN_URL}/${file_key}`;
   }
+
+  setCompleteImageUrl(image_url: string) {
+    this.image_url = image_url;
+  }
 }
 
 namespace Organization {

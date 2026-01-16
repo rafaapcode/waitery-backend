@@ -1,9 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
-import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Organization } from 'src/core/domain/entities/organization';
-import { IORGANIZATION_CONTRACT, ISTORAGE_SERVICE } from 'src/shared/constants';
+import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
 import { UpdateOrganizationDTO } from '../dto/update-organization.dto';
 
 export type UpdateOrganizationParams = {
@@ -22,8 +21,6 @@ export class UpdateOrganizationUseCase implements IUpdateOrganizationUseCase {
   constructor(
     @Inject(IORGANIZATION_CONTRACT)
     private readonly orgService: IOrganizationContract,
-    @Inject(ISTORAGE_SERVICE)
-    private readonly storageService: IStorageGw,
   ) {}
 
   async execute(params: UpdateOrganizationParams): Promise<Organization> {
@@ -46,7 +43,7 @@ export class UpdateOrganizationUseCase implements IUpdateOrganizationUseCase {
 
     if (image_file) {
       if (org.image_url) {
-        this.storageService
+        this.orgService
           .deleteFile({
             key: this.getImageKeyFromUrl(org.image_url),
           })
@@ -57,24 +54,10 @@ export class UpdateOrganizationUseCase implements IUpdateOrganizationUseCase {
           );
       }
 
-      const input_key = this.storageService.getFileKey({
-        filename: image_file.originalname,
-        orgId: org.id,
+      await this.orgService.uploadFile({
+        file: image_file,
+        org,
       });
-
-      const { fileKey } = await this.storageService.uploadFile({
-        fileBuffer: image_file.buffer,
-        key: input_key,
-        contentType: image_file.mimetype,
-        size: image_file.size,
-        orgId: org.id,
-      });
-
-      if (!fileKey) {
-        sentry.logger.error('Error uploading organization image file');
-      } else {
-        org.setNewImageUrl(fileKey);
-      }
     }
 
     const org_updated = await this.orgService.update({

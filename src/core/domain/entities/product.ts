@@ -1,13 +1,15 @@
 import { Prisma } from 'generated/prisma';
+import { env } from 'src/shared/config/env';
+import { ulid } from 'ulid';
 import { Category } from './category';
 import { ProductsOrder } from './order';
 
 export class Product {
-  readonly id?: string;
+  readonly id: string;
   readonly org_id: string;
   readonly name: string;
   readonly description: string;
-  readonly image_url: string;
+  image_url: string;
   readonly price: number;
   readonly ingredients: { value: string; label: string }[];
   readonly category: Category;
@@ -15,7 +17,11 @@ export class Product {
   readonly discount: boolean;
 
   constructor(data: Product.Attr) {
-    if (data.id) this.id = data.id;
+    if (data.id) {
+      this.id = data.id;
+    } else {
+      this.id = ulid();
+    }
     this.org_id = data.org_id;
     this.name = data.name;
     this.description = data.description;
@@ -55,6 +61,10 @@ export class Product {
       quantity: quantity,
       image_url: this.image_url ?? '',
     };
+  }
+
+  setNewImageUrl(file_key: string) {
+    this.image_url = `${env.CDN_URL}/${file_key}`;
   }
 }
 

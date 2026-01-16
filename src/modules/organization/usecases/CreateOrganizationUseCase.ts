@@ -6,14 +6,9 @@ import {
 } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
-import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { createOganizationEntity } from 'src/core/domain/entities/organization';
-import {
-  IORGANIZATION_CONTRACT,
-  ISTORAGE_SERVICE,
-  IUSER_CONTRACT,
-} from 'src/shared/constants';
+import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
 import { CreateOrganizationDTO } from '../dto/create-organization.dto';
 
 export type CreateOrganizationParams = {
@@ -35,8 +30,6 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly orgService: IOrganizationContract,
     @Inject(IUSER_CONTRACT)
     private readonly userService: IUserContract,
-    @Inject(ISTORAGE_SERVICE)
-    private readonly storageService: IStorageGw,
   ) {}
 
   async execute({
@@ -85,24 +78,11 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     }
 
     if (image_file) {
-      const input_key = this.storageService.getFileKey({
-        filename: image_file.originalname,
-        orgId: organization.id,
+      const organizationWithImageUrl = await this.orgService.uploadFile({
+        file: image_file,
+        org: organization,
       });
-
-      const { fileKey } = await this.storageService.uploadFile({
-        fileBuffer: image_file.buffer,
-        key: input_key,
-        contentType: image_file.mimetype,
-        size: image_file.size,
-        orgId: organization.id,
-      });
-
-      if (!fileKey) {
-        sentry.logger.error('Error uploading organization image file');
-      } else {
-        organization.setNewImageUrl(fileKey);
-      }
+      organization.setCompleteImageUrl(organizationWithImageUrl.image_url);
     }
 
     await this.orgService.create({

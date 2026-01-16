@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
+import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
-import { IUTILS_SERVICE } from 'src/shared/constants';
+import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
 import { OrganizationRepo } from './repo/organization.repo';
 
 @Injectable()
@@ -11,7 +13,42 @@ export class OrganizationService implements IOrganizationContract {
     private readonly orgRepo: OrganizationRepo,
     @Inject(IUTILS_SERVICE)
     private readonly utilsService: IUtilsContract,
+    @Inject(ISTORAGE_SERVICE)
+    private readonly storageService: IStorageGw,
   ) {}
+
+  async deleteFile(
+    params: IOrganizationContract.DeleteFileParams,
+  ): Promise<IOrganizationContract.DeleteFileOutput> {
+    const { success } = await this.storageService.deleteFile(params);
+    return success;
+  }
+
+  async uploadFile(
+    params: IOrganizationContract.UploadFileParams,
+  ): Promise<IOrganizationContract.UploadFileOutput> {
+    const { file, org } = params;
+    const input_key = this.storageService.getFileKey({
+      filename: file.originalname,
+      orgId: org.id,
+    });
+
+    const { fileKey } = await this.storageService.uploadFile({
+      fileBuffer: file.buffer,
+      key: input_key,
+      contentType: file.mimetype,
+      size: file.size,
+      orgId: org.id,
+    });
+
+    if (!fileKey) {
+      sentry.logger.error('Error uploading organization image file');
+    } else {
+      org.setNewImageUrl(fileKey);
+    }
+
+    return org;
+  }
 
   async getAddressInformation(
     cep: string,

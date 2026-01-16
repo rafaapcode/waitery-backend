@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { StorageModule } from 'src/infra/storage/storage.module';
+import { StorageService } from 'src/infra/storage/storage.service';
 import {
   ICATEGORY_CONTRACT,
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { UtilsService } from 'src/utils.service';
@@ -25,7 +28,7 @@ import { GetProductUseCase } from './usecases/GetProductUseCase';
 import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, StorageModule],
   controllers: [ProductController],
   providers: [
     ProductRepository,
@@ -57,6 +60,10 @@ import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
     {
       provide: IUTILS_SERVICE,
       useClass: UtilsService,
+    },
+    {
+      provide: ISTORAGE_SERVICE,
+      useClass: StorageService,
     },
   ],
 })

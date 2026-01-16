@@ -1,13 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import * as sentry from '@sentry/nestjs';
 import { Prisma } from 'generated/prisma';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
+import { ISTORAGE_SERVICE } from 'src/shared/constants';
 import { ProductRepository } from './repo/product.repository';
 
 @Injectable()
 export class ProductService implements IProductContract {
-  constructor(private readonly productRepo: ProductRepository) {}
+  constructor(
+    private readonly productRepo: ProductRepository,
+    @Inject(ISTORAGE_SERVICE)
+    private readonly storageService: IStorageGw,
+  ) {}
+
+  async uploadFile(
+    params: IProductContract.UploadFileParams,
+  ): Promise<IProductContract.UploadFileOutput> {
+    const { file, product } = params;
+    const input_key = this.storageService.getFileKey({
+      filename: file.originalname,
+      orgId: product.org_id,
+      productId: product.id,
+    });
+
+    const { fileKey } = await this.storageService.uploadFile({
+      fileBuffer: file.buffer,
+      key: input_key,
+      contentType: file.mimetype,
+      size: file.size,
+      orgId: product.org_id,
+      productId: product.id,
+    });
+
+    if (!fileKey) {
+      sentry.logger.error('Error uploading organization image file');
+    } else {
+      product.setNewImageUrl(fileKey);
+    }
+
+    return product;
+  }
+
+  async deleteFile(
+    params: IProductContract.DeleteFileParams,
+  ): Promise<IProductContract.DeleteFileOutput> {
+    const { success } = await this.storageService.deleteFile(params);
+    return success;
+  }
+
   async create(
     params: IProductContract.CreateParams,
   ): Promise<IProductContract.CreateOutput> {

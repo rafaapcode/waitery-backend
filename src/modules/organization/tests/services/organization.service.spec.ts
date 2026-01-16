@@ -11,11 +11,16 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { Organization } from 'src/core/domain/entities/organization';
-import { IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  createOganizationEntity,
+  Organization,
+} from 'src/core/domain/entities/organization';
+import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
 import { ulid } from 'ulid';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
@@ -24,6 +29,23 @@ describe('OrganizationService', () => {
   let orgService: OrganizationService;
   let orgrepo: OrganizationRepo;
   let utilsService: IUtilsContract;
+  let storageService: IStorageGw;
+  const org: Organization = createOganizationEntity({
+    description: faker.person.bio(),
+    email: faker.internet.email(),
+    cep: faker.location.zipCode(),
+    name: faker.company.name(),
+    image_url: faker.image.url(),
+    location_code: faker.location.zipCode(),
+    street: faker.location.street(),
+    neighborhood: faker.location.street(),
+    close_hour: Number(23),
+    open_hour: Number(8),
+    owner_id: 'data.owner_id',
+    city: faker.location.city(),
+    lat: 0,
+    long: 0,
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,57 +72,55 @@ describe('OrganizationService', () => {
             getCepAddressInformations: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     orgService = module.get<OrganizationService>(OrganizationService);
     orgrepo = module.get<OrganizationRepo>(OrganizationRepo);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(orgService).toBeDefined();
     expect(orgrepo).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should create an organization', async () => {
     // Arrange
+    const mockedData = {
+      id: ulid(),
+      cep: faker.location.zipCode(),
+      city: faker.location.city(),
+      close_hour: 23,
+      name: faker.company.name(),
+      description: faker.person.bio(),
+      email: faker.internet.email(),
+      image_url: faker.image.url(),
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
+      open_hour: 8,
+      location_code: faker.location.buildingNumber(),
+      neighborhood: faker.location.street(),
+      street: faker.location.street(),
+    };
     const orgData: IOrganizationContract.CreateParams = {
-      data: {
-        id: ulid(),
-        cep: '12345678',
-        city: 'City',
-        close_hour: 23,
-        name: 'Org',
-        description: 'Org description',
-        email: 'rafa@gmail.com',
-        image_url: 'http://image.com',
-        lat: -23.55052,
-        long: -46.633308,
-        open_hour: 8,
-        location_code: '1231313',
-        neighborhood: 'Neighborhood',
-        street: 'Street',
-      },
+      data: mockedData,
       owner_id: 'owner_id',
     };
 
     jest.spyOn(orgrepo, 'create').mockResolvedValue({
-      cep: '12345678',
-      city: 'City',
-      close_hour: 23,
-      id: `org_id`,
-      name: `Org `,
-      description: 'Org description',
-      email: 'rafa@gmail.com',
-      image_url: 'http://image.com',
-      lat: -23.55052,
-      long: -46.633308,
-      open_hour: 8,
-      location_code: '1231313',
-      neighborhood: 'Neighborhood',
-      street: 'Street',
+      ...mockedData,
       owner_id: 'owner_id',
     });
 
@@ -115,40 +135,29 @@ describe('OrganizationService', () => {
 
   it('Should update an organization', async () => {
     // Arrange
+    const mockedData = {
+      cep: faker.location.zipCode(),
+      city: faker.location.city(),
+      close_hour: 23,
+      name: faker.company.name(),
+      description: faker.person.bio(),
+      email: faker.internet.email(),
+      image_url: faker.image.url(),
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
+      open_hour: 8,
+      location_code: faker.location.buildingNumber(),
+      neighborhood: faker.location.street(),
+      street: faker.location.street(),
+    };
     const orgData: IOrganizationContract.UpdateParams = {
-      data: {
-        cep: '12345678',
-        city: 'City',
-        close_hour: 23,
-        name: 'Org',
-        description: 'Org description',
-        email: 'rafa@gmail.com',
-        image_url: 'http://image.com',
-        lat: -23.55052,
-        long: -46.633308,
-        open_hour: 8,
-        location_code: '1231313',
-        neighborhood: 'Neighborhood',
-        street: 'Street',
-      },
+      data: mockedData,
       id: 'owner_id',
     };
 
     jest.spyOn(orgrepo, 'update').mockResolvedValue({
-      cep: '12345678',
-      city: 'City',
-      close_hour: 23,
-      id: `org_id`,
-      name: `Org `,
-      description: 'Org description',
-      email: 'rafa@gmail.com',
-      image_url: 'http://image.com',
-      lat: -23.55052,
-      long: -46.633308,
-      open_hour: 8,
-      location_code: '1231313',
-      neighborhood: 'Neighborhood',
-      street: 'Street',
+      ...mockedData,
+      id: ulid(),
       owner_id: 'owner_id',
     });
 
@@ -184,20 +193,20 @@ describe('OrganizationService', () => {
     };
 
     jest.spyOn(orgrepo, 'get').mockResolvedValue({
-      cep: '12345678',
-      city: 'City',
+      id: ulid(),
+      cep: faker.location.zipCode(),
+      city: faker.location.city(),
       close_hour: 23,
-      id: `org_id`,
-      name: `Org `,
-      description: 'Org description',
-      email: 'rafa@gmail.com',
-      image_url: 'http://image.com',
-      lat: -23.55052,
-      long: -46.633308,
+      name: faker.company.name(),
+      description: faker.person.bio(),
+      email: faker.internet.email(),
+      image_url: faker.image.url(),
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
       open_hour: 8,
-      location_code: '1231313',
-      neighborhood: 'Neighborhood',
-      street: 'Street',
+      location_code: faker.location.buildingNumber(),
+      neighborhood: faker.location.street(),
+      street: faker.location.street(),
       owner_id: 'owner_id',
     });
 
@@ -235,20 +244,20 @@ describe('OrganizationService', () => {
 
     jest.spyOn(orgrepo, 'getAll').mockResolvedValue(
       Array.from({ length: 3 }).map((_, idx) => ({
-        cep: '12345678',
-        city: 'City',
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
         close_hour: 23,
         id: `org_id-${idx}`,
         name: `Org ${idx}`,
-        description: 'Org description',
-        email: 'rafa@gmail.com',
-        image_url: 'http://image.com',
-        lat: -23.55052,
-        long: -46.633308,
+        description: faker.person.bio(),
+        email: faker.internet.email(),
+        image_url: faker.image.url(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         open_hour: 8,
-        location_code: '1231313',
-        neighborhood: 'Neighborhood',
-        street: 'Street',
+        location_code: faker.location.buildingNumber(),
+        neighborhood: faker.location.street(),
+        street: faker.location.street(),
         owner_id: 'owner_id',
       })),
     );
@@ -288,20 +297,20 @@ describe('OrganizationService', () => {
     };
 
     jest.spyOn(orgrepo, 'verifyOrgById').mockResolvedValue({
-      cep: '12345678',
-      city: 'City',
+      cep: faker.location.zipCode(),
+      city: faker.location.city(),
       close_hour: 23,
-      id: 'org_id',
-      name: 'Org',
-      description: 'Org description',
-      email: 'rafa@gmail.com',
-      image_url: 'http://image.com',
-      lat: -23.55052,
-      long: -46.633308,
+      id: ulid(),
+      name: faker.company.name(),
+      description: faker.person.bio(),
+      email: faker.internet.email(),
+      image_url: faker.image.url(),
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
       open_hour: 8,
-      location_code: '1231313',
-      neighborhood: 'Neighborhood',
-      street: 'Street',
+      location_code: faker.location.buildingNumber(),
+      neighborhood: faker.location.street(),
+      street: faker.location.street(),
       owner_id: 'owner_id',
     });
 
@@ -336,24 +345,24 @@ describe('OrganizationService', () => {
     // Arrange
     const orgData: IOrganizationContract.VerifyOrgsParamsByName = {
       owner_id: 'owner_id',
-      name: 'Org',
+      name: faker.company.name(),
     };
 
     jest.spyOn(orgrepo, 'verifyOrgByName').mockResolvedValue({
-      cep: '12345678',
-      city: 'City',
+      cep: faker.location.zipCode(),
+      city: faker.location.city(),
       close_hour: 23,
-      id: 'org_id',
-      name: 'Org',
-      description: 'Org description',
-      email: 'rafa@gmail.com',
-      image_url: 'http://image.com',
-      lat: -23.55052,
-      long: -46.633308,
+      id: ulid(),
+      name: faker.company.name(),
+      description: faker.person.bio(),
+      email: faker.internet.email(),
+      image_url: faker.image.url(),
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
       open_hour: 8,
-      location_code: '1231313',
-      neighborhood: 'Neighborhood',
-      street: 'Street',
+      location_code: faker.location.buildingNumber(),
+      neighborhood: faker.location.street(),
+      street: faker.location.street(),
       owner_id: 'owner_id',
     });
 
@@ -386,14 +395,14 @@ describe('OrganizationService', () => {
 
   it('Should return informations about the CEP', async () => {
     // Arrange
-    const cep = '12345678';
+    const cep = faker.location.zipCode();
 
     jest.spyOn(utilsService, 'getCepAddressInformations').mockResolvedValue({
-      cep: '12345-678',
-      logradouro: 'Rua Exemplo',
-      complemento: 'Apto 101',
+      cep: cep,
+      logradouro: faker.location.street(),
+      complemento: '',
       unidade: '',
-      bairro: 'Centro',
+      bairro: faker.location.streetAddress(),
       localidade: 'São Paulo',
       uf: 'SP',
       estado: 'São Paulo',
@@ -410,14 +419,14 @@ describe('OrganizationService', () => {
     // Assert
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
-    expect(result).toHaveProperty('cep', '12345-678');
+    expect(result).toHaveProperty('cep', cep);
     expect(result).toHaveProperty('localidade', 'São Paulo');
     expect(result).toHaveProperty('uf', 'SP');
   });
 
   it('Should return null if the CEP is invalid', async () => {
     // Arrange
-    const cep = '12345678';
+    const cep = faker.location.zipCode();
 
     jest
       .spyOn(utilsService, 'getCepAddressInformations')
@@ -434,7 +443,7 @@ describe('OrganizationService', () => {
 
   it('Should return error if occur some error on the CEP service', async () => {
     // Arrange
-    const cep = '12345678';
+    const cep = faker.location.zipCode();
 
     jest
       .spyOn(utilsService, 'getCepAddressInformations')
@@ -447,5 +456,30 @@ describe('OrganizationService', () => {
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
     expect(result).toBeNull();
+  });
+
+  it('Should upload a file', async () => {
+    // Arrange
+    const filename = faker.system.fileName();
+    const file = {
+      originalname: filename,
+      buffer: Buffer.from('file-content'),
+      mimetype: 'image/png',
+      size: 1024,
+    } as Express.Multer.File;
+
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'organization/132adad/image.png' });
+
+    // Act
+    const result = await orgService.uploadFile({
+      file,
+      org,
+    });
+
+    // Assert
+    expect(storageService.uploadFile).toHaveBeenCalledTimes(1);
+    expect(result).toBeInstanceOf(Organization);
   });
 });

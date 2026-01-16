@@ -37,6 +37,14 @@ export interface IProductContract {
   verifyProdIsRelatedWithOrg(
     params: IProductContract.VerifyProductIsRelatedWithOrgParams,
   ): Promise<IProductContract.VerifyProductIsRelatedWithOrgOutput>;
+
+  uploadFile(
+    params: IProductContract.UploadFileParams,
+  ): Promise<IProductContract.UploadFileOutput>;
+
+  deleteFile(
+    params: IProductContract.DeleteFileParams,
+  ): Promise<IProductContract.DeleteFileOutput>;
 }
 
 export namespace IProductContract {
@@ -115,4 +123,15 @@ export namespace IProductContract {
   };
 
   export type VerifyProductIsRelatedWithOrgOutput = boolean;
+
+  export type UploadFileParams = {
+    file: Express.Multer.File;
+    product: Product;
+  };
+  export type UploadFileOutput = Product;
+
+  export type DeleteFileParams = {
+    key: string;
+  };
+  export type DeleteFileOutput = boolean;
 }

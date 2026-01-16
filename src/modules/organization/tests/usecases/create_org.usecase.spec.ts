@@ -12,13 +12,17 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { Organization } from 'src/core/domain/entities/organization';
+import {
+  createOganizationEntity,
+  Organization,
+} from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import { UserService } from 'src/modules/user/user.service';
@@ -129,35 +133,46 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante Fogo de chão',
+        name: 'Restaurante',
         email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
+        description: faker.person.bio(),
         location_code: 'BR-MG-015',
         open_hour: 8,
         close_hour: 18,
-        cep: '30130-010',
+        cep: faker.location.zipCode(),
       },
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
     jest.spyOn(utilsService, 'getCepAddressInformations').mockResolvedValue({
-      cep: '12345-678',
-      logradouro: 'Rua Exemplo',
+      cep: faker.location.zipCode(),
+      logradouro: faker.location.street(),
       complemento: 'Apto 101',
       unidade: '',
-      bairro: 'Centro',
-      localidade: 'São Paulo',
+      bairro: faker.location.street(),
+      localidade: faker.location.streetAddress(),
       uf: 'SP',
-      estado: 'São Paulo',
+      estado: faker.location.state(),
       regiao: 'Sudeste',
       ibge: '3550308',
       gia: '1004',
       ddd: '11',
       siafi: '7107',
     });
-    jest
-      .spyOn(storageService, 'uploadFile')
-      .mockResolvedValue({ fileKey: 'file_key' });
+    const infos = await orgService.getAddressInformation(data.data.cep);
+    jest.clearAllMocks();
+    jest.spyOn(orgService, 'uploadFile').mockResolvedValue(
+      createOganizationEntity({
+        ...data.data,
+        close_hour: Number(data.data.close_hour),
+        open_hour: Number(data.data.open_hour),
+        owner_id,
+        city: infos ? `${infos.localidade}-${infos.uf}` : '',
+        neighborhood: infos ? infos.bairro : '',
+        street: infos ? infos.logradouro : '',
+        lat: 0,
+        long: 0,
+      }),
+    );
 
     // Act
     const newOrg = await createOrgUseCase.execute(data);
@@ -168,7 +183,7 @@ describe('Create Org UseCase', () => {
       data.data.cep,
     );
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
-    expect(storageService.uploadFile).toHaveBeenCalledTimes(0);
+    expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
     expect(newOrg).toBeInstanceOf(Organization);
     expect(newOrg.owner_id).toBe(owner_id);
   });
@@ -178,14 +193,14 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id: '1231313',
       data: {
-        name: 'Restaurante Fogo de chão123123',
+        name: faker.company.name(),
         email: 'contato@bemestar.com',
         description:
           'Clínica especializada em atendimento psicológico e terapias.',
         location_code: 'BR-MG-015',
         open_hour: 8,
         close_hour: 18,
-        cep: '30130-010',
+        cep: faker.location.zipCode(),
       },
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
@@ -202,14 +217,14 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante Fogo de chão',
+        name: 'Restaurante',
         email: 'contato@bemestar.com',
         description:
           'Clínica especializada em atendimento psicológico e terapias.',
         location_code: 'BR-MG-015',
         open_hour: 8,
         close_hour: 18,
-        cep: '30130-010',
+        cep: faker.location.zipCode(),
       },
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
@@ -224,7 +239,7 @@ describe('Create Org UseCase', () => {
   it('Should upload a file and create the imageUrl if the image_file is provided', async () => {
     // Arrange
     const image_file = {
-      originalname: 'logo.png',
+      originalname: faker.system.fileName(),
       buffer: Buffer.from('file_buffer'),
       mimetype: 'image/png',
       size: 1024,
@@ -232,24 +247,32 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante Fogo de chão 123123',
+        name: faker.company.name(),
         email: 'contato_novo@bemestar.com',
         description:
           'Clínica especializada em atendimento psicológico e terapias.',
         location_code: 'BR-MG-015',
         open_hour: 8,
         close_hour: 18,
-        cep: '30132-012',
+        cep: faker.location.zipCode(),
       },
       image_file,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
-    jest
-      .spyOn(storageService, 'getFileKey')
-      .mockReturnValue('organization/file_key/logo.png');
-    jest
-      .spyOn(storageService, 'uploadFile')
-      .mockResolvedValue({ fileKey: 'organization/file_key/logo.png' });
+    const infos = await orgService.getAddressInformation(data.data.cep);
+    const org_data = createOganizationEntity({
+      ...data.data,
+      close_hour: Number(data.data.close_hour),
+      open_hour: Number(data.data.open_hour),
+      owner_id,
+      city: infos ? `${infos.localidade}-${infos.uf}` : '',
+      neighborhood: infos ? infos.bairro : '',
+      street: infos ? infos.logradouro : '',
+      lat: faker.location.latitude(),
+      long: faker.location.longitude(),
+      image_url: 'https://waitery.s3.teste/organization/file_key/logo.png',
+    });
+    jest.spyOn(orgService, 'uploadFile').mockResolvedValue(org_data);
 
     // Act
     const newOrg = await createOrgUseCase.execute(data);
@@ -259,19 +282,7 @@ describe('Create Org UseCase', () => {
     expect(newOrg.image_url).toBeTruthy();
     expect(newOrg.owner_id).toBe(owner_id);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
-    expect(storageService.uploadFile).toHaveBeenCalledTimes(1);
-    expect(storageService.getFileKey).toHaveBeenCalledTimes(1);
-    expect(storageService.getFileKey).toHaveBeenCalledWith({
-      filename: image_file.originalname,
-      orgId: newOrg.id,
-    });
-    expect(storageService.uploadFile).toHaveBeenCalledWith({
-      fileBuffer: image_file.buffer,
-      key: 'organization/file_key/logo.png',
-      contentType: image_file.mimetype,
-      size: image_file.size,
-      orgId: newOrg.id,
-    });
+    expect(orgService.uploadFile).toHaveBeenCalledTimes(1);
   });
 
   it('Should not Upload a file if the image_file is not provided', async () => {
@@ -279,19 +290,31 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante Fogo de chão 893183109u1',
+        name: faker.company.name(),
         email: 'contato_novo_2@bemestar.com',
         description:
           'Clínica especializada em atendimento psicológico e terapias.',
         location_code: 'BR-MG-015',
         open_hour: 8,
         close_hour: 18,
-        cep: '30179-017',
+        cep: faker.location.zipCode(),
       },
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
-    jest.spyOn(storageService, 'getFileKey').mockReturnValue('');
-    jest.spyOn(storageService, 'uploadFile').mockResolvedValue({ fileKey: '' });
+    const infos = await orgService.getAddressInformation(data.data.cep);
+    jest.spyOn(orgService, 'uploadFile').mockResolvedValue(
+      createOganizationEntity({
+        ...data.data,
+        close_hour: Number(data.data.close_hour),
+        open_hour: Number(data.data.open_hour),
+        owner_id,
+        city: infos ? `${infos.localidade}-${infos.uf}` : '',
+        neighborhood: infos ? infos.bairro : '',
+        street: infos ? infos.logradouro : '',
+        lat: 0,
+        long: 0,
+      }),
+    );
 
     // Act
     const newOrg = await createOrgUseCase.execute(data);
@@ -301,7 +324,6 @@ describe('Create Org UseCase', () => {
     expect(newOrg.image_url).toBeFalsy();
     expect(newOrg.owner_id).toBe(owner_id);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
-    expect(storageService.uploadFile).toHaveBeenCalledTimes(0);
-    expect(storageService.getFileKey).toHaveBeenCalledTimes(0);
+    expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
   });
 });

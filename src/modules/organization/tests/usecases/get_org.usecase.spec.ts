@@ -14,10 +14,15 @@ jest.mock('src/shared/config/env', () => ({
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { GetOrganizationUseCase } from '../../usecases/GetOrganizationUseCase';
@@ -25,6 +30,7 @@ import { GetOrganizationUseCase } from '../../usecases/GetOrganizationUseCase';
 describe('Get Org UseCase', () => {
   let getOrgUseCase: GetOrganizationUseCase;
   let orgService: IOrganizationContract;
+  let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
@@ -50,6 +56,14 @@ describe('Get Org UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -58,6 +72,7 @@ describe('Get Org UseCase', () => {
     userRepo = module.get<UserRepo>(UserRepo);
     prismaService = module.get<PrismaService>(PrismaService);
     getOrgUseCase = module.get<GetOrganizationUseCase>(GetOrganizationUseCase);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
@@ -97,6 +112,7 @@ describe('Get Org UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should get a organization', async () => {
