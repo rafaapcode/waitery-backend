@@ -18,10 +18,10 @@ export class StorageService implements IStorageGw {
   getFileKey(params: IStorageGw.GetFileKeyParams): IStorageGw.GetFileKeyOutput {
     const { orgId, productId, filename } = params;
     if (productId) {
-      const key = `organization/${orgId}/product/${productId}/${filename}`;
+      const key = `organization/${orgId}/product/${productId}/${filename.replace(/ /g, '_')}`;
       return key;
     }
-    const key = `organization/${orgId}/${filename}`;
+    const key = `organization/${orgId}/${filename.replace(/ /g, '_')}`;
     return key;
   }
 
