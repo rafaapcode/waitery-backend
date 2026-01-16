@@ -14,10 +14,15 @@ jest.mock('src/shared/config/env', () => ({
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { DeleteOrganizationUseCase } from '../../usecases/DeleteOrganizationUseCase';
@@ -25,6 +30,7 @@ import { DeleteOrganizationUseCase } from '../../usecases/DeleteOrganizationUseC
 describe('Delete Org UseCase', () => {
   let deleteOrgUseCase: DeleteOrganizationUseCase;
   let orgService: IOrganizationContract;
+  let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
@@ -51,6 +57,14 @@ describe('Delete Org UseCase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -62,7 +76,7 @@ describe('Delete Org UseCase', () => {
       DeleteOrganizationUseCase,
     );
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
-
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     const { id } = await prismaService.organization.create({
       data: {
         name: 'Restaurante Fogo de chão',
@@ -92,9 +106,15 @@ describe('Delete Org UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should delete a organization', async () => {
+    // Arrange
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: true });
+
     // Act
     await deleteOrgUseCase.execute(org_id, owner_id);
     const org = await prismaService.organization.findUnique({

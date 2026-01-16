@@ -14,11 +14,16 @@ jest.mock('src/shared/config/env', () => ({
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
-import { IORGANIZATION_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { UpdateOrganizationUseCase } from '../../usecases/UpdateOrganizationUseCase';
@@ -26,6 +31,7 @@ import { UpdateOrganizationUseCase } from '../../usecases/UpdateOrganizationUseC
 describe('Update a Org UseCase', () => {
   let updateOrgUseCase: UpdateOrganizationUseCase;
   let orgService: IOrganizationContract;
+  let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
@@ -52,6 +58,14 @@ describe('Update a Org UseCase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -63,7 +77,7 @@ describe('Update a Org UseCase', () => {
       UpdateOrganizationUseCase,
     );
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
-
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     const { id } = await prismaService.organization.create({
       data: {
         name: 'Restaurante Fogo de chão',
@@ -103,6 +117,7 @@ describe('Update a Org UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should update a organization', async () => {
@@ -116,16 +131,22 @@ describe('Update a Org UseCase', () => {
         city: 'São Paulo',
       },
     };
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'file_key' });
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: true });
 
     // Act
     const old_org = await prismaService.organization.findUnique({
       where: { id: org_id },
     });
-    const updated_org = await updateOrgUseCase.execute(
-      data.id,
-      data.owner_id,
-      data.data,
-    );
+    const updated_org = await updateOrgUseCase.execute({
+      id: data.id,
+      owner_id: data.owner_id,
+      data: data.data,
+    });
 
     // Assert
     expect(old_org?.name).toBe('Restaurante Fogo de chão');
@@ -157,7 +178,11 @@ describe('Update a Org UseCase', () => {
 
     // Assert
     await expect(
-      updateOrgUseCase.execute(data.id, 'data.owner_id', data.data),
+      updateOrgUseCase.execute({
+        id: data.id,
+        owner_id: 'data.owner_id',
+        data: data.data,
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -175,7 +200,11 @@ describe('Update a Org UseCase', () => {
 
     // Assert
     await expect(
-      updateOrgUseCase.execute('data.id', data.owner_id, data.data),
+      updateOrgUseCase.execute({
+        id: 'data.id',
+        owner_id: data.owner_id,
+        data: data.data,
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 });
