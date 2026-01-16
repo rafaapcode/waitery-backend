@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -11,9 +15,30 @@ export class StorageService implements IStorageGw {
     this.client = new S3Client({ region: 'us-east-1' });
   }
 
-  deleteFile: (
+  async deleteFile(
     filePath: IStorageGw.DeleteFileParams,
-  ) => Promise<IStorageGw.DeleteFileOutput>;
+  ): Promise<IStorageGw.DeleteFileOutput> {
+    if (!filePath.key) {
+      sentry.logger.error('File key is required to delete a file from S3.');
+      return { success: false };
+    }
+
+    const command = new DeleteObjectCommand({
+      Bucket: env.BUCKET_NAME,
+      Key: filePath.key,
+    });
+
+    const res = await this.client.send(command);
+
+    const status = res.$metadata.httpStatusCode;
+
+    if (status !== 200) {
+      sentry.logger.error(`Error deleting file from S3. Status: ${status}`);
+      return { success: false };
+    }
+
+    return { success: true };
+  }
 
   getFileKey(params: IStorageGw.GetFileKeyParams): IStorageGw.GetFileKeyOutput {
     const { orgId, productId, filename } = params;

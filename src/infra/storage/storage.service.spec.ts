@@ -88,6 +88,55 @@ describe('StorageService', () => {
     expect(sendSpy).toHaveBeenCalled();
     expect(result).toEqual({ fileKey: '' });
   });
+
+  it('should return a success when the file is deleted', async () => {
+    // Arrange
+    sendSpy.mockResolvedValue({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    // Act
+    const result = await storageService.deleteFile({
+      key: 'organization/org123/test-image.png',
+    });
+
+    // Assert
+    expect(sendSpy).toHaveBeenCalled();
+    expect(result).toEqual({ success: true });
+  });
+
+  it('should not return a success when the file is not deleted', async () => {
+    // Arrange
+    sendSpy.mockResolvedValue({
+      $metadata: { httpStatusCode: 500 },
+    });
+
+    // Act
+    const result = await storageService.deleteFile({
+      key: 'organization/org123/test-image.png',
+    });
+
+    // Assert
+    expect(sendSpy).toHaveBeenCalled();
+    expect(result).toEqual({ success: false });
+  });
+
+  it('should not return a success when the key is not provided', async () => {
+    // Arrange
+    sendSpy.mockResolvedValue({
+      $metadata: { httpStatusCode: 500 },
+    });
+
+    // Act
+    const result = await storageService.deleteFile({
+      key: '',
+    });
+
+    // Assert
+    expect(sendSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: false });
+  });
+
   it('should generate key with productId when provided', () => {
     // Arrange
     const params = {
