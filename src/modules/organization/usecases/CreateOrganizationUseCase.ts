@@ -16,14 +16,16 @@ import {
 } from 'src/shared/constants';
 import { CreateOrganizationDTO } from '../dto/create-organization.dto';
 
-type CreateParams = {
+export type CreateOrganizationParams = {
   owner_id: string;
   data: CreateOrganizationDTO;
   image_file?: Express.Multer.File;
 };
 
 interface ICreateOrganizationUseCase {
-  execute(params: CreateParams): Promise<IOrganizationContract.CreateOutput>;
+  execute(
+    params: CreateOrganizationParams,
+  ): Promise<IOrganizationContract.CreateOutput>;
 }
 
 @Injectable()
@@ -41,7 +43,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     data,
     owner_id,
     image_file,
-  }: CreateParams): Promise<IOrganizationContract.CreateOutput> {
+  }: CreateOrganizationParams): Promise<IOrganizationContract.CreateOutput> {
     const getAddressInformation = await this.orgService.getAddressInformation(
       data.cep,
     );
