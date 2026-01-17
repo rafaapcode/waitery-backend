@@ -30,6 +30,21 @@ describe('OrganizationService', () => {
   let orgrepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let storageService: IStorageGw;
+
+  const ownerId = faker.string.uuid();
+  const orgId = faker.string.uuid();
+  const cityName = faker.location.city();
+  const stateName = faker.location.state();
+  const stateAbbr = faker.location.state({ abbreviated: true });
+  const regionName = faker.helpers.arrayElement([
+    'Norte',
+    'Nordeste',
+    'Centro-Oeste',
+    'Sudeste',
+    'Sul',
+  ]);
+  const fileKey = `organization/${faker.string.uuid()}/${faker.system.fileName()}`;
+
   const org: Organization = createOganizationEntity({
     description: faker.person.bio(),
     email: faker.internet.email(),
@@ -41,7 +56,7 @@ describe('OrganizationService', () => {
     neighborhood: faker.location.street(),
     close_hour: Number(23),
     open_hour: Number(8),
-    owner_id: 'data.owner_id',
+    owner_id: ownerId,
     city: faker.location.city(),
     lat: 0,
     long: 0,
@@ -116,12 +131,12 @@ describe('OrganizationService', () => {
     };
     const orgData: IOrganizationContract.CreateParams = {
       data: mockedData,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'create').mockResolvedValue({
       ...mockedData,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     });
 
     // Act
@@ -152,13 +167,13 @@ describe('OrganizationService', () => {
     };
     const orgData: IOrganizationContract.UpdateParams = {
       data: mockedData,
-      id: 'owner_id',
+      id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'update').mockResolvedValue({
       ...mockedData,
       id: ulid(),
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     });
 
     // Act
@@ -173,7 +188,7 @@ describe('OrganizationService', () => {
   it('Should delete an organization', async () => {
     // Arrange
     const orgData: IOrganizationContract.DeleteParams = {
-      id: 'owner_id',
+      id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'delete').mockResolvedValue();
@@ -189,7 +204,7 @@ describe('OrganizationService', () => {
   it('Should get an valid organization', async () => {
     // Arrange
     const orgData: IOrganizationContract.GetParams = {
-      id: 'owner_id',
+      id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'get').mockResolvedValue({
@@ -207,7 +222,7 @@ describe('OrganizationService', () => {
       location_code: faker.location.buildingNumber(),
       neighborhood: faker.location.street(),
       street: faker.location.street(),
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     });
 
     // Act
@@ -222,7 +237,7 @@ describe('OrganizationService', () => {
   it('Should get null to a invalid organization', async () => {
     // Arrange
     const orgData: IOrganizationContract.GetParams = {
-      id: 'owner_id',
+      id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'get').mockResolvedValue(null);
@@ -239,7 +254,7 @@ describe('OrganizationService', () => {
   it('Should getAll valid organizations', async () => {
     // Arrange
     const orgData: IOrganizationContract.GetAllParams = {
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'getAll').mockResolvedValue(
@@ -247,8 +262,8 @@ describe('OrganizationService', () => {
         cep: faker.location.zipCode(),
         city: faker.location.city(),
         close_hour: 23,
-        id: `org_id-${idx}`,
-        name: `Org ${idx}`,
+        id: `${orgId}-${idx}`,
+        name: `${faker.company.name()} ${idx}`,
         description: faker.person.bio(),
         email: faker.internet.email(),
         image_url: faker.image.url(),
@@ -258,7 +273,7 @@ describe('OrganizationService', () => {
         location_code: faker.location.buildingNumber(),
         neighborhood: faker.location.street(),
         street: faker.location.street(),
-        owner_id: 'owner_id',
+        owner_id: ownerId,
       })),
     );
 
@@ -275,7 +290,7 @@ describe('OrganizationService', () => {
   it('Should get null to return all organizations', async () => {
     // Arrange
     const orgData: IOrganizationContract.GetAllParams = {
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
 
     jest.spyOn(orgrepo, 'getAll').mockResolvedValue(null);
@@ -292,8 +307,8 @@ describe('OrganizationService', () => {
   it('Should return true if the user has a org searching by id', async () => {
     // Arrange
     const orgData: IOrganizationContract.VerifyOrgsParamsById = {
-      owner_id: 'owner_id',
-      org_id: 'Org',
+      owner_id: ownerId,
+      org_id: orgId,
     };
 
     jest.spyOn(orgrepo, 'verifyOrgById').mockResolvedValue({
@@ -311,7 +326,7 @@ describe('OrganizationService', () => {
       location_code: faker.location.buildingNumber(),
       neighborhood: faker.location.street(),
       street: faker.location.street(),
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     });
 
     // Act
@@ -326,8 +341,8 @@ describe('OrganizationService', () => {
   it('Should return false if the user has not a org searching by id', async () => {
     // Arrange
     const orgData: IOrganizationContract.VerifyOrgsParamsById = {
-      owner_id: 'owner_id',
-      org_id: 'Org',
+      owner_id: ownerId,
+      org_id: orgId,
     };
 
     jest.spyOn(orgrepo, 'verifyOrgById').mockResolvedValue(null);
@@ -344,7 +359,7 @@ describe('OrganizationService', () => {
   it('Should return true if the user has a org searching by the name', async () => {
     // Arrange
     const orgData: IOrganizationContract.VerifyOrgsParamsByName = {
-      owner_id: 'owner_id',
+      owner_id: ownerId,
       name: faker.company.name(),
     };
 
@@ -363,7 +378,7 @@ describe('OrganizationService', () => {
       location_code: faker.location.buildingNumber(),
       neighborhood: faker.location.street(),
       street: faker.location.street(),
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     });
 
     // Act
@@ -378,8 +393,8 @@ describe('OrganizationService', () => {
   it('Should return false if the user has not a org searching by the name', async () => {
     // Arrange
     const orgData: IOrganizationContract.VerifyOrgsParamsByName = {
-      owner_id: 'owner_id',
-      name: 'Org',
+      owner_id: ownerId,
+      name: faker.company.name(),
     };
 
     jest.spyOn(orgrepo, 'verifyOrgByName').mockResolvedValue(null);
@@ -403,14 +418,14 @@ describe('OrganizationService', () => {
       complemento: '',
       unidade: '',
       bairro: faker.location.streetAddress(),
-      localidade: 'São Paulo',
-      uf: 'SP',
-      estado: 'São Paulo',
-      regiao: 'Sudeste',
-      ibge: '3550308',
-      gia: '1004',
-      ddd: '11',
-      siafi: '7107',
+      localidade: cityName,
+      uf: stateAbbr,
+      estado: stateName,
+      regiao: regionName,
+      ibge: faker.string.numeric(7),
+      gia: faker.string.numeric(4),
+      ddd: faker.string.numeric(2),
+      siafi: faker.string.numeric(4),
     });
 
     // Act
@@ -420,8 +435,8 @@ describe('OrganizationService', () => {
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
     expect(result).toHaveProperty('cep', cep);
-    expect(result).toHaveProperty('localidade', 'São Paulo');
-    expect(result).toHaveProperty('uf', 'SP');
+    expect(result).toHaveProperty('localidade', cityName);
+    expect(result).toHaveProperty('uf', stateAbbr);
   });
 
   it('Should return null if the CEP is invalid', async () => {
@@ -470,7 +485,7 @@ describe('OrganizationService', () => {
 
     jest
       .spyOn(storageService, 'uploadFile')
-      .mockResolvedValue({ fileKey: 'organization/132adad/image.png' });
+      .mockResolvedValue({ fileKey: fileKey });
 
     // Act
     const result = await orgService.uploadFile({
@@ -485,7 +500,7 @@ describe('OrganizationService', () => {
 
   it('Should delete a file', async () => {
     // Arrange
-    const filekey = 'organization/132adad/image.png';
+    const deleteFileKey = fileKey;
 
     jest
       .spyOn(storageService, 'deleteFile')
@@ -493,13 +508,13 @@ describe('OrganizationService', () => {
 
     // Act
     const result = await orgService.deleteFile({
-      key: filekey,
+      key: deleteFileKey,
     });
 
     // Assert
     expect(storageService.deleteFile).toHaveBeenCalledTimes(1);
     expect(storageService.deleteFile).toHaveBeenCalledWith({
-      key: filekey,
+      key: deleteFileKey,
     });
     expect(result).toBeTruthy();
   });

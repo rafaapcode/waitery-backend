@@ -50,6 +50,31 @@ describe('Create Org UseCase', () => {
   let prismaService: PrismaService;
   let owner_id: string;
 
+  const userCpf = faker.string.numeric(11);
+  const userEmail = faker.internet.email();
+  const org1Name = faker.company.name();
+  const org1Email = faker.internet.email();
+  const org2Email = faker.internet.email();
+  const org3Email = faker.internet.email();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const cityName = faker.location.city();
+  const stateAbbr = faker.location.state({ abbreviated: true });
+  const regionName = faker.helpers.arrayElement([
+    'Norte',
+    'Nordeste',
+    'Centro-Oeste',
+    'Sudeste',
+    'Sul',
+  ]);
+  const imageUrl = `https://waitery.s3.teste/organization/${faker.string.uuid()}/logo.png`;
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -98,10 +123,9 @@ describe('Create Org UseCase', () => {
 
     const { id } = await prismaService.user.create({
       data: {
-        cpf: '1111111111',
-        email: 'teste@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        email: userEmail,
+        password: faker.internet.password({ length: 20 }),
         role: 'OWNER',
       },
     });
@@ -131,12 +155,12 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante',
-        email: 'contato@bemestar.com',
-        description: faker.person.bio(),
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
+        name: org1Name,
+        email: org1Email,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
         cep: faker.location.zipCode(),
       },
     };
@@ -144,17 +168,17 @@ describe('Create Org UseCase', () => {
     jest.spyOn(utilsService, 'getCepAddressInformations').mockResolvedValue({
       cep: faker.location.zipCode(),
       logradouro: faker.location.street(),
-      complemento: 'Apto 101',
+      complemento: faker.location.secondaryAddress(),
       unidade: '',
       bairro: faker.location.street(),
-      localidade: faker.location.streetAddress(),
-      uf: 'SP',
+      localidade: cityName,
+      uf: stateAbbr,
       estado: faker.location.state(),
-      regiao: 'Sudeste',
-      ibge: '3550308',
-      gia: '1004',
-      ddd: '11',
-      siafi: '7107',
+      regiao: regionName,
+      ibge: faker.string.numeric(7),
+      gia: faker.string.numeric(4),
+      ddd: faker.string.numeric(2),
+      siafi: faker.string.numeric(4),
     });
     const infos = await orgService.getAddressInformation(data.data.cep);
     jest.clearAllMocks();
@@ -189,15 +213,14 @@ describe('Create Org UseCase', () => {
   it('Should thrown an error if the owner not exists', async () => {
     // Arrange
     const data: CreateOrganizationParams = {
-      owner_id: '1231313',
+      owner_id: faker.string.uuid(),
       data: {
         name: faker.company.name(),
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
+        email: faker.internet.email(),
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
         cep: faker.location.zipCode(),
       },
     };
@@ -215,13 +238,12 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: 'Restaurante',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
+        name: org1Name,
+        email: org1Email,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
         cep: faker.location.zipCode(),
       },
     };
@@ -246,12 +268,11 @@ describe('Create Org UseCase', () => {
       owner_id,
       data: {
         name: faker.company.name(),
-        email: 'contato_novo@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
+        email: org2Email,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
         cep: faker.location.zipCode(),
       },
       image_file,
@@ -268,7 +289,7 @@ describe('Create Org UseCase', () => {
       street: infos ? infos.logradouro : '',
       lat: faker.location.latitude(),
       long: faker.location.longitude(),
-      image_url: 'https://waitery.s3.teste/organization/file_key/logo.png',
+      image_url: imageUrl,
     });
     jest.spyOn(orgService, 'uploadFile').mockResolvedValue(org_data);
 
@@ -289,12 +310,11 @@ describe('Create Org UseCase', () => {
       owner_id,
       data: {
         name: faker.company.name(),
-        email: 'contato_novo_2@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
+        email: org3Email,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
         cep: faker.location.zipCode(),
       },
     };

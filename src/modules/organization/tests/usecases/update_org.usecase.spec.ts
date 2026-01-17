@@ -11,6 +11,7 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
@@ -36,8 +37,27 @@ describe('Update a Org UseCase', () => {
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
-  const owner_id = 'testestes123131';
   let org_id: string;
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.paragraph();
+  const cityName = faker.location.city();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const newOrgName = faker.company.name();
+  const newOrgDescription = faker.lorem.paragraph();
+  const newCityName = faker.location.city();
+  const fileKey = `organization/${faker.string.uuid()}/${faker.system.fileName()}`;
+
+  const owner_id = ownerId;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -80,20 +100,19 @@ describe('Update a Org UseCase', () => {
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: orgDescription,
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: cityName,
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
@@ -122,14 +141,14 @@ describe('Update a Org UseCase', () => {
       id: org_id,
       owner_id,
       data: {
-        name: 'Novo restaurante chegando',
-        description: 'nova descrição papai',
-        city: 'São Paulo',
+        name: newOrgName,
+        description: newOrgDescription,
+        city: newCityName,
       },
     };
     jest
       .spyOn(storageService, 'uploadFile')
-      .mockResolvedValue({ fileKey: 'file_key' });
+      .mockResolvedValue({ fileKey: fileKey });
     jest
       .spyOn(storageService, 'deleteFile')
       .mockResolvedValue({ success: true });
@@ -145,19 +164,15 @@ describe('Update a Org UseCase', () => {
     });
 
     // Assert
-    expect(old_org?.name).toBe('Restaurante Fogo de chão');
-    expect(old_org?.description).toBe(
-      'Clínica especializada em atendimento psicológico e terapias.',
-    );
+    expect(old_org?.name).toBe(orgName);
+    expect(old_org?.description).toBe(orgDescription);
     expect(updated_org).toBeInstanceOf(Organization);
     expect(updated_org.name).toBe(data.data.name);
     expect(updated_org.description).toBe(data.data.description);
     expect(updated_org.city).toBe(data.data.city);
-    expect(updated_org.name).not.toBe('Restaurante Fogo de chão');
-    expect(updated_org.description).not.toBe(
-      'Clínica especializada em atendimento psicológico e terapias.',
-    );
-    expect(updated_org.city).not.toBe('Belo Horizonte');
+    expect(updated_org.name).not.toBe(orgName);
+    expect(updated_org.description).not.toBe(orgDescription);
+    expect(updated_org.city).not.toBe(cityName);
   });
 
   it('Should throw an error if the user is not associated with the organization', async () => {
@@ -166,9 +181,9 @@ describe('Update a Org UseCase', () => {
       id: org_id,
       owner_id,
       data: {
-        name: 'Novo restaurante chegando',
-        description: 'nova descrição papai',
-        city: 'São Paulo',
+        name: newOrgName,
+        description: newOrgDescription,
+        city: newCityName,
       },
     };
 
@@ -176,7 +191,7 @@ describe('Update a Org UseCase', () => {
     await expect(
       updateOrgUseCase.execute({
         id: data.id,
-        owner_id: 'data.owner_id',
+        owner_id: faker.string.uuid(),
         data: data.data,
       }),
     ).rejects.toThrow(NotFoundException);
@@ -188,16 +203,16 @@ describe('Update a Org UseCase', () => {
       id: org_id,
       owner_id,
       data: {
-        name: 'Novo restaurante chegando',
-        description: 'nova descrição papai',
-        city: 'São Paulo',
+        name: newOrgName,
+        description: newOrgDescription,
+        city: newCityName,
       },
     };
 
     // Assert
     await expect(
       updateOrgUseCase.execute({
-        id: 'data.id',
+        id: faker.string.uuid(),
         owner_id: data.owner_id,
         data: data.data,
       }),

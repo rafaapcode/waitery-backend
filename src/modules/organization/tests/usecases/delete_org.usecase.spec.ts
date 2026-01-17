@@ -11,6 +11,7 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
@@ -36,7 +37,20 @@ describe('Delete Org UseCase', () => {
   let userRepo: UserRepo;
   let prismaService: PrismaService;
   let org_id: string;
-  const owner_id = 'testestes123131';
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+
+  const owner_id = ownerId;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -79,20 +93,19 @@ describe('Delete Org UseCase', () => {
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
@@ -140,7 +153,7 @@ describe('Delete Org UseCase', () => {
 
   it('Should throw an error if the org not exist', async () => {
     // Act
-    org_id = '12313131';
+    org_id = faker.string.uuid();
     const org = await prismaService.organization.findUnique({
       where: { id: org_id },
     });
