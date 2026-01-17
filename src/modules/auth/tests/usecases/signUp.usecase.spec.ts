@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -15,6 +16,13 @@ describe('SignUp UseCase', () => {
   let jwtService: JwtService;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
+
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const userPassword = faker.internet.password({ length: 15 });
+  const userCpf = faker.string.numeric(11);
+  const token = faker.string.alphanumeric(128);
+  const bcryptHash = faker.string.alphanumeric(60);
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,7 +63,7 @@ describe('SignUp UseCase', () => {
 
   afterAll(async () => {
     await prismaService.user.delete({
-      where: { email: 'rafinha123@gmail.com' },
+      where: { email: userEmail },
     });
   });
 
@@ -69,13 +77,13 @@ describe('SignUp UseCase', () => {
   it('Should signUp a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignUpParams = {
-      name: 'rafael aparecido',
-      email: 'rafinha123@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
-      cpf: '12345678910',
+      name: userName,
+      email: userEmail,
+      password: userPassword,
+      cpf: userCpf,
     };
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('bcrypt_hash');
+    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(bcryptHash);
 
     // Act
     const newUser = await signUpUseCase.execute(data);
@@ -83,8 +91,8 @@ describe('SignUp UseCase', () => {
     // Assert
     expect(newUser.user.id).toBeDefined();
     expect(newUser.user).toBeInstanceOf(User);
-    expect(newUser.access_token).toBe('token_qualquer');
-    expect(newUser.user.password).toBe('bcrypt_hash');
+    expect(newUser.access_token).toBe(token);
+    expect(newUser.user.password).toBe(bcryptHash);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledWith(newUser.user.fromEntity());
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
@@ -94,13 +102,13 @@ describe('SignUp UseCase', () => {
   it('Should throw an Conflict Error when try to signUp a existent user', async () => {
     // Arrange
     const data: IAuthContract.SignUpParams = {
-      name: 'rafael aparecido',
-      email: 'rafinha123@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
-      cpf: '12345678910',
+      name: userName,
+      email: userEmail,
+      password: userPassword,
+      cpf: userCpf,
     };
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('bcrypt_hash');
+    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(bcryptHash);
 
     // Assert
     await expect(signUpUseCase.execute(data)).rejects.toThrow(

@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -16,6 +17,14 @@ describe('SignIn UseCase', () => {
   let jwtService: JwtService;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
+
+  const userCpf = faker.string.numeric(11);
+  const userEmail = faker.internet.email();
+  const userPassword = faker.internet.password({ length: 15 });
+  const token = faker.string.alphanumeric(128);
+  const nonExistentEmail = faker.internet.email();
+  const wrongPassword = faker.internet.password({ length: 20 });
+  let hashedPassword: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,12 +54,13 @@ describe('SignIn UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signInUseCase = module.get<SignInUseCase>(SignInUseCase);
 
+    hashedPassword = await utilsService.generateHash(userPassword);
+
     await prismaService.user.create({
       data: {
-        cpf: '1111111111',
-        email: 'teste@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        email: userEmail,
+        password: hashedPassword,
         role: 'OWNER',
       },
     });
@@ -63,7 +73,7 @@ describe('SignIn UseCase', () => {
   afterAll(async () => {
     await prismaService.user.delete({
       where: {
-        email: 'teste@gmail.com',
+        email: userEmail,
       },
     });
   }, 15000);
@@ -78,16 +88,16 @@ describe('SignIn UseCase', () => {
   it('Should signIn a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'teste@gmail.com',
-      password: 'qweasdzxc2003',
+      email: userEmail,
+      password: userPassword,
     };
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
+    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Act
     const user_signedIn = await signInUseCase.execute(data);
 
     // Asssert
-    expect(user_signedIn.access_token).toBe('token_qualquer');
+    expect(user_signedIn.access_token).toBe(token);
     expect(user_signedIn.user).toBeInstanceOf(User);
     expect(user_signedIn.user.id).toBeTruthy();
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
@@ -99,10 +109,10 @@ describe('SignIn UseCase', () => {
   it('Should not signIn a user that dont exists', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'teste123@gmail.com',
-      password: 'qweasdzxc2003',
+      email: nonExistentEmail,
+      password: userPassword,
     };
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
+    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Asssert
     expect(jwtService.sign).toHaveBeenCalledTimes(0);
@@ -114,10 +124,10 @@ describe('SignIn UseCase', () => {
   it('Should not signIn a user with wrong password', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'teste@gmail.com',
-      password: 'qweasdzxc2003123123',
+      email: userEmail,
+      password: wrongPassword,
     };
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => 'token_qualquer');
+    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Asssert
     expect(jwtService.sign).toHaveBeenCalledTimes(0);

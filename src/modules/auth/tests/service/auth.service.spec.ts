@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   ConflictException,
@@ -17,8 +18,14 @@ describe('AuthService - SignIn', () => {
   let prismaService: PrismaService;
   let jwtService: JwtService;
   let utilsService: IUtilsContract;
-  const token: string =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30';
+
+  const token = faker.string.alphanumeric(128);
+  const userName = faker.person.fullName();
+  const userId = faker.string.uuid();
+  const userEmail = faker.internet.email();
+  const userCpf = faker.string.numeric(11);
+  const userPassword = faker.internet.password({ length: 15 });
+  const hashBcrypt = faker.string.alphanumeric(60);
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,15 +72,15 @@ describe('AuthService - SignIn', () => {
   it('Should signIn a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'rafinha@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
+      email: userEmail,
+      password: userPassword,
     };
     jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue({
-      name: 'Rafael',
-      id: '1J0PV7ZZ7FFM12SSPPRFP2E0W',
-      email: 'rafinha@gmail.com',
-      cpf: '11111111111',
-      password: 'hashBcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -96,8 +103,8 @@ describe('AuthService - SignIn', () => {
   it('Should throw if a user dont exist', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'rafinha@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
+      email: userEmail,
+      password: userPassword,
     };
     jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
 
@@ -108,15 +115,15 @@ describe('AuthService - SignIn', () => {
   it('Should throw if the password is incorrect', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: 'rafinha@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
+      email: userEmail,
+      password: userPassword,
     };
     jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue({
-      name: 'Rafael',
-      id: '1J0PV7ZZ7FFM12SSPPRFP2E0W',
-      email: 'rafinha@gmail.com',
-      cpf: '11111111111',
-      password: 'hashBcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -133,10 +140,17 @@ describe('AuthService - SignUp', () => {
   let prismaService: PrismaService;
   let jwtService: JwtService;
   let utilsService: IUtilsContract;
-  const token: string =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30';
-  const hashBcrypt: string =
-    '$2a$12$8pnK6AuwIdw.4cFuGQO0j.pxhwT17UXlYO7Lw80uVq0UgrXNo1.wG';
+
+  const token = faker.string.alphanumeric(128);
+  const hashBcrypt = faker.string.alphanumeric(60);
+  const userName = faker.person.fullName();
+  const userId = faker.string.uuid();
+  const userEmail = faker.internet.email();
+  const userCpf = faker.string.numeric(11);
+  const userPassword = faker.internet.password({ length: 15 });
+  const signUpName = faker.person.fullName();
+  const signUpCpf = faker.string.numeric(11);
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -183,18 +197,18 @@ describe('AuthService - SignUp', () => {
   it('Should signUp a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignUpParams = {
-      name: 'rafael aparecido',
-      email: 'rafinha@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
-      cpf: '12345678910',
+      name: signUpName,
+      email: userEmail,
+      password: userPassword,
+      cpf: signUpCpf,
     };
     jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
     jest.spyOn(prismaService.user, 'create').mockResolvedValue({
-      name: 'Rafael',
-      id: '1J0PV7ZZ7FFM12SSPPRFP2E0W',
-      email: 'rafinha@gmail.com',
-      cpf: '11111111111',
-      password: 'hashBcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -220,7 +234,7 @@ describe('AuthService - SignUp', () => {
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledWith(signUpUser.user.fromEntity());
     expect(signUpUser.user).toBeDefined();
-    expect(signUpUser.user.id).toBe('1J0PV7ZZ7FFM12SSPPRFP2E0W');
+    expect(signUpUser.user.id).toBe(userId);
     expect(signUpUser.user.password).toBe(hashBcrypt);
     expect(signUpUser.access_token).toBe(token);
   });
@@ -228,17 +242,17 @@ describe('AuthService - SignUp', () => {
   it('Should throw an ConflictException if the user already exists', async () => {
     // Arrange
     const data: IAuthContract.SignUpParams = {
-      name: 'rafael aparecido',
-      email: 'rafinha@gmail.com',
-      password: 'qweasdzxczxcasdqwe',
-      cpf: '12345678910',
+      name: signUpName,
+      email: userEmail,
+      password: userPassword,
+      cpf: signUpCpf,
     };
     jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue({
-      name: 'Rafael',
-      id: '1J0PV7ZZ7FFM12SSPPRFP2E0W',
-      email: 'rafinha@gmail.com',
-      cpf: '11111111111',
-      password: 'hashBcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
