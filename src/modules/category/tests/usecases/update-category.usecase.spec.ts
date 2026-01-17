@@ -91,16 +91,26 @@ describe('Update Category UseCase', () => {
       },
     });
 
+    org_id = id;
+  });
+
+  beforeEach(async () => {
+    // Criar uma nova categoria para cada teste
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
         icon: categoryIcon,
         name: categoryName,
-        org_id: id,
+        org_id,
       },
     });
-
-    org_id = id;
     cat_id = cat_id_db;
+  });
+
+  afterEach(async () => {
+    // Deletar a categoria após cada teste
+    await prismaService.category.delete({
+      where: { id: cat_id },
+    });
   });
 
   afterAll(async () => {
