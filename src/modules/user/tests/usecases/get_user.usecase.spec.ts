@@ -1,10 +1,15 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { GetUserUseCase } from '../../usecases/GetUserUseCase';
 import { UserService } from '../../user.service';
@@ -16,6 +21,7 @@ describe('Get User UseCase', () => {
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
   let user_id: string;
+  let storageService: IStorageGw;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +40,14 @@ describe('Get User UseCase', () => {
             validateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -42,6 +56,7 @@ describe('Get User UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     getUserUseCase = module.get<GetUserUseCase>(GetUserUseCase);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -58,11 +73,7 @@ describe('Get User UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.user.delete({
-      where: {
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-      },
-    });
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -72,6 +83,7 @@ describe('Get User UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should return a user', async () => {

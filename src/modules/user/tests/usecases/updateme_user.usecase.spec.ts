@@ -4,11 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { UpdateMeUseCase } from '../../usecases/UpdateMeUseCase';
 import { UserService } from '../../user.service';
@@ -20,6 +25,7 @@ describe('Update the current user UseCase', () => {
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
   let user_id: string;
+  let storageService: IStorageGw;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +44,14 @@ describe('Update the current user UseCase', () => {
             validateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -46,6 +60,7 @@ describe('Update the current user UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     updateMeUseCase = module.get<UpdateMeUseCase>(UpdateMeUseCase);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -62,11 +77,7 @@ describe('Update the current user UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.user.delete({
-      where: {
-        id: user_id,
-      },
-    });
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -76,6 +87,7 @@ describe('Update the current user UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should update the current user without a new_password', async () => {

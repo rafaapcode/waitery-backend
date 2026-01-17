@@ -1,10 +1,15 @@
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { GetAllUserUseCase } from '../../usecases/GetAllUserUseCase';
 import { UserService } from '../../user.service';
@@ -17,6 +22,7 @@ describe('GetAll Users UseCase', () => {
   let utilsService: IUtilsContract;
   let user_id: string;
   let org_id: string;
+  let storageService: IStorageGw;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -35,6 +41,14 @@ describe('GetAll Users UseCase', () => {
             validateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -43,6 +57,7 @@ describe('GetAll Users UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     getAllUserUseCase = module.get<GetAllUserUseCase>(GetAllUserUseCase);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -98,29 +113,9 @@ describe('GetAll Users UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.userOrg.deleteMany({
-      where: {
-        org_id: org_id,
-      },
-    });
-
-    await prismaService.user.delete({
-      where: {
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-      },
-    });
-
-    const cpfs = Array.from({ length: 25 }).map((_, idx) =>
-      `${idx}`.repeat(11),
-    );
-
-    await prismaService.user.deleteMany({
-      where: {
-        cpf: {
-          in: cpfs,
-        },
-      },
-    });
+    await prismaService.userOrg.deleteMany({});
+    await prismaService.user.deleteMany({});
+    await prismaService.user.deleteMany({});
   }, 15000);
 
   it('Should all services be defined', () => {
@@ -131,6 +126,7 @@ describe('GetAll Users UseCase', () => {
     expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
     expect(org_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should return the first 10 users in the page 0', async () => {

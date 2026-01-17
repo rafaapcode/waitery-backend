@@ -12,11 +12,12 @@ jest.mock('src/shared/config/env', () => ({
 }));
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { User, UserRole } from 'src/core/domain/entities/user';
-import { IUTILS_SERVICE } from 'src/shared/constants';
+import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { UserService } from '../../user.service';
 
@@ -24,6 +25,7 @@ describe('UserService', () => {
   let userService: UserService;
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
+  let storageService: IStorageGw;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -52,17 +54,27 @@ describe('UserService', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
     userService = module.get<UserService>(UserService);
     userRepo = module.get<UserRepo>(UserRepo);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
   });
 
   it('All services must be defined', () => {
     expect(userService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(userRepo).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should create a new user', async () => {

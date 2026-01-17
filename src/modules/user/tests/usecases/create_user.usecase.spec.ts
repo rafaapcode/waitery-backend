@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
@@ -13,6 +14,7 @@ import { OrganizationService } from 'src/modules/organization/organization.servi
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
@@ -30,6 +32,7 @@ describe('Create User UseCase', () => {
   let prismaService: PrismaService;
   let org_id: string;
   let user_id: string;
+  let storageService: IStorageGw;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -52,6 +55,14 @@ describe('Create User UseCase', () => {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -64,6 +75,7 @@ describe('Create User UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     prismaService = module.get<PrismaService>(PrismaService);
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -110,29 +122,11 @@ describe('Create User UseCase', () => {
   beforeEach(() => jest.clearAllMocks());
 
   afterAll(async () => {
-    await prismaService.userOrg.deleteMany({
-      where: {
-        org_id,
-      },
-    });
+    await prismaService.userOrg.deleteMany({});
 
-    await prismaService.user.deleteMany({
-      where: {
-        email: {
-          in: [
-            'rafaap@gmail.com',
-            'teste32131@gmail.com',
-            'rafaap2013131@gmail.com',
-          ],
-        },
-      },
-    });
+    await prismaService.user.deleteMany({});
 
-    await prismaService.organization.delete({
-      where: {
-        id: org_id,
-      },
-    });
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -145,6 +139,7 @@ describe('Create User UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should create a new user', async () => {

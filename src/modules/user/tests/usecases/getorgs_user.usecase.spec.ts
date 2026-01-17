@@ -11,12 +11,17 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 import { Test, TestingModule } from '@nestjs/testing';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IUSER_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import {
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
+} from 'src/shared/constants';
 import { UserRepo } from '../../repo/user.repository';
 import { GetOrgsOfUserUseCase } from '../../usecases/GetOrgsOfUserUseCase';
 import { UserService } from '../../user.service';
@@ -28,6 +33,7 @@ describe('Get Orgs Of Users UseCase', () => {
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
   let user_id: string;
+  let storageService: IStorageGw;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -46,6 +52,14 @@ describe('Get Orgs Of Users UseCase', () => {
             validateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -55,6 +69,7 @@ describe('Get Orgs Of Users UseCase', () => {
     getOrgsOfUserUsecase =
       module.get<GetOrgsOfUserUseCase>(GetOrgsOfUserUseCase);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -91,17 +106,9 @@ describe('Get Orgs Of Users UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.organization.deleteMany({
-      where: {
-        owner_id: user_id,
-      },
-    });
+    await prismaService.organization.deleteMany({});
 
-    await prismaService.user.delete({
-      where: {
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-      },
-    });
+    await prismaService.user.deleteMany({});
   }, 15000);
 
   it('Should all services be defined', () => {
@@ -111,6 +118,7 @@ describe('Get Orgs Of Users UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should get all orgs fo a user', async () => {
