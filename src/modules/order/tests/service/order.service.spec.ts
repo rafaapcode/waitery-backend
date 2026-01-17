@@ -1,5 +1,20 @@
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
   createOrderEntity,
@@ -7,14 +22,41 @@ import {
   OrderStatus,
 } from 'src/core/domain/entities/order';
 import { createProductEntity } from 'src/core/domain/entities/product';
-import { IORDER_WS_CONTRACT } from 'src/shared/constants';
+import { IORDER_WS_CONTRACT, ISTORAGE_SERVICE } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 
 describe('Order Service', () => {
   let orderService: OrderService;
   let orderRepo: OrderRepository;
+  let storageService: IStorageGw;
   let wsGateway: IOrderWSContract;
+
+  const orgId = faker.string.uuid();
+  const userId = faker.string.uuid();
+  const orderId1 = faker.string.uuid();
+  const orderId2 = faker.string.uuid();
+  const orderId3 = faker.string.uuid();
+  const categoryId = faker.string.uuid();
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.lorem.word();
+  const productDescription = faker.lorem.sentence();
+  const productImageUrl = faker.internet.url();
+  const productName = faker.commerce.productName();
+  const productPrice = faker.number.float({
+    min: 10,
+    max: 500,
+    fractionDigits: 2,
+  });
+  const orderQuantity = faker.number.int({ min: 1, max: 10 });
+  const orderTable = `Mesa ${faker.number.int({ min: 1, max: 50 })}`;
+  const orderTotalPrice = faker.number.float({
+    min: 50,
+    max: 1000,
+    fractionDigits: 2,
+  });
+  const orderStatus = OrderStatus.DONE;
+  const orgId2 = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,12 +83,21 @@ describe('Order Service', () => {
             emitCreateOrder: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     orderService = module.get<OrderService>(OrderService);
     orderRepo = module.get<OrderRepository>(OrderRepository);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
   });
 
   beforeEach(() => jest.clearAllMocks());
@@ -55,29 +106,30 @@ describe('Order Service', () => {
     expect(orderService).toBeDefined();
     expect(orderRepo).toBeDefined();
     expect(wsGateway).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should create a new order', async () => {
     // Arrange
     const data = createOrderEntity({
-      org_id: '1231231',
+      org_id: orgId,
       products: [],
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
+      quantity: orderQuantity,
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
     });
     jest.spyOn(orderRepo, 'create').mockResolvedValue({
-      org_id: '1231231',
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
+      org_id: orgId,
+      quantity: orderQuantity,
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
       created_at: new Date(),
       deleted_at: null,
-      id: '1231321',
+      id: orderId1,
       products: [],
     });
 
@@ -88,7 +140,7 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(wsGateway.emitCreateOrder).toHaveBeenCalledTimes(1);
     expect(wsGateway.emitCreateOrder).toHaveBeenCalledWith({
-      event: 'order-org-1231231',
+      event: `order-org-${orgId}`,
       data: {
         action: 'new_order',
         order: order,
@@ -103,42 +155,42 @@ describe('Order Service', () => {
     const prods = Array.from({ length: 5 }).map((_, idx) =>
       createProductEntity({
         category: createCategoryEntity({
-          icon: '😊',
-          name: 'teste',
-          org_id: '1231231',
-          id: '123123_Cat',
+          icon: categoryIcon,
+          name: categoryName,
+          org_id: orgId,
+          id: categoryId,
         }),
-        description: 'Descrição teste',
+        description: productDescription,
         discount: false,
         discounted_price: 0,
-        image_url: 'http:',
+        image_url: productImageUrl,
         ingredients: [],
-        name: 'Produto bom',
-        org_id: '1231231',
-        price: 120,
+        name: productName,
+        org_id: orgId,
+        price: productPrice,
         id: `${idx}`.repeat(11),
       }),
     );
     const data = createOrderEntity({
-      org_id: '1231231',
+      org_id: orgId,
       products: prods.map((p, idx) => p.toOrderType(idx + 1)),
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
-      id: 'order_1123132uid',
+      quantity: orderQuantity,
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
+      id: orderId2,
     });
     jest.spyOn(orderRepo, 'create').mockResolvedValue({
-      org_id: '1231231',
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
+      org_id: orgId,
+      quantity: orderQuantity,
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
       created_at: new Date(),
       deleted_at: null,
-      id: '1231321',
+      id: orderId1,
       products: [],
     });
 
@@ -149,7 +201,7 @@ describe('Order Service', () => {
     expect(order).toBeInstanceOf(Order);
     expect(wsGateway.emitCreateOrder).toHaveBeenCalledTimes(1);
     expect(wsGateway.emitCreateOrder).toHaveBeenCalledWith({
-      event: 'order-org-1231231',
+      event: `order-org-${orgId}`,
       data: {
         action: 'new_order',
         order: order,
@@ -161,7 +213,7 @@ describe('Order Service', () => {
 
   it('Should delete a order', async () => {
     // Arrange
-    const order_id = 'order_1231123';
+    const order_id = orderId3;
     jest.spyOn(orderRepo, 'delete').mockResolvedValue();
 
     // Act
@@ -174,7 +226,7 @@ describe('Order Service', () => {
 
   it('Should cancel a order', async () => {
     // Arrange
-    const order_id = 'order_1231123';
+    const order_id = orderId3;
     jest.spyOn(orderRepo, 'cancel').mockResolvedValue();
 
     // Act
@@ -191,40 +243,37 @@ describe('Order Service', () => {
 
     // Act
     await orderService.updateOrderStatus({
-      order_id: '1231321',
-      status: OrderStatus.DONE,
+      order_id: orderId1,
+      status: orderStatus,
     });
 
     // Assert
     expect(orderRepo.updateOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.updateOrder).toHaveBeenCalledWith(
-      '1231321',
-      OrderStatus.DONE,
-    );
+    expect(orderRepo.updateOrder).toHaveBeenCalledWith(orderId1, orderStatus);
   });
 
   it('Should get a order', async () => {
     // Arrange
     jest.spyOn(orderRepo, 'getOrder').mockResolvedValue({
-      org_id: '1231231',
-      quantity: 10,
+      org_id: orgId,
+      quantity: orderQuantity,
       products: [],
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
       created_at: new Date(),
       deleted_at: null,
-      id: '1231321',
+      id: orderId1,
     });
 
     // Act
-    const order = await orderService.getOrder('1231321');
+    const order = await orderService.getOrder(orderId1);
 
     // Assert
     expect(order).toBeInstanceOf(Order);
     expect(orderRepo.getOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getOrder).toHaveBeenCalledWith('1231321');
+    expect(orderRepo.getOrder).toHaveBeenCalledWith(orderId1);
   });
 
   it('Should return null if a order does not exists', async () => {
@@ -232,12 +281,12 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getOrder').mockResolvedValue(null);
 
     // Act
-    const order = await orderService.getOrder('1231231');
+    const order = await orderService.getOrder(orderId2);
 
     // Assert
     expect(order).toBeNull();
     expect(orderRepo.getOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getOrder).toHaveBeenCalledWith('1231231');
+    expect(orderRepo.getOrder).toHaveBeenCalledWith(orderId2);
   });
 
   it('Should return all orders of page 0', async () => {
@@ -245,11 +294,11 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
       Array.from({ length: 26 }).map((_, idx) => ({
         org_id: `${idx}`.repeat(10),
-        quantity: 10,
-        status: OrderStatus.DONE,
+        quantity: orderQuantity,
+        status: orderStatus,
         table: `${idx}`.repeat(2),
         total_price: idx * 4.5,
-        user_id: `rafael_123123-${idx}`,
+        user_id: `${userId}-${idx}`,
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
@@ -259,7 +308,7 @@ describe('Order Service', () => {
 
     // Act
     const { orders, has_next } = await orderService.getAllOrders({
-      org_id: '123123123',
+      org_id: orgId2,
       page: 0,
     });
 
@@ -268,7 +317,7 @@ describe('Order Service', () => {
     expect(orders.length).toBe(25);
     expect(orders[0]).toBeInstanceOf(Order);
     expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 0, 26);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith(orgId2, 0, 26);
   });
 
   it('Should return all orders of page 1', async () => {
@@ -276,11 +325,11 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
       Array.from({ length: 3 }).map((_, idx) => ({
         org_id: `${idx}`.repeat(10),
-        quantity: 10,
-        status: OrderStatus.DONE,
+        quantity: orderQuantity,
+        status: orderStatus,
         table: `${idx}`.repeat(2),
         total_price: idx * 4.5,
-        user_id: `rafael_123123-${idx}`,
+        user_id: `${userId}-${idx}`,
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
@@ -290,7 +339,7 @@ describe('Order Service', () => {
 
     // Act
     const { orders, has_next } = await orderService.getAllOrders({
-      org_id: '123123123',
+      org_id: orgId2,
       page: 1,
     });
 
@@ -299,7 +348,7 @@ describe('Order Service', () => {
     expect(orders.length).toBe(3);
     expect(orders[0]).toBeInstanceOf(Order);
     expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 25, 26);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith(orgId2, 25, 26);
   });
 
   it('Should return all orders of page 0 if the page is not defined', async () => {
@@ -307,11 +356,11 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getAllOrders').mockResolvedValue(
       Array.from({ length: 3 }).map((_, idx) => ({
         org_id: `${idx}`.repeat(10),
-        quantity: 10,
-        status: OrderStatus.DONE,
+        quantity: orderQuantity,
+        status: orderStatus,
         table: `${idx}`.repeat(2),
         total_price: idx * 4.5,
-        user_id: `rafael_123123-${idx}`,
+        user_id: `${userId}-${idx}`,
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
@@ -321,7 +370,7 @@ describe('Order Service', () => {
 
     // Act
     const { orders, has_next } = await orderService.getAllOrders({
-      org_id: '123123123',
+      org_id: orgId2,
     });
 
     // Assert
@@ -329,7 +378,7 @@ describe('Order Service', () => {
     expect(orders.length).toBe(3);
     expect(orders[0]).toBeInstanceOf(Order);
     expect(orderRepo.getAllOrders).toHaveBeenCalledTimes(1);
-    expect(orderRepo.getAllOrders).toHaveBeenCalledWith('123123123', 0, 26);
+    expect(orderRepo.getAllOrders).toHaveBeenCalledWith(orgId2, 0, 26);
   });
 
   it('Should return all orders of today', async () => {
@@ -337,11 +386,11 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'getAllOrdersOfToday').mockResolvedValue(
       Array.from({ length: 3 }).map((_, idx) => ({
         org_id: `${idx}`.repeat(10),
-        quantity: 10,
-        status: OrderStatus.DONE,
+        quantity: orderQuantity,
+        status: orderStatus,
         table: `${idx}`.repeat(2),
         total_price: idx * 4.5,
-        user_id: `rafael_123123-${idx}`,
+        user_id: `${userId}-${idx}`,
         created_at: new Date(),
         deleted_at: null,
         id: `${idx}`.repeat(5),
@@ -351,7 +400,7 @@ describe('Order Service', () => {
 
     // Act
     const orders = await orderService.getAllOrdersOfToday({
-      org_id: '123123123',
+      org_id: orgId2,
       orders_canceled: true,
     });
 
@@ -361,36 +410,36 @@ describe('Order Service', () => {
     expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledTimes(1);
     expect(orderRepo.getAllOrdersOfToday).toHaveBeenCalledWith({
       orders_canceled: true,
-      org_id: '123123123',
+      org_id: orgId2,
     });
   });
 
   it('Should return true if the order of a user exists', async () => {
     // Arrange
     jest.spyOn(orderRepo, 'verifyOrder').mockResolvedValue({
-      org_id: '1231231',
-      quantity: 10,
-      status: OrderStatus.DONE,
-      table: '12',
-      total_price: 120,
-      user_id: 'rafael_123123',
+      org_id: orgId,
+      quantity: orderQuantity,
+      status: orderStatus,
+      table: orderTable,
+      total_price: orderTotalPrice,
+      user_id: userId,
       created_at: new Date(),
       deleted_at: null,
-      id: '1231321',
+      id: orderId1,
       products: [],
     });
 
     // Act
     const isOrderOfOrg = await orderService.verifyOrderByUser({
-      order_id: '1231321',
-      user_id: '1231231',
+      order_id: orderId1,
+      user_id: userId,
     });
 
     // Assert
     expect(isOrderOfOrg).toBeTruthy();
     expect(orderRepo.verifyOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.verifyOrder).toHaveBeenCalledWith('1231321', {
-      user_id: '1231231',
+    expect(orderRepo.verifyOrder).toHaveBeenCalledWith(orderId1, {
+      user_id: userId,
     });
   });
 
@@ -400,15 +449,15 @@ describe('Order Service', () => {
 
     // Act
     const isOrderOfOrg = await orderService.verifyOrderByUser({
-      order_id: '1231321',
-      user_id: '1231231',
+      order_id: orderId1,
+      user_id: userId,
     });
 
     // Assert
     expect(isOrderOfOrg).toBeFalsy();
     expect(orderRepo.verifyOrder).toHaveBeenCalledTimes(1);
-    expect(orderRepo.verifyOrder).toHaveBeenCalledWith('1231321', {
-      user_id: '1231231',
+    expect(orderRepo.verifyOrder).toHaveBeenCalledWith(orderId1, {
+      user_id: userId,
     });
   });
 
@@ -417,10 +466,10 @@ describe('Order Service', () => {
     jest.spyOn(orderRepo, 'restartsTheOrdersOfDay').mockResolvedValue();
 
     // Act
-    await orderService.restartsTheOrdersOfDay('org_123123');
+    await orderService.restartsTheOrdersOfDay(orgId);
 
     // Assert
     expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledTimes(1);
-    expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledWith('org_123123');
+    expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledWith(orgId);
   });
 });

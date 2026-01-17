@@ -1,9 +1,24 @@
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
+import { faker } from '@faker-js/faker';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Order } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -14,6 +29,7 @@ import {
   IORDER_CONTRACT,
   IORDER_WS_CONTRACT,
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
@@ -28,10 +44,39 @@ describe('Get All Orders Of Today UseCase', () => {
   let orgRepo: OrganizationRepo;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
+  let storageService: IStorageGw;
   let org_id: string;
   let org_id2: string;
   let user_id: string;
   let wsGateway: IOrderWSContract;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const userPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const orgName = faker.company.name();
+  const orgName2 = faker.company.name();
+  const orgImageUrl = faker.internet.url();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.sentence();
+  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
+  const orgCloseHour = faker.number.int({ min: 18, max: 23 });
+  const orgCep = faker.location.zipCode('#####-###');
+  const orgCity = faker.location.city();
+  const orgNeighborhood = faker.location.county();
+  const orgStreet = faker.location.streetAddress();
+  const orgLat = faker.location.latitude();
+  const orgLong = faker.location.longitude();
+  const orderQuantity = faker.number.int({ min: 1, max: 10 });
+  const orderTotalPrice = faker.number.float({
+    min: 50,
+    max: 1000,
+    fractionDigits: 2,
+  });
+  const fakeOrgId = faker.string.uuid();
+  const fakeOwnerId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -62,6 +107,14 @@ describe('Get All Orders Of Today UseCase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -75,63 +128,61 @@ describe('Get All Orders Of Today UseCase', () => {
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: userPassword,
         role: UserRole.OWNER,
       },
     });
 
     const org = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user.id,
       },
     });
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão2',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName2,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user.id,
       },
     });
 
     await prismaService.order.createMany({
       data: Array.from({ length: 10 }).map((_, idx) => ({
-        quantity: 1,
+        quantity: orderQuantity,
         table: `Mesa ${idx}`,
-        total_price: 120,
+        total_price: orderTotalPrice,
         org_id: org.id,
         user_id: user.id,
         products: [] as Prisma.JsonArray,
@@ -142,9 +193,9 @@ describe('Get All Orders Of Today UseCase', () => {
 
     await prismaService.order.createMany({
       data: Array.from({ length: 18 }).map((_, idx) => ({
-        quantity: 1,
+        quantity: orderQuantity,
         table: `Mesa ${idx}`,
-        total_price: 120,
+        total_price: orderTotalPrice,
         org_id: org2.id,
         user_id: user.id,
         products: [] as Prisma.JsonArray,
@@ -159,11 +210,9 @@ describe('Get All Orders Of Today UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.order.deleteMany({ where: { org_id: org_id } });
-    await prismaService.order.deleteMany({ where: { org_id: org_id2 } });
-    await prismaService.organization.delete({ where: { id: org_id } });
-    await prismaService.organization.delete({ where: { id: org_id2 } });
-    await prismaService.user.delete({ where: { id: user_id } });
+    await prismaService.order.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -178,6 +227,7 @@ describe('Get All Orders Of Today UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should return all orders of today included the canceled orders', async () => {
@@ -245,7 +295,7 @@ describe('Get All Orders Of Today UseCase', () => {
   it('Should throw an error if the org_id not exists', async () => {
     // Assert
     await expect(
-      getAllOrdersOfTodayUseCase.execute(user_id, UserRole.OWNER, 'org_id', {
+      getAllOrdersOfTodayUseCase.execute(user_id, UserRole.OWNER, fakeOrgId, {
         canceled_orders: false,
       }),
     ).rejects.toThrow(NotFoundException);
@@ -254,7 +304,7 @@ describe('Get All Orders Of Today UseCase', () => {
   it('Should throw an error if the owner_id is not linked with the e org', async () => {
     // Assert
     await expect(
-      getAllOrdersOfTodayUseCase.execute('owner_id', UserRole.OWNER, org_id, {
+      getAllOrdersOfTodayUseCase.execute(fakeOwnerId, UserRole.OWNER, org_id, {
         canceled_orders: false,
       }),
     ).rejects.toThrow(ConflictException);

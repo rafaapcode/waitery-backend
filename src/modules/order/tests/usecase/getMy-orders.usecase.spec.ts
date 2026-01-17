@@ -1,11 +1,30 @@
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Order } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
-import { IORDER_CONTRACT, IORDER_WS_CONTRACT } from 'src/shared/constants';
+import {
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  ISTORAGE_SERVICE,
+} from 'src/shared/constants';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 import { GetMyOrderUseCase } from '../../usecases/GetMyOrdersUseCase';
@@ -15,11 +34,46 @@ describe('Get My Orders UseCase', () => {
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let prismaService: PrismaService;
+  let storageService: IStorageGw;
   let org_id: string;
-  let org_id2: string;
   let user_id: string;
   let user_id2: string;
   let wsGateway: IOrderWSContract;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const userPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const user2Cpf = faker.string.numeric(11);
+  const user2Name = faker.person.fullName();
+  const user2Email = faker.internet.email();
+  const orgName = faker.company.name();
+  const orgName2 = faker.company.name();
+  const orgImageUrl = faker.internet.url();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.sentence();
+  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
+  const orgCloseHour = faker.number.int({ min: 18, max: 23 });
+  const orgCep = faker.location.zipCode('#####-###');
+  const orgCity = faker.location.city();
+  const orgNeighborhood = faker.location.county();
+  const orgStreet = faker.location.streetAddress();
+  const orgLat = faker.location.latitude();
+  const orgLong = faker.location.longitude();
+  const orderQuantity1 = faker.number.int({ min: 1, max: 10 });
+  const orderQuantity2 = faker.number.int({ min: 1, max: 10 });
+  const orderTotalPrice1 = faker.number.float({
+    min: 50,
+    max: 1000,
+    fractionDigits: 2,
+  });
+  const orderTotalPrice2 = faker.number.float({
+    min: 50,
+    max: 1000,
+    fractionDigits: 2,
+  });
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,6 +91,14 @@ describe('Get My Orders UseCase', () => {
             emitCreateOrder: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -45,74 +107,71 @@ describe('Get My Orders UseCase', () => {
     orderService = module.get<IOrderContract>(IORDER_CONTRACT);
     orderRepo = module.get<OrderRepository>(OrderRepository);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: userPassword,
         role: UserRole.OWNER,
       },
     });
 
     const user2 = await prismaService.user.create({
       data: {
-        cpf: '12223245829',
-        name: 'rafael ap',
-        email: 'rafaap321321321@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: user2Cpf,
+        name: user2Name,
+        email: user2Email,
+        password: userPassword,
         role: UserRole.ADMIN,
       },
     });
 
     const org = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user.id,
       },
     });
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão 1231123',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName2,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user2.id,
       },
     });
 
     await prismaService.order.createMany({
       data: Array.from({ length: 67 }).map((_, idx) => ({
-        quantity: 1,
+        quantity: orderQuantity1,
         table: `Mesa ${idx}`,
-        total_price: 120,
+        total_price: orderTotalPrice1,
         org_id: org.id,
         user_id: user.id,
         products: [] as Prisma.JsonArray,
@@ -121,9 +180,9 @@ describe('Get My Orders UseCase', () => {
 
     await prismaService.order.createMany({
       data: Array.from({ length: 5 }).map((_, idx) => ({
-        quantity: 2,
+        quantity: orderQuantity2,
         table: `Mesa ${idx}`,
-        total_price: 100,
+        total_price: orderTotalPrice2,
         org_id: org2.id,
         user_id: user.id,
         products: [] as Prisma.JsonArray,
@@ -131,21 +190,14 @@ describe('Get My Orders UseCase', () => {
     });
 
     org_id = org.id;
-    org_id2 = org2.id;
     user_id = user.id;
     user_id2 = user2.id;
   });
 
   afterAll(async () => {
-    await prismaService.order.deleteMany({ where: { org_id: org_id } });
-    await prismaService.order.deleteMany({ where: { org_id: org_id2 } });
-    await prismaService.organization.deleteMany({
-      where: { owner_id: user_id },
-    });
-    await prismaService.organization.deleteMany({
-      where: { owner_id: user_id2 },
-    });
-    await prismaService.user.deleteMany({ where: { name: 'rafael ap' } });
+    await prismaService.order.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -157,6 +209,7 @@ describe('Get My Orders UseCase', () => {
     expect(user_id).toBeDefined();
     expect(user_id2).toBeDefined();
     expect(wsGateway).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {

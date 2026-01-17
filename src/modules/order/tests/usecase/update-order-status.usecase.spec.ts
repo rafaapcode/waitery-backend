@@ -1,9 +1,24 @@
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
+import { faker } from '@faker-js/faker';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -14,6 +29,7 @@ import {
   IORDER_CONTRACT,
   IORDER_WS_CONTRACT,
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { OrderService } from '../../order.service';
@@ -26,6 +42,7 @@ describe('Update Order Status UseCase', () => {
   let orderRepo: OrderRepository;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let storageService: IStorageGw;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let order_id: string;
@@ -35,6 +52,43 @@ describe('Update Order Status UseCase', () => {
   let cat_id: string;
   let product_id: string;
   let wsGateway: IOrderWSContract;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const org1Name = faker.company.name();
+  const org1ImageUrl = faker.internet.url();
+  const org1Email = faker.internet.email();
+  const org1Description = faker.lorem.sentence();
+  const org1LocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const org1OpenHour = faker.number.int({ min: 6, max: 10 });
+  const org1CloseHour = faker.number.int({ min: 18, max: 22 });
+  const org1Cep = faker.string.numeric(8);
+  const org1City = faker.location.city();
+  const org1Neighborhood = faker.location.street();
+  const org1Street = faker.location.streetAddress();
+  const org1Lat = faker.location.latitude();
+  const org1Long = faker.location.longitude();
+  const org2Name = faker.company.name();
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.lorem.word();
+  const productDescription = faker.lorem.sentence();
+  const productImageUrl = faker.internet.url();
+  const productName = faker.commerce.productName();
+  const productPrice = faker.number.float({
+    min: 10,
+    max: 100,
+    fractionDigits: 2,
+  });
+  const ingredient1Name = faker.lorem.word();
+  const ingredient1Icon = faker.internet.emoji();
+  const ingredient2Name = faker.lorem.word();
+  const ingredient2Icon = faker.internet.emoji();
+  const orderQuantity = faker.number.int({ min: 1, max: 5 });
+  const orderTable = `Mesa ${faker.number.int({ min: 1, max: 20 })}`;
+  const orderTotalPrice = productPrice * orderQuantity;
+  const fakeOrderId = faker.string.uuid();
+  const fakeOrgId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +119,14 @@ describe('Update Order Status UseCase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            deleteFile: jest.fn(),
+            getFileUrl: jest.fn(),
+            uploadFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -78,12 +140,13 @@ describe('Update Order Status UseCase', () => {
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '12345678900',
-        name: 'rafael ap',
-        email: 'rafaap123@gmail.com',
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
         password:
           '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
         role: UserRole.OWNER,
@@ -92,61 +155,59 @@ describe('Update Order Status UseCase', () => {
 
     const org = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão123312',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org1Name,
+        image_url: org1ImageUrl,
+        email: org1Email,
+        description: org1Description,
+        location_code: org1LocationCode,
+        open_hour: org1OpenHour,
+        close_hour: org1CloseHour,
+        cep: org1Cep,
+        city: org1City,
+        neighborhood: org1Neighborhood,
+        street: org1Street,
+        lat: org1Lat,
+        long: org1Long,
         owner_id: user.id,
       },
     });
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão da nevasca 2',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org2Name,
+        image_url: org1ImageUrl,
+        email: org1Email,
+        description: org1Description,
+        location_code: org1LocationCode,
+        open_hour: org1OpenHour,
+        close_hour: org1CloseHour,
+        cep: org1Cep,
+        city: org1City,
+        neighborhood: org1Neighborhood,
+        street: org1Street,
+        lat: org1Lat,
+        long: org1Long,
         owner_id: user.id,
       },
     });
 
     const cat = await prismaService.category.create({
       data: {
-        icon: '🥗',
-        name: 'Vegetais',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: org.id,
       },
     });
 
     const prod1 = await prismaService.product.create({
       data: {
-        description: 'Descrição',
-        image_url: 'http://',
-        name: 'Produto bom 1',
-        price: 30,
+        description: productDescription,
+        image_url: productImageUrl,
+        name: productName,
+        price: productPrice,
         ingredients: [
-          { name: 'pão', icon: '💪' },
-          { name: 'mussarela', icon: '💪' },
+          { name: ingredient1Name, icon: ingredient1Icon },
+          { name: ingredient2Name, icon: ingredient2Icon },
         ] as Prisma.JsonArray,
         category_id: cat.id,
         org_id: org.id,
@@ -155,19 +216,19 @@ describe('Update Order Status UseCase', () => {
 
     const order = await prismaService.order.create({
       data: {
-        quantity: 2,
-        table: 'Mesa 10',
-        total_price: 60,
+        quantity: orderQuantity,
+        table: orderTable,
+        total_price: orderTotalPrice,
         org_id: org.id,
         user_id: user.id,
         products: [
           {
-            category: '🥗 Vegetais',
+            category: `${categoryIcon} ${categoryName}`,
             discount: false,
-            name: 'Produto bom 1',
-            price: 30,
-            quantity: 2,
-            image_url: 'http://',
+            name: productName,
+            price: productPrice,
+            quantity: orderQuantity,
+            image_url: productImageUrl,
           },
         ],
       },
@@ -182,17 +243,11 @@ describe('Update Order Status UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.order.deleteMany({ where: { user_id } });
-    await prismaService.product.deleteMany({
-      where: {
-        id: product_id,
-      },
-    });
-    await prismaService.category.deleteMany({ where: { org_id } });
-    await prismaService.organization.deleteMany({
-      where: { owner_id: user_id },
-    });
-    await prismaService.user.deleteMany({ where: { cpf: '12345678900' } });
+    await prismaService.order.deleteMany({});
+    await prismaService.product.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -210,6 +265,7 @@ describe('Update Order Status UseCase', () => {
     expect(order_id).toBeDefined();
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should update a status of an order', async () => {
@@ -242,7 +298,7 @@ describe('Update Order Status UseCase', () => {
           status: OrderStatus.IN_PRODUCTION,
         },
         org_id,
-        'order_id',
+        fakeOrderId,
       ),
     ).rejects.toThrow(NotFoundException);
   });
@@ -254,7 +310,7 @@ describe('Update Order Status UseCase', () => {
         {
           status: OrderStatus.IN_PRODUCTION,
         },
-        'org_id',
+        fakeOrgId,
         order_id,
       ),
     ).rejects.toThrow(NotFoundException);
