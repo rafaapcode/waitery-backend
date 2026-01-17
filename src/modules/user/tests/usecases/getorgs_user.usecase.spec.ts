@@ -147,9 +147,9 @@ describe('Get Orgs Of Users UseCase', () => {
     // Assert
     expect(orgs.length).toBe(4);
     expect(orgs[0]).toBeInstanceOf(Organization);
-    expect(orgs[0].name).toBe(orgNames[0]);
-    expect(orgs[1].name).toBe(orgNames[1]);
-    expect(orgs[2].name).toBe(orgNames[2]);
+    const orgNamesReceived = orgs.map((org) => org.name);
+    expect(orgNamesReceived).toEqual(expect.arrayContaining(orgNames));
+    expect(orgNames).toEqual(expect.arrayContaining(orgNamesReceived));
   });
 
   it('Should return an empty array', async () => {
