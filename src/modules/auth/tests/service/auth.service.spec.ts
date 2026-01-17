@@ -24,11 +24,11 @@ describe('AuthService - SignIn', () => {
 
   const token = faker.string.alphanumeric(128);
   const userName = faker.person.fullName();
-  const userId = faker.string.uuid();
   const userEmail = faker.internet.email();
   const userCpf = faker.string.numeric(11);
   const userPassword = faker.internet.password({ length: 15 });
-  const hashBcrypt = faker.string.alphanumeric(60);
+  const hashBcrypt =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,14 +36,7 @@ describe('AuthService - SignIn', () => {
       providers: [
         AuthService,
         FactoriesService,
-        {
-          provide: PrismaService,
-          useValue: {
-            user: {
-              findUnique: jest.fn(),
-            },
-          },
-        },
+        PrismaService,
         {
           provide: IUTILS_SERVICE,
           useValue: {
@@ -66,6 +59,20 @@ describe('AuthService - SignIn', () => {
     jwtService = module.get<JwtService>(JwtService);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     factorieService = module.get<FactoriesService>(FactoriesService);
+
+    await prismaService.user.create({
+      data: {
+        name: userName,
+        email: userEmail,
+        cpf: userCpf,
+        password: hashBcrypt,
+        role: UserRole.OWNER,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await prismaService.user.deleteMany({});
   });
 
   it('All services must be defined', () => {
@@ -82,16 +89,6 @@ describe('AuthService - SignIn', () => {
       email: userEmail,
       password: userPassword,
     };
-    jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue({
-      name: userName,
-      id: userId,
-      email: userEmail,
-      cpf: userCpf,
-      password: hashBcrypt,
-      role: UserRole.OWNER,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(true);
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
@@ -110,10 +107,9 @@ describe('AuthService - SignIn', () => {
   it('Should throw if a user dont exist', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: userEmail,
+      email: faker.internet.email(),
       password: userPassword,
     };
-    jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
 
     // Assert
     await expect(authService.signIn(data)).rejects.toThrow(NotFoundException);
@@ -125,16 +121,6 @@ describe('AuthService - SignIn', () => {
       email: userEmail,
       password: userPassword,
     };
-    jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue({
-      name: userName,
-      id: userId,
-      email: userEmail,
-      cpf: userCpf,
-      password: hashBcrypt,
-      role: UserRole.OWNER,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(false);
 
     // Assert
@@ -194,6 +180,10 @@ describe('AuthService - SignUp', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
   });
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('All services must be defined', () => {
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
@@ -209,8 +199,8 @@ describe('AuthService - SignUp', () => {
       password: userPassword,
       cpf: signUpCpf,
     };
-    jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
-    jest.spyOn(prismaService.user, 'create').mockResolvedValue({
+    (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismaService.user.create as jest.Mock).mockResolvedValue({
       name: userName,
       id: userId,
       email: userEmail,
@@ -220,8 +210,8 @@ describe('AuthService - SignUp', () => {
       created_at: new Date(),
       updated_at: new Date(),
     });
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
-    jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
+    (utilsService.generateHash as jest.Mock).mockResolvedValue(hashBcrypt);
+    (jwtService.sign as jest.Mock).mockImplementation(() => token);
 
     // Act
     const signUpUser = await authService.signUp(data);
@@ -254,7 +244,7 @@ describe('AuthService - SignUp', () => {
       password: userPassword,
       cpf: signUpCpf,
     };
-    jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue({
+    (prismaService.user.findFirst as jest.Mock).mockResolvedValue({
       name: userName,
       id: userId,
       email: userEmail,
