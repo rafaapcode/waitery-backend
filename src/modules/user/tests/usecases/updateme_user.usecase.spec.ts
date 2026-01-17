@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   ConflictException,
@@ -26,6 +27,21 @@ describe('Update the current user UseCase', () => {
   let utilsService: IUtilsContract;
   let user_id: string;
   let storageService: IStorageGw;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const hashPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const currentPassword = faker.internet.password();
+  const updatedName = faker.person.fullName();
+  const updatedEmail = faker.internet.email();
+  const secondUpdatedEmail = faker.internet.email();
+  const thirdUpdatedEmail = faker.internet.email();
+  const newPassword = faker.internet.password();
+  const wrongPassword = faker.internet.password();
+  const hashNewPassword = faker.internet.password({ length: 20 });
+  const fakeUserId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -64,11 +80,10 @@ describe('Update the current user UseCase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '45587667820',
-        name: 'rafael ap',
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: hashPassword,
         role: UserRole.OWNER,
       },
     });
@@ -95,8 +110,8 @@ describe('Update the current user UseCase', () => {
     const data: IUserContract.UpdateMeParams = {
       id: user_id,
       data: {
-        name: 'Rafael Aparecido legal',
-        email: 'rafael@gmail.com',
+        name: updatedName,
+        email: updatedEmail,
       },
     };
 
@@ -105,17 +120,17 @@ describe('Update the current user UseCase', () => {
 
     // Assert
     expect(updated_user).toBeInstanceOf(User);
-    expect(updated_user.name).not.toBe('rafael ap');
-    expect(updated_user.email).not.toBe('rafa.ap.ap.ap2003@gmail.com');
+    expect(updated_user.name).not.toBe(userName);
+    expect(updated_user.email).not.toBe(userEmail);
   });
 
   it('Should throw an error if the user is not found', async () => {
     // Arrange
     const data: IUserContract.UpdateMeParams = {
-      id: 'user_id',
+      id: fakeUserId,
       data: {
-        name: 'Rafael Aparecido legal',
-        email: 'rafael@gmail.com',
+        name: updatedName,
+        email: updatedEmail,
       },
     };
 
@@ -130,8 +145,8 @@ describe('Update the current user UseCase', () => {
     const data: IUserContract.UpdateMeParams = {
       id: user_id,
       data: {
-        name: 'Rafael Aparecido legal',
-        email: 'rafael@gmail.com',
+        name: updatedName,
+        email: updatedEmail,
       },
     };
 
@@ -146,9 +161,9 @@ describe('Update the current user UseCase', () => {
     const data: IUserContract.UpdateMeParams = {
       id: user_id,
       data: {
-        name: 'Rafael Aparecido',
-        email: 'rafaelchicos@gmail.com',
-        new_password: 'testando_123123',
+        name: updatedName,
+        email: secondUpdatedEmail,
+        new_password: newPassword,
       },
     };
 
@@ -163,10 +178,10 @@ describe('Update the current user UseCase', () => {
     const data: IUserContract.UpdateMeParams = {
       id: user_id,
       data: {
-        name: 'Rafael Aparecido',
-        email: 'rafaelchicos@gmail.com',
-        new_password: 'testando_123123',
-        password: 'rafinha123123',
+        name: updatedName,
+        email: secondUpdatedEmail,
+        new_password: newPassword,
+        password: wrongPassword,
       },
     };
 
@@ -181,13 +196,13 @@ describe('Update the current user UseCase', () => {
     const data: IUserContract.UpdateMeParams = {
       id: user_id,
       data: {
-        name: 'Rafael Aparecido',
-        email: 'rafaelchicos@gmail.com',
-        new_password: 'testando_123123',
-        password: 'qweasdzxc2003',
+        name: updatedName,
+        email: thirdUpdatedEmail,
+        new_password: newPassword,
+        password: currentPassword,
       },
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_pasword');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashNewPassword);
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(true);
 
     // Act
@@ -201,7 +216,7 @@ describe('Update the current user UseCase', () => {
 
     // Assert
     expect(updatedUser).toBeInstanceOf(User);
-    expect(updatedUser.email).toBe('rafaelchicos@gmail.com');
-    expect(user?.password).toBe('hash_pasword');
+    expect(updatedUser.email).toBe(thirdUpdatedEmail);
+    expect(user?.password).toBe(hashNewPassword);
   });
 });

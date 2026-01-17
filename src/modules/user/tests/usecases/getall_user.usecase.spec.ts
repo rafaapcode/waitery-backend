@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -23,6 +24,26 @@ describe('GetAll Users UseCase', () => {
   let user_id: string;
   let org_id: string;
   let storageService: IStorageGw;
+
+  const ownerCpf = faker.string.numeric(11);
+  const ownerName = faker.person.fullName();
+  const ownerEmail = faker.internet.email();
+  const hashPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const orgName = faker.company.name();
+  const orgImageUrl = faker.internet.url();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.sentence();
+  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
+  const orgCloseHour = faker.number.int({ min: 18, max: 22 });
+  const orgCep = faker.string.numeric(8);
+  const orgCity = faker.location.city();
+  const orgNeighborhood = faker.location.street();
+  const orgStreet = faker.location.streetAddress();
+  const orgLat = faker.location.latitude();
+  const orgLong = faker.location.longitude();
+  const fakeUserId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,42 +82,39 @@ describe('GetAll Users UseCase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '45587667820',
-        name: 'rafael ap',
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: ownerCpf,
+        name: ownerName,
+        email: ownerEmail,
+        password: hashPassword,
         role: UserRole.OWNER,
       },
     });
 
     await prismaService.user.createMany({
-      data: Array.from({ length: 25 }).map((_, idx) => ({
-        cpf: `${idx}`.repeat(11),
-        name: `rafael ap ${idx}`,
-        email: `rafaap${idx}@gmail.com`,
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+      data: Array.from({ length: 25 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        password: hashPassword,
         role: UserRole.ADMIN,
       })),
     });
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user.id,
       },
     });
@@ -206,7 +224,7 @@ describe('GetAll Users UseCase', () => {
       getAllUserUseCase.execute({
         org_id,
         page: 3,
-        owner_id: 'user_id',
+        owner_id: fakeUserId,
       }),
     ).rejects.toThrow(ConflictException);
   });

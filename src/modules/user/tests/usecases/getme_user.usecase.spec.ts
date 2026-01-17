@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -22,6 +23,13 @@ describe('Get Current User UseCase', () => {
   let utilsService: IUtilsContract;
   let user_id: string;
   let storageService: IStorageGw;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const hashPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const fakeUserId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -60,11 +68,10 @@ describe('Get Current User UseCase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '45587667820',
-        name: 'rafael ap',
-        email: 'rafa.ap.ap.ap2003@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: hashPassword,
         role: UserRole.OWNER,
       },
     });
@@ -75,7 +82,7 @@ describe('Get Current User UseCase', () => {
   afterAll(async () => {
     await prismaService.user.delete({
       where: {
-        email: 'rafa.ap.ap.ap2003@gmail.com',
+        email: userEmail,
       },
     });
   });
@@ -100,7 +107,7 @@ describe('Get Current User UseCase', () => {
 
   it('Should throw an error if the user not exist', async () => {
     // Assert
-    await expect(getMeUseCase.execute('user_id')).rejects.toThrow(
+    await expect(getMeUseCase.execute(fakeUserId)).rejects.toThrow(
       NotFoundException,
     );
   });

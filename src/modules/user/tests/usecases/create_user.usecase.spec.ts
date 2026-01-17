@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   ConflictException,
@@ -33,6 +34,32 @@ describe('Create User UseCase', () => {
   let org_id: string;
   let user_id: string;
   let storageService: IStorageGw;
+
+  const ownerCpf = faker.string.numeric(11);
+  const ownerName = faker.person.fullName();
+  const ownerEmail = faker.internet.email();
+  const hashPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const orgName = faker.company.name();
+  const orgImageUrl = faker.internet.url();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.sentence();
+  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
+  const orgCloseHour = faker.number.int({ min: 18, max: 22 });
+  const orgCep = faker.string.numeric(8);
+  const orgCity = faker.location.city();
+  const orgNeighborhood = faker.location.street();
+  const orgStreet = faker.location.streetAddress();
+  const orgLat = faker.location.latitude();
+  const orgLong = faker.location.longitude();
+  const newUserCpf = faker.string.numeric(11);
+  const newUserName = faker.person.fullName();
+  const newUserEmail = faker.internet.email();
+  const newUserPassword = faker.internet.password();
+  const conflictCpf = faker.string.numeric(11);
+  const conflictEmail = faker.internet.email();
+  const fakeOrgId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -79,31 +106,29 @@ describe('Create User UseCase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: ownerCpf,
+        name: ownerName,
+        email: ownerEmail,
+        password: hashPassword,
         role: UserRole.OWNER,
       },
     });
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: orgImageUrl,
+        email: orgEmail,
+        description: orgDescription,
+        location_code: orgLocationCode,
+        open_hour: orgOpenHour,
+        close_hour: orgCloseHour,
+        cep: orgCep,
+        city: orgCity,
+        neighborhood: orgNeighborhood,
+        street: orgStreet,
+        lat: orgLat,
+        long: orgLong,
         owner_id: user.id,
       },
     });
@@ -146,15 +171,15 @@ describe('Create User UseCase', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '1111111111',
-        name: 'rafael teste',
-        email: 'teste32131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: newUserCpf,
+        name: newUserName,
+        email: newUserEmail,
+        password: newUserPassword,
         role: UserRole.ADMIN,
       },
       org_id,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Act
     const user = await createUserUseCase.execute(data);
@@ -162,22 +187,22 @@ describe('Create User UseCase', () => {
     // Assert
     expect(user).toBeInstanceOf(User);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
-    expect(user.password).toBe('hash_password');
+    expect(user.password).toBe(hashPassword);
   });
 
   it('Should throw an error if the user already exists (email)', async () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '55555555555',
-        name: 'rafael teste',
-        email: 'teste32131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: conflictCpf,
+        name: newUserName,
+        email: newUserEmail,
+        password: newUserPassword,
         role: UserRole.ADMIN,
       },
       org_id,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Assert
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
@@ -190,15 +215,15 @@ describe('Create User UseCase', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '1111111111',
-        name: 'rafael teste',
-        email: 'rafaap2013131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: newUserCpf,
+        name: newUserName,
+        email: conflictEmail,
+        password: newUserPassword,
         role: UserRole.ADMIN,
       },
       org_id,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Assert
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
@@ -211,15 +236,15 @@ describe('Create User UseCase', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '55555555555',
-        name: 'rafael teste',
-        email: 'rafaap2013131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: conflictCpf,
+        name: newUserName,
+        email: conflictEmail,
+        password: newUserPassword,
         role: UserRole.ADMIN,
       },
       org_id: '',
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Assert
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
@@ -232,15 +257,15 @@ describe('Create User UseCase', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '55555555555',
-        name: 'rafael teste',
-        email: 'rafaap2013131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: conflictCpf,
+        name: newUserName,
+        email: conflictEmail,
+        password: newUserPassword,
         role: UserRole.OWNER,
       },
       org_id,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Assert
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
@@ -253,15 +278,15 @@ describe('Create User UseCase', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '55555555555',
-        name: 'rafael teste',
-        email: 'rafaap2013131@gmail.com',
-        password: 'qweasdzxc2003', // qweasdzxc2003
+        cpf: conflictCpf,
+        name: newUserName,
+        email: conflictEmail,
+        password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id: 'org_id123123',
+      org_id: fakeOrgId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Assert
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);

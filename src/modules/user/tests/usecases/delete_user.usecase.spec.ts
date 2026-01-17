@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -22,6 +23,12 @@ describe('Delete User UseCase', () => {
   let utilsService: IUtilsContract;
   let user_id: string;
   let storageService: IStorageGw;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const hashPassword =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -60,11 +67,10 @@ describe('Delete User UseCase', () => {
 
     const { id } = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: hashPassword,
         role: UserRole.OWNER,
       },
     });

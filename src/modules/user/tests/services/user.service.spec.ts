@@ -10,6 +10,7 @@ jest.mock('src/shared/config/env', () => ({
     NODE_ENV: 'test',
   },
 }));
+import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -26,6 +27,29 @@ describe('UserService', () => {
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
   let storageService: IStorageGw;
+
+  const userCpf = faker.string.numeric(11);
+  const userEmail = faker.internet.email();
+  const userName = faker.person.fullName();
+  const userPassword = faker.internet.password();
+  const userId = faker.string.uuid();
+  const orgId = faker.string.uuid();
+  const ownerId = faker.string.uuid();
+  const hashBcrypt =
+    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
+  const orgName = faker.company.name();
+  const orgDescription = faker.lorem.sentence();
+  const orgEmail = faker.internet.email();
+  const orgImageUrl = faker.internet.url();
+  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
+  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
+  const orgCloseHour = faker.number.int({ min: 18, max: 23 });
+  const orgCep = faker.string.numeric(8);
+  const orgCity = faker.location.city();
+  const orgNeighborhood = faker.location.street();
+  const orgStreet = faker.location.streetAddress();
+  const orgLat = faker.location.latitude();
+  const orgLong = faker.location.longitude();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -81,21 +105,21 @@ describe('UserService', () => {
     // Arrange
     const data: IUserContract.CreateParams = {
       data: {
-        cpf: '12345678900',
-        email: 'rafa@gmail.com',
-        name: 'Rafael',
-        password: 'qweasdz',
+        cpf: userCpf,
+        email: userEmail,
+        name: userName,
+        password: userPassword,
         role: UserRole.OWNER,
       },
-      org_id: 'org_id',
+      org_id: orgId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'create').mockResolvedValue({
-      name: 'Rafael',
-      id: '12313131adada',
-      email: 'rafa@gmail.com',
-      cpf: '12345678900',
-      password: 'hash_bcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -107,14 +131,14 @@ describe('UserService', () => {
 
     // Assert
     expect(userCreated).toBeDefined();
-    expect(userCreated.password).toBe('hash_bcrypt');
+    expect(userCreated.password).toBe(hashBcrypt);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(utilsService.generateHash).toHaveBeenCalledWith(data.data.password);
     expect(userRepo.create).toHaveBeenCalledTimes(1);
     expect(userRepo.create).toHaveBeenCalledWith({
       ...data.data,
       org_id: data.org_id,
-      password: 'hash_bcrypt',
+      password: hashBcrypt,
     });
     expect(userRepo.createRelationWithOrg).toHaveBeenCalledTimes(1);
   });
@@ -123,20 +147,20 @@ describe('UserService', () => {
     // Arrange
     const data: IUserContract.UpdateParams = {
       data: {
-        cpf: '12345678900',
-        email: 'rafa@gmail.com',
-        name: 'Rafael Ap',
+        cpf: userCpf,
+        email: userEmail,
+        name: userName,
         role: UserRole.OWNER,
       },
-      id: '12313131adada',
+      id: userId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'update').mockResolvedValue({
-      name: 'Rafael Ap',
-      id: '12313131adada',
-      email: 'rafa@gmail.com',
-      cpf: '12345678900',
-      password: 'hash_bcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -162,21 +186,21 @@ describe('UserService', () => {
     // Arrange
     const data: IUserContract.UpdateParams = {
       data: {
-        cpf: '12345678900',
-        email: 'rafa@gmail.com',
-        name: 'Rafael Ap',
-        password: 'new_password',
+        cpf: userCpf,
+        email: userEmail,
+        name: userName,
+        password: userPassword,
         role: UserRole.OWNER,
       },
-      id: '12313131adada',
+      id: userId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'update').mockResolvedValue({
-      name: 'Rafael Ap',
-      id: '12313131adada',
-      email: 'rafa@gmail.com',
-      cpf: '12345678900',
-      password: 'hash_bcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -194,7 +218,7 @@ describe('UserService', () => {
       id: data.id,
       data: {
         ...data.data,
-        password: 'hash_bcrypt',
+        password: hashBcrypt,
       },
     });
   });
@@ -203,18 +227,18 @@ describe('UserService', () => {
     // Arrange
     const data: IUserContract.UpdateMeParams = {
       data: {
-        email: 'rafa@gmail.com',
-        name: 'Rafael Ap',
+        email: userEmail,
+        name: userName,
       },
-      id: '12313131adada',
+      id: userId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'updateMe').mockResolvedValue({
-      name: 'Rafael Ap',
-      id: '12313131adada',
-      email: 'rafa@gmail.com',
-      cpf: '12345678900',
-      password: 'hash_bcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -240,19 +264,19 @@ describe('UserService', () => {
     // Arrange
     const data: IUserContract.UpdateMeParams = {
       data: {
-        email: 'rafa@gmail.com',
-        name: 'Rafael Ap',
-        new_password: 'new_password',
+        email: userEmail,
+        name: userName,
+        new_password: userPassword,
       },
-      id: '12313131adada',
+      id: userId,
     };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_bcrypt');
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'updateMe').mockResolvedValue({
-      name: 'Rafael Ap',
-      id: '12313131adada',
-      email: 'rafa@gmail.com',
-      cpf: '12345678900',
-      password: 'hash_bcrypt',
+      name: userName,
+      id: userId,
+      email: userEmail,
+      cpf: userCpf,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       created_at: new Date(),
       updated_at: new Date(),
@@ -270,7 +294,7 @@ describe('UserService', () => {
       id: data.id,
       data: {
         ...data.data,
-        new_password: 'hash_bcrypt',
+        new_password: hashBcrypt,
       },
     });
   });
@@ -278,7 +302,7 @@ describe('UserService', () => {
   it('Should delete a user', async () => {
     // Arrange
     const data: IUserContract.DeleteParams = {
-      id: '12313131adada',
+      id: userId,
     };
     jest.spyOn(userRepo, 'delete').mockResolvedValue(true);
 
@@ -293,19 +317,19 @@ describe('UserService', () => {
   it('Should getAll users with page 0 and has_next page', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 0,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(true);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
-      Array.from({ length: 11 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+      Array.from({ length: 11 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
-        id: `user_id${idx}`,
-        name: 'Rafael Ap',
-        password: 'hash_bcrypt',
+        id: faker.string.uuid(),
+        name: userName,
+        password: hashBcrypt,
         role: UserRole.OWNER,
         updated_at: new Date(),
       })),
@@ -325,19 +349,19 @@ describe('UserService', () => {
   it('Should getAll users with page 1 and has_next page', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 1,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(true);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
-      Array.from({ length: 11 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+      Array.from({ length: 11 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
-        id: `user_id${idx}`,
-        name: 'Rafael Ap',
-        password: 'hash_bcrypt',
+        id: faker.string.uuid(),
+        name: userName,
+        password: hashBcrypt,
         role: UserRole.OWNER,
         updated_at: new Date(),
       })),
@@ -357,19 +381,19 @@ describe('UserService', () => {
   it('Should getAll users with page 2 and has_next page', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 2,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(true);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
-      Array.from({ length: 11 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+      Array.from({ length: 11 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
-        id: `user_id${idx}`,
-        name: 'Rafael Ap',
-        password: 'hash_bcrypt',
+        id: faker.string.uuid(),
+        name: userName,
+        password: hashBcrypt,
         role: UserRole.OWNER,
         updated_at: new Date(),
       })),
@@ -389,15 +413,15 @@ describe('UserService', () => {
   it('Should getAll users with page 3 and has_next page', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 3,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(true);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
       Array.from({ length: 11 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
         id: `user_id${idx}`,
         name: 'Rafael Ap',
@@ -421,19 +445,19 @@ describe('UserService', () => {
   it('Should getAll users in page 0/1 and has_next must be false', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 0,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(true);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
-      Array.from({ length: 10 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+      Array.from({ length: 10 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
-        id: `user_id${idx}`,
-        name: 'Rafael Ap',
-        password: 'hash_bcrypt',
+        id: faker.string.uuid(),
+        name: userName,
+        password: hashBcrypt,
         role: UserRole.OWNER,
         updated_at: new Date(),
       })),
@@ -453,19 +477,19 @@ describe('UserService', () => {
   it('Should throw an error if the user has not the org', async () => {
     // Arrange
     const data: IUserContract.GetAllParams = {
-      org_id: 'org_id',
+      org_id: orgId,
       page: 0,
-      owner_id: 'owner_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'verifyOrgById').mockResolvedValue(false);
     jest.spyOn(userRepo, 'getAll').mockResolvedValue(
-      Array.from({ length: 10 }).map((_, idx) => ({
-        cpf: `${idx}2345678900${idx}`,
-        email: `rafa${idx}@gmail.com`,
+      Array.from({ length: 10 }).map(() => ({
+        cpf: faker.string.numeric(11),
+        email: faker.internet.email(),
         created_at: new Date(),
-        id: `user_id${idx}`,
-        name: 'Rafael Ap',
-        password: 'hash_bcrypt',
+        id: faker.string.uuid(),
+        name: userName,
+        password: hashBcrypt,
         role: UserRole.OWNER,
         updated_at: new Date(),
       })),
@@ -477,15 +501,15 @@ describe('UserService', () => {
   it('Should get the current user', async () => {
     // Arrange
     const data: IUserContract.GetMeParams = {
-      id: 'user_id',
+      id: userId,
     };
     jest.spyOn(userRepo, 'getMe').mockResolvedValue({
-      cpf: '2345678900',
-      email: 'rafa@gmail.com',
+      cpf: userCpf,
+      email: userEmail,
       created_at: new Date(),
-      id: 'user_id',
-      name: 'Rafael Ap',
-      password: 'hash_bcrypt',
+      id: userId,
+      name: userName,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       updated_at: new Date(),
     });
@@ -502,7 +526,7 @@ describe('UserService', () => {
   it('Should not get the current user if dont exist', async () => {
     // Arrange
     const data: IUserContract.GetMeParams = {
-      id: 'user_id',
+      id: userId,
     };
     jest.spyOn(userRepo, 'getMe').mockResolvedValue(null);
 
@@ -518,15 +542,15 @@ describe('UserService', () => {
   it('Should get a user', async () => {
     // Arrange
     const data: IUserContract.GetParams = {
-      id: 'user_id',
+      id: userId,
     };
     jest.spyOn(userRepo, 'get').mockResolvedValue({
-      cpf: '2345678900',
-      email: 'rafa@gmail.com',
+      cpf: userCpf,
+      email: userEmail,
       created_at: new Date(),
-      id: 'user_id',
-      name: 'Rafael Ap',
-      password: 'hash_bcrypt',
+      id: userId,
+      name: userName,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       updated_at: new Date(),
     });
@@ -543,7 +567,7 @@ describe('UserService', () => {
   it('Should not get a user if dont exist', async () => {
     // Arrange
     const data: IUserContract.GetParams = {
-      id: 'user_id',
+      id: userId,
     };
     jest.spyOn(userRepo, 'get').mockResolvedValue(null);
 
@@ -559,15 +583,15 @@ describe('UserService', () => {
   it('Should get a user by email', async () => {
     // Arrange
     const data: IUserContract.GetUserByEmailParams = {
-      email: 'rafa@gmail.com',
+      email: userEmail,
     };
     jest.spyOn(userRepo, 'getuserByEmail').mockResolvedValue({
-      cpf: '2345678900',
-      email: 'rafa@gmail.com',
+      cpf: userCpf,
+      email: userEmail,
       created_at: new Date(),
-      id: 'user_id',
-      name: 'Rafael Ap',
-      password: 'hash_bcrypt',
+      id: userId,
+      name: userName,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       updated_at: new Date(),
     });
@@ -584,7 +608,7 @@ describe('UserService', () => {
   it('Should not get a user by email if dont exist', async () => {
     // Arrange
     const data: IUserContract.GetUserByEmailParams = {
-      email: 'rafa@gmail.com',
+      email: userEmail,
     };
     jest.spyOn(userRepo, 'getuserByEmail').mockResolvedValue(null);
 
@@ -600,15 +624,15 @@ describe('UserService', () => {
   it('Should get a user by cpf', async () => {
     // Arrange
     const data: IUserContract.GetUserByCpfParams = {
-      cpf: '2345678900',
+      cpf: userCpf,
     };
     jest.spyOn(userRepo, 'getuserByCpf').mockResolvedValue({
-      cpf: '2345678900',
-      email: 'rafa@gmail.com',
+      cpf: userCpf,
+      email: userEmail,
       created_at: new Date(),
-      id: 'user_id',
-      name: 'Rafael Ap',
-      password: 'hash_bcrypt',
+      id: userId,
+      name: userName,
+      password: hashBcrypt,
       role: UserRole.OWNER,
       updated_at: new Date(),
     });
@@ -625,7 +649,7 @@ describe('UserService', () => {
   it('Should not get a user by cpf if dont exist', async () => {
     // Arrange
     const data: IUserContract.GetUserByCpfParams = {
-      cpf: '2345678900',
+      cpf: userCpf,
     };
     jest.spyOn(userRepo, 'getuserByCpf').mockResolvedValue(null);
 
@@ -641,26 +665,26 @@ describe('UserService', () => {
   it('Should get all orgs of a user', async () => {
     // Arrange
     const data: IUserContract.GetOrgsParams = {
-      owner_id: 'owner_user_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'getUserOrgs').mockResolvedValue(
-      Array.from({ length: 3 }).map((_, idx) => ({
-        cep: '12345678',
-        city: 'City',
-        close_hour: 23,
+      Array.from({ length: 3 }).map(() => ({
+        cep: orgCep,
+        city: orgCity,
+        close_hour: orgCloseHour,
         created_at: new Date(),
-        id: `org_id${idx}`,
-        name: `Org ${idx}`,
-        description: 'Org description',
-        email: 'rafa@gmail.com',
-        image_url: 'http://image.com',
-        lat: -23.55052,
-        long: -46.633308,
-        open_hour: 8,
-        location_code: '1231313',
-        neighborhood: 'Neighborhood',
+        id: faker.string.uuid(),
+        name: orgName,
+        description: orgDescription,
+        email: orgEmail,
+        image_url: orgImageUrl,
+        lat: orgLat,
+        long: orgLong,
+        open_hour: orgOpenHour,
+        location_code: orgLocationCode,
+        neighborhood: orgNeighborhood,
         owner_id: data.owner_id,
-        street: 'Street',
+        street: orgStreet,
       })),
     );
 
@@ -678,7 +702,7 @@ describe('UserService', () => {
   it('Should return a empty array if no organization was found', async () => {
     // Arrange
     const data: IUserContract.GetOrgsParams = {
-      owner_id: 'owner_user_id',
+      owner_id: ownerId,
     };
     jest.spyOn(userRepo, 'getUserOrgs').mockResolvedValue([]);
 
