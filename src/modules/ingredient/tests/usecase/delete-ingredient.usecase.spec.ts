@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -13,6 +14,10 @@ describe('Delete Ingredient UseCase', () => {
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
   let ing_id: string;
+
+  const ingredientIcon = faker.internet.emoji();
+  const ingredientName = faker.lorem.word().toLowerCase();
+  const nonExistentIngId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,8 +41,8 @@ describe('Delete Ingredient UseCase', () => {
 
     const { id } = await prismaService.ingredient.create({
       data: {
-        icon: '🥗',
-        name: 'ing 1',
+        icon: ingredientIcon,
+        name: ingredientName,
       },
     });
     ing_id = id;
@@ -70,8 +75,8 @@ describe('Delete Ingredient UseCase', () => {
 
   it('Should throw a NotFoundError if the ingredient does not exists', async () => {
     // Assert
-    await expect(deleteIngredientUseCase.execute('ing_id')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      deleteIngredientUseCase.execute(nonExistentIngId),
+    ).rejects.toThrow(NotFoundException);
   });
 });

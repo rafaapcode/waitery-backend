@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -14,6 +15,16 @@ describe('Create Ingredient UseCase', () => {
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
   let ing_id: string;
+
+  const ingredientIcon = faker.internet.emoji();
+  const ingredientName = faker.lorem.word().toLowerCase();
+  const updatedIcon1 = faker.internet.emoji();
+  const updatedIcon2 = faker.internet.emoji();
+  const updatedIcon3 = faker.internet.emoji();
+  const updatedName1 = faker.lorem.word();
+  const updatedName2 = faker.lorem.word();
+  const updatedName3 = faker.lorem.word();
+  const fakeIngredientId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,19 +48,15 @@ describe('Create Ingredient UseCase', () => {
 
     const { id } = await prismaService.ingredient.create({
       data: {
-        icon: '🥗',
-        name: 'ing 1',
+        icon: ingredientIcon,
+        name: ingredientName,
       },
     });
     ing_id = id;
   });
 
   afterAll(async () => {
-    await prismaService.ingredient.delete({
-      where: {
-        name: 'ing 3',
-      },
-    });
+    await prismaService.ingredient.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -70,8 +77,8 @@ describe('Create Ingredient UseCase', () => {
     const ing_updated = await updateIngredientUseCase.execute({
       id: ing_id,
       data: {
-        icon: '🍪',
-        name: 'Ing 2',
+        icon: updatedIcon1,
+        name: updatedName1,
       },
     });
 
@@ -85,10 +92,10 @@ describe('Create Ingredient UseCase', () => {
     // Assert
     await expect(
       updateIngredientUseCase.execute({
-        id: 'ing_id',
+        id: fakeIngredientId,
         data: {
-          icon: '🍪',
-          name: 'Ing 2',
+          icon: updatedIcon2,
+          name: updatedName2,
         },
       }),
     ).rejects.toThrow(NotFoundException);
@@ -105,8 +112,8 @@ describe('Create Ingredient UseCase', () => {
     const ing_updated = await updateIngredientUseCase.execute({
       id: ing_id,
       data: {
-        icon: '🍪',
-        name: 'Ing 3',
+        icon: updatedIcon3,
+        name: updatedName3,
       },
     });
 
@@ -116,7 +123,7 @@ describe('Create Ingredient UseCase', () => {
     expect(ingredientService.update).toHaveBeenCalledTimes(1);
     expect(ingredientService.update).toHaveBeenCalledWith({
       id: ing_id,
-      ingredient: { icon: '🍪', name: 'ing 3' },
+      ingredient: { icon: updatedIcon3, name: updatedName3.toLowerCase() },
     });
   });
 });

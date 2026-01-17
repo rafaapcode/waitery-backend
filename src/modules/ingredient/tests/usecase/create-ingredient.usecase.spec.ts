@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -16,6 +17,10 @@ describe('Create Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
+
+  const ingredientIcon = faker.internet.emoji();
+  const ingredientName1 = faker.lorem.word();
+  const ingredientName2 = faker.lorem.word();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -39,17 +44,7 @@ describe('Create Ingredient UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.ingredient.delete({
-      where: {
-        name: 'ing 1',
-      },
-    });
-
-    await prismaService.ingredient.delete({
-      where: {
-        name: 'ing 2',
-      },
-    });
+    await prismaService.ingredient.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -62,8 +57,8 @@ describe('Create Ingredient UseCase', () => {
   it('Should create a new ingredient', async () => {
     // Arrage
     const data: IIngredientContract.CreateParams = createIngredientEntity({
-      icon: '🥗',
-      name: 'Ing 1',
+      icon: ingredientIcon,
+      name: ingredientName1,
     });
 
     // Act
@@ -77,8 +72,8 @@ describe('Create Ingredient UseCase', () => {
   it('Should throw a Conflict error if the ingredient already exists', async () => {
     // Arrage
     const data: IIngredientContract.CreateParams = createIngredientEntity({
-      icon: '🥗',
-      name: 'Ing 1',
+      icon: ingredientIcon,
+      name: ingredientName1,
     });
 
     // Assert
@@ -90,8 +85,8 @@ describe('Create Ingredient UseCase', () => {
   it('Should normalize the name to lowercase when create a new ingredient', async () => {
     // Arrage
     const data: IIngredientContract.CreateParams = createIngredientEntity({
-      icon: '🥗',
-      name: 'Ing 2',
+      icon: ingredientIcon,
+      name: ingredientName2,
     });
     jest.spyOn(ingredientService, 'create');
     jest.spyOn(ingredientService, 'getByName');
@@ -106,9 +101,11 @@ describe('Create Ingredient UseCase', () => {
     expect(ingredientService.getByName).toHaveBeenCalledTimes(1);
     expect(ingredientService.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'ing 2',
+        name: ingredientName2.toLowerCase(),
       }),
     );
-    expect(ingredientService.getByName).toHaveBeenCalledWith('ing 2');
+    expect(ingredientService.getByName).toHaveBeenCalledWith(
+      ingredientName2.toLowerCase(),
+    );
   });
 });

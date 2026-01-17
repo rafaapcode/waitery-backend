@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -13,6 +14,9 @@ describe('Create Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
+
+  const ingredientIcon = faker.internet.emoji();
+  const baseIngredientName = faker.lorem.word().toLowerCase();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,8 +40,8 @@ describe('Create Ingredient UseCase', () => {
 
     await prismaService.ingredient.createMany({
       data: Array.from({ length: 6 }).map((_, idx) => ({
-        icon: '🥗',
-        name: `ing ${idx}`,
+        icon: ingredientIcon,
+        name: `${baseIngredientName} ${idx}`,
       })),
     });
   });
