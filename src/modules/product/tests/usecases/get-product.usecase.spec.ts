@@ -196,23 +196,11 @@ describe('Get Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({
-      where: { org_id },
-    });
-    await prismaService.ingredient.deleteMany({
-      where: { icon: ingredientIcon },
-    });
-    await prismaService.category.deleteMany({
-      where: { name: categoryName },
-    });
-    await prismaService.organization.deleteMany({
-      where: {
-        name: orgName,
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: userEmail },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.ingredient.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {

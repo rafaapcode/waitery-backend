@@ -98,11 +98,7 @@ describe('GetAll Orgs UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.organization.deleteMany({
-      where: {
-        owner_id: owner_id_with_orgs,
-      },
-    });
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should be all services defined', () => {

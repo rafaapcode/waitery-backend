@@ -12,6 +12,7 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
@@ -55,6 +56,24 @@ describe('Get Products By Category Usecase', () => {
   let user_id: string;
   let cat_id: string;
   let cat_id2: string;
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const org1Name = faker.company.name();
+  const org1Email = faker.internet.email();
+  const org2Name = faker.company.name();
+  const org2Email = faker.internet.email();
+  const category1Name = faker.commerce.department();
+  const category2Name = faker.commerce.department();
+  const categoryIcon = faker.helpers.arrayElement([
+    '🍏',
+    '🍕',
+    '🍔',
+    '🍟',
+    '🥗',
+    '🍰',
+  ]);
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
@@ -111,77 +130,84 @@ describe('Get Products By Category Usecase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: faker.internet.password({ length: 20 }),
         role: UserRole.OWNER,
       },
     });
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org1Name,
+        image_url: faker.image.url(),
+        email: org1Email,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id: user.id,
       },
     });
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org2Name,
+        image_url: faker.image.url(),
+        email: org2Email,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id: user.id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: category1Name,
         org_id: id,
       },
     });
 
     const { id: cat_id_db2 } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas2',
+        icon: categoryIcon,
+        name: category2Name,
         org_id: org2.id,
       },
     });
     await prismaService.product.createMany({
       data: Array.from({ length: 43 }).map((_, i) => ({
-        name: `name - ${i}`,
-        description: 'description',
-        image_url: 'image_url',
+        name: `${faker.commerce.productName()} - ${i}`,
+        description: faker.lorem.sentence(),
+        image_url: faker.image.url(),
         ingredients: [] as Prisma.JsonArray,
-        price: 5 * i + 1,
+        price: faker.number.int({ min: 10, max: 500 }),
         category_id: cat_id_db,
         org_id: id,
       })),
@@ -195,22 +221,10 @@ describe('Get Products By Category Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({
-      where: { org_id },
-    });
-    await prismaService.category.deleteMany({
-      where: { name: { in: ['Massas', 'Massas2'] } },
-    });
-    await prismaService.organization.deleteMany({
-      where: {
-        name: {
-          in: ['Restaurante Fogo de chão', 'Restaurante Fogo de chão 2'],
-        },
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: 'rafaap@gmail.com' },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -233,14 +247,14 @@ describe('Get Products By Category Usecase', () => {
   it('Should throw an error if the org_id is invalid', async () => {
     // Assert
     await expect(
-      getProductByCategoryUseCase.execute('invalid_org_id', cat_id),
+      getProductByCategoryUseCase.execute(faker.string.uuid(), cat_id),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an error if the cat_id is invalid', async () => {
     // Assert
     await expect(
-      getProductByCategoryUseCase.execute(org_id, 'invalid_cat_id'),
+      getProductByCategoryUseCase.execute(org_id, faker.string.uuid()),
     ).rejects.toThrow(NotFoundException);
   });
 

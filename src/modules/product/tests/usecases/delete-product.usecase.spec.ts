@@ -92,10 +92,10 @@ describe('Delete Product Usecase', () => {
     '🍅',
     '🧄',
   ]);
-  const ingredient1Name = faker.commerce.productMaterial();
-  const ingredient2Name = faker.commerce.productMaterial();
-  const ingredient3Name = faker.commerce.productMaterial();
-  const ingredient4Name = faker.commerce.productMaterial();
+  const ingredient1Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient2Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient3Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient4Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
   const productName = faker.commerce.productName();
   const productDescription = faker.lorem.paragraph();
   const productPrice = faker.number.int({ min: 50, max: 500 });
@@ -289,21 +289,11 @@ describe('Delete Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({ where: { name: productName } });
-    await prismaService.category.deleteMany({ where: { name: categoryName } });
-    await prismaService.ingredient.deleteMany({
-      where: { icon: ingredientIcon },
-    });
-    await prismaService.organization.deleteMany({
-      where: {
-        name: {
-          in: [org1Name, org2Name],
-        },
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: { in: [user1Email, user2Email] } },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.ingredient.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {

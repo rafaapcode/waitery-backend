@@ -12,6 +12,7 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
@@ -49,6 +50,33 @@ describe('Get All Products Usecase', () => {
   let user_id: string;
   let cat_id: string;
   let ing_ids: string[];
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const categoryName = faker.commerce.department();
+  const categoryIcon = faker.helpers.arrayElement([
+    '🍏',
+    '🍕',
+    '🍔',
+    '🍟',
+    '🥗',
+    '🍰',
+  ]);
+  const ingredientIcon = faker.helpers.arrayElement([
+    '🥗',
+    '🧀',
+    '🥩',
+    '🥬',
+    '🍅',
+    '🧄',
+  ]);
+  const ingredient1Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient2Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient3Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient4Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
@@ -97,41 +125,46 @@ describe('Get All Products Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+    const user = await prismaService.user.upsert({
+      where: { email: userEmail },
+      update: {},
+      create: {
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: faker.internet.password({ length: 20 }),
         role: UserRole.OWNER,
       },
     });
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id: user.id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: id,
       },
     });
@@ -139,42 +172,42 @@ describe('Get All Products Usecase', () => {
     const [ing1, ing2, ing3, ing4] = await Promise.all([
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 1',
+          icon: ingredientIcon,
+          name: ingredient1Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 2',
+          icon: ingredientIcon,
+          name: ingredient2Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 3',
+          icon: ingredientIcon,
+          name: ingredient3Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 4',
+          icon: ingredientIcon,
+          name: ingredient4Name,
         },
       }),
     ]);
 
     await prismaService.product.createMany({
       data: Array.from({ length: 43 }).map((_, i) => ({
-        name: `name - ${i}`,
-        description: 'description',
-        image_url: 'image_url',
+        name: `${faker.commerce.productName()} - ${i}`,
+        description: faker.lorem.sentence(),
+        image_url: faker.image.url(),
         ingredients: [
           ing1.name,
           ing2.name,
           ing3.name,
           ing4.name,
         ] as Prisma.JsonArray,
-        price: 5 * i + 1,
+        price: faker.number.int({ min: 10, max: 500 }),
         category_id: cat_id_db,
         org_id: id,
       })),
@@ -187,23 +220,11 @@ describe('Get All Products Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({
-      where: { org_id },
-    });
-    await prismaService.category.deleteMany({ where: { name: 'Massas' } });
-    await prismaService.ingredient.deleteMany({
-      where: { icon: '🥗' },
-    });
-    await prismaService.organization.deleteMany({
-      where: {
-        name: {
-          in: ['Restaurante Fogo de chão', 'Restaurante Fogo de chão 2'],
-        },
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: 'rafaap@gmail.com' },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.ingredient.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -224,7 +245,7 @@ describe('Get All Products Usecase', () => {
   it('Should throw an error if the org_id is invalid', async () => {
     // Assert
     await expect(
-      getAllProductsUseCase.execute('invalid_org_id'),
+      getAllProductsUseCase.execute(faker.string.uuid()),
     ).rejects.toThrow(NotFoundException);
   });
 

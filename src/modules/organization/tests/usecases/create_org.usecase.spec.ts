@@ -111,10 +111,8 @@ describe('Create Org UseCase', () => {
   beforeEach(() => jest.clearAllMocks());
 
   afterAll(async () => {
-    await prismaService.user.delete({ where: { email: 'teste@gmail.com' } });
-    await prismaService.organization.deleteMany({
-      where: { email: 'contato@bemestar.com' },
-    });
+    await prismaService.user.deleteMany({});
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should be all services defined', () => {

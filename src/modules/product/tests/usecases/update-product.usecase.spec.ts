@@ -12,6 +12,7 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
@@ -55,6 +56,36 @@ describe('Update Product Usecase', () => {
   let cat_id: string;
   let prod_id: string;
   let ing_ids: string[];
+
+  const userCpf = faker.string.numeric(11);
+  const userName = faker.person.fullName();
+  const userEmail = faker.internet.email();
+  const org1Name = faker.company.name();
+  const org1Email = faker.internet.email();
+  const org2Name = faker.company.name();
+  const org2Email = faker.internet.email();
+  const categoryName = faker.commerce.department();
+  const categoryIcon = faker.helpers.arrayElement([
+    '🍏',
+    '🍕',
+    '🍔',
+    '🍟',
+    '🥗',
+    '🍰',
+  ]);
+  const ingredientIcon = faker.helpers.arrayElement([
+    '🥗',
+    '🧀',
+    '🥩',
+    '🥬',
+    '🍅',
+    '🧄',
+  ]);
+  const ingredient1Name = faker.commerce.productMaterial();
+  const ingredient2Name = faker.commerce.productMaterial();
+  const productName = faker.commerce.productName();
+  const productDescription = faker.lorem.paragraph();
+  const productPrice = faker.number.int({ min: 50, max: 500 });
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
@@ -109,59 +140,67 @@ describe('Update Product Usecase', () => {
 
     const user = await prismaService.user.create({
       data: {
-        cpf: '22222222222',
-        name: 'rafael ap',
-        email: 'rafaap@gmail.com',
-        password:
-          '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u', // qweasdzxc2003
+        cpf: userCpf,
+        name: userName,
+        email: userEmail,
+        password: faker.internet.password({ length: 20 }),
         role: UserRole.OWNER,
       },
     });
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org1Name,
+        image_url: faker.image.url(),
+        email: org1Email,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id: user.id,
       },
     });
 
     const org2 = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão 2',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org2Name,
+        image_url: faker.image.url(),
+        email: org2Email,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id: user.id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: id,
       },
     });
@@ -169,25 +208,25 @@ describe('Update Product Usecase', () => {
     const [ing1, ing2] = await Promise.all([
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 1',
+          icon: ingredientIcon,
+          name: ingredient1Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 2',
+          icon: ingredientIcon,
+          name: ingredient2Name,
         },
       }),
     ]);
 
     const prod = await prismaService.product.create({
       data: {
-        name: 'name',
-        description: 'description',
-        image_url: 'image_url',
+        name: productName,
+        description: productDescription,
+        image_url: faker.image.url(),
         ingredients: [ing1.name] as Prisma.JsonArray,
-        price: 120,
+        price: productPrice,
         category_id: cat_id_db,
         org_id: id,
       },
@@ -202,25 +241,11 @@ describe('Update Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({
-      where: { org_id },
-    });
-    await prismaService.ingredient.deleteMany({
-      where: { icon: '🥗' },
-    });
-    await prismaService.category.deleteMany({
-      where: { name: { in: ['Massas', 'Massas2'] } },
-    });
-    await prismaService.organization.deleteMany({
-      where: {
-        name: {
-          in: ['Restaurante Fogo de chão', 'Restaurante Fogo de chão 2'],
-        },
-      },
-    });
-    await prismaService.user.deleteMany({
-      where: { email: 'rafaap@gmail.com' },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.ingredient.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -245,33 +270,33 @@ describe('Update Product Usecase', () => {
   it('Should not be able to update a product if organization does not exist', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'name2',
-      price: 130,
+      name: faker.commerce.productName(),
+      price: faker.number.int({ min: 50, max: 500 }),
     };
     // Assert
     await expect(
-      updateProductUseCase.execute('fake_id', prod_id, data),
+      updateProductUseCase.execute(faker.string.uuid(), prod_id, data),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should not be able to update a product if product does not exist', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'name2',
-      price: 130,
+      name: faker.commerce.productName(),
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
     await expect(
-      updateProductUseCase.execute(org_id, 'prod_id', data),
+      updateProductUseCase.execute(org_id, faker.string.uuid(), data),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should not be able to update a product if product is not related with the org', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'name2',
-      price: 130,
+      name: faker.commerce.productName(),
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
@@ -283,8 +308,8 @@ describe('Update Product Usecase', () => {
   it('Should  be able to update a product', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'Novo nome do produto de teste',
-      price: 250,
+      name: faker.commerce.productName(),
+      price: faker.number.int({ min: 200, max: 600 }),
     };
     const old_product = await prismaService.product.findUnique({
       where: { id: prod_id },
@@ -312,7 +337,7 @@ describe('Update Product Usecase', () => {
   it('Should  be able to update a product with new ingredients', async () => {
     // Arrange
     const data: UpdateProductDto = {
-      name: 'Novo nome do produto 123123',
+      name: faker.commerce.productName(),
       ingredients: ing_ids,
     };
     const old_product = await prismaService.product.findUnique({

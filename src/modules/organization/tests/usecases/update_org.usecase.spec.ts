@@ -102,11 +102,7 @@ describe('Update a Org UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.organization.delete({
-      where: {
-        id: org_id,
-      },
-    });
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should be all services defined', () => {

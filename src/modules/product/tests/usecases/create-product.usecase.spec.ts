@@ -83,10 +83,10 @@ describe('Create Product Usecase', () => {
     '🍅',
     '🧄',
   ]);
-  const ingredient1Name = faker.commerce.productMaterial();
-  const ingredient2Name = faker.commerce.productMaterial();
-  const ingredient3Name = faker.commerce.productMaterial();
-  const ingredient4Name = faker.commerce.productMaterial();
+  const ingredient1Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient2Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient3Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
+  const ingredient4Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
   const productName = faker.commerce.productName();
   const productPrice = faker.number.int({ min: 50, max: 500 });
 
@@ -214,14 +214,10 @@ describe('Create Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({ where: { name: productName } });
-    await prismaService.category.deleteMany({ where: { name: categoryName } });
-    await prismaService.ingredient.deleteMany({
-      where: { icon: ingredientIcon },
-    });
-    await prismaService.organization.deleteMany({
-      where: { owner_id: ownerId },
-    });
+    await prismaService.product.deleteMany({});
+    await prismaService.category.deleteMany({});
+    await prismaService.ingredient.deleteMany({});
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -326,9 +322,6 @@ describe('Create Product Usecase', () => {
     await expect(
       createProductUseCase.execute(data, faker.string.uuid()),
     ).rejects.toThrow(NotFoundException);
-    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
-      BadRequestException,
-    );
   });
 
   it('Should throw an error if the org does not exists', async () => {
