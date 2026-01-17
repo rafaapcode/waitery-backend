@@ -1,9 +1,24 @@
+// Mock do módulo env ANTES de qualquer import que o utilize
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -15,6 +30,7 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { UpdateProductDto } from '../../dto/update-product.dto';
@@ -29,6 +45,7 @@ describe('Update Product Usecase', () => {
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let ingService: IIngredientContract;
+  let storageService: IStorageGw;
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
@@ -67,6 +84,14 @@ describe('Update Product Usecase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -80,6 +105,7 @@ describe('Update Product Usecase', () => {
     ingRepo = modules.get<IngredientRepository>(IngredientRepository);
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -213,6 +239,7 @@ describe('Update Product Usecase', () => {
     expect(prod_id).toBeDefined();
     expect(ing_ids).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should not be able to update a product if organization does not exist', async () => {

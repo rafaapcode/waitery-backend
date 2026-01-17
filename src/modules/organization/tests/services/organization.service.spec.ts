@@ -482,4 +482,46 @@ describe('OrganizationService', () => {
     expect(storageService.uploadFile).toHaveBeenCalledTimes(1);
     expect(result).toBeInstanceOf(Organization);
   });
+
+  it('Should delete a file', async () => {
+    // Arrange
+    const filekey = 'organization/132adad/image.png';
+
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: true });
+
+    // Act
+    const result = await orgService.deleteFile({
+      key: filekey,
+    });
+
+    // Assert
+    expect(storageService.deleteFile).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteFile).toHaveBeenCalledWith({
+      key: filekey,
+    });
+    expect(result).toBeTruthy();
+  });
+
+  it('Should delete a file if the file key is empty', async () => {
+    // Arrange
+    const filekey = '';
+
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: false });
+
+    // Act
+    const result = await orgService.deleteFile({
+      key: filekey,
+    });
+
+    // Assert
+    expect(storageService.deleteFile).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteFile).toHaveBeenCalledWith({
+      key: filekey,
+    });
+    expect(result).toBeFalsy();
+  });
 });

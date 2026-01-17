@@ -1,8 +1,23 @@
+// Mock do módulo env ANTES de qualquer import que o utilize
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -14,6 +29,7 @@ import { OrganizationRepo } from 'src/modules/organization/repo/organization.rep
 import {
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
@@ -25,6 +41,7 @@ describe('Get All Products Usecase', () => {
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
+  let storageService: IStorageGw;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
@@ -58,6 +75,14 @@ describe('Get All Products Usecase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -70,6 +95,7 @@ describe('Get All Products Usecase', () => {
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -192,6 +218,7 @@ describe('Get All Products Usecase', () => {
     expect(cat_id).toBeDefined();
     expect(ing_ids.length).toBe(4);
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should throw an error if the org_id is invalid', async () => {

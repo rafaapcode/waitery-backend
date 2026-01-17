@@ -1,3 +1,18 @@
+// Mock do módulo env ANTES de qualquer import que o utilize
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   ConflictException,
@@ -8,6 +23,7 @@ import { ICategoryContract } from 'src/core/application/contracts/category/ICate
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -22,6 +38,7 @@ import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { CreateProductDto } from '../../dto/create-product.dto';
@@ -33,6 +50,7 @@ describe('Create Product Usecase', () => {
   let createProductUseCase: CreateProductUseCase;
   let productService: IProductContract;
   let catService: ICategoryContract;
+  let storageService: IStorageGw;
   let catRepo: CategoryRepository;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
@@ -41,10 +59,36 @@ describe('Create Product Usecase', () => {
   let utilsService: IUtilsContract;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
-  const owner_id = 'owner_id';
   let org_id: string;
   let cat_id: string;
   let ing_ids: string[];
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const categoryName = faker.commerce.department();
+  const categoryIcon = faker.helpers.arrayElement([
+    '🍏',
+    '🍕',
+    '🍔',
+    '🍟',
+    '🥗',
+    '🍰',
+  ]);
+  const ingredientIcon = faker.helpers.arrayElement([
+    '🥗',
+    '🧀',
+    '🥩',
+    '🥬',
+    '🍅',
+    '🧄',
+  ]);
+  const ingredient1Name = faker.commerce.productMaterial();
+  const ingredient2Name = faker.commerce.productMaterial();
+  const ingredient3Name = faker.commerce.productMaterial();
+  const ingredient4Name = faker.commerce.productMaterial();
+  const productName = faker.commerce.productName();
+  const productPrice = faker.number.int({ min: 50, max: 500 });
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
@@ -79,6 +123,14 @@ describe('Create Product Usecase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -95,31 +147,36 @@ describe('Create Product Usecase', () => {
     orgRepo = modules.get<OrganizationRepo>(OrganizationRepo);
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
-        owner_id,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
+        owner_id: ownerId,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: id,
       },
     });
@@ -127,26 +184,26 @@ describe('Create Product Usecase', () => {
     const [ing1, ing2, ing3, ing4] = await Promise.all([
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 1',
+          icon: ingredientIcon,
+          name: ingredient1Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 2',
+          icon: ingredientIcon,
+          name: ingredient2Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 3',
+          icon: ingredientIcon,
+          name: ingredient3Name,
         },
       }),
       prismaService.ingredient.create({
         data: {
-          icon: '🥗',
-          name: 'ing 4',
+          icon: ingredientIcon,
+          name: ingredient4Name,
         },
       }),
     ]);
@@ -157,13 +214,13 @@ describe('Create Product Usecase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.product.deleteMany({ where: { name: 'name' } });
-    await prismaService.category.deleteMany({ where: { name: 'Massas' } });
+    await prismaService.product.deleteMany({ where: { name: productName } });
+    await prismaService.category.deleteMany({ where: { name: categoryName } });
     await prismaService.ingredient.deleteMany({
-      where: { icon: '🥗' },
+      where: { icon: ingredientIcon },
     });
     await prismaService.organization.deleteMany({
-      where: { owner_id },
+      where: { owner_id: ownerId },
     });
   });
 
@@ -181,6 +238,7 @@ describe('Create Product Usecase', () => {
     expect(org_id).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
     expect(ing_ids.length).toBe(4);
   });
 
@@ -188,11 +246,14 @@ describe('Create Product Usecase', () => {
     // Arrange
     const data: CreateProductDto = {
       category_id: cat_id,
-      description: 'description',
-      name: 'name',
+      description: faker.lorem.paragraph(),
+      name: productName,
       ingredients: ing_ids,
-      price: 120,
+      price: productPrice,
     };
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'https://test-cdn.com/file.jpg' });
 
     // Act
     const product = await createProductUseCase.execute(data, org_id);
@@ -200,17 +261,17 @@ describe('Create Product Usecase', () => {
     // Assert
     expect(product).toBeInstanceOf(Product);
     expect(product.ingredients.length).toBe(4);
-    expect(product.category.name).toBe('Massas');
+    expect(product.category.name).toBe(categoryName);
   });
 
   it('Should throw an error if the category does not exists', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      name: 'name2',
+      category_id: faker.string.uuid(),
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
       ingredients: ing_ids,
-      price: 120,
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
@@ -222,11 +283,11 @@ describe('Create Product Usecase', () => {
   it('Should throw an error if the ingredients doest not exists', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      name: 'name2',
+      category_id: faker.string.uuid(),
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
       ingredients: [],
-      price: 120,
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
@@ -238,11 +299,11 @@ describe('Create Product Usecase', () => {
   it('Should throw an error if the ingredients os greater then the ingredients on the db', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: 'cat_id',
-      description: 'description',
-      name: 'name2',
-      ingredients: [...ing_ids, 'ing_id'],
-      price: 120,
+      category_id: faker.string.uuid(),
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
+      ingredients: [...ing_ids, faker.string.uuid()],
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
@@ -255,26 +316,45 @@ describe('Create Product Usecase', () => {
     // Arrange
     const data: CreateProductDto = {
       category_id: cat_id,
-      description: 'description',
-      name: 'name2',
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
       ingredients: ing_ids,
-      price: 120,
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert
-    await expect(createProductUseCase.execute(data, 'org_id')).rejects.toThrow(
-      NotFoundException,
+    await expect(
+      createProductUseCase.execute(data, faker.string.uuid()),
+    ).rejects.toThrow(NotFoundException);
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
+      BadRequestException,
     );
+  });
+
+  it('Should throw an error if the org does not exists', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: cat_id,
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
+      ingredients: ing_ids,
+      price: faker.number.int({ min: 50, max: 500 }),
+    };
+
+    // Assert
+    await expect(
+      createProductUseCase.execute(data, 'uuidqualuqer'),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an error if the product already exists with the same name', async () => {
     // Arrange
     const data: CreateProductDto = {
       category_id: cat_id,
-      description: 'description',
-      name: 'name',
+      description: faker.lorem.paragraph(),
+      name: productName,
       ingredients: ing_ids,
-      price: 120,
+      price: faker.number.int({ min: 50, max: 500 }),
     };
 
     // Assert

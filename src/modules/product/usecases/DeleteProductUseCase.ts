@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as sentry from '@sentry/node';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -58,8 +59,22 @@ export class DeleteProductUseCase implements IDeleteProductUseCase {
     }
 
     if (product.image_url) {
-      // await this.prodService.deleteFile({});
+      this.prodService
+        .deleteFile({
+          key: this.getImageKeyFromUrl(product.image_url),
+        })
+        .catch((err) =>
+          sentry.logger.error(
+            `Error deleting product image file ${JSON.stringify(err)}`,
+          ),
+        );
     }
+
     await this.prodService.delete({ product_id, org_id });
+  }
+
+  private getImageKeyFromUrl(url: string): string {
+    const urlObj = new URL(url);
+    return urlObj.pathname.slice(1);
   }
 }

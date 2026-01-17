@@ -1,9 +1,24 @@
+// Mock do módulo env ANTES de qualquer import que o utilize
+jest.mock('src/shared/config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-jwt-secret-key',
+    REFRESH_JWT_SECRET: 'test-refresh-jwt-secret',
+    PORT: '3000',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CEP_SERVICE_API_URL: 'https://test-cep-api.com',
+    CDN_URL: 'https://test-cdn.com',
+    BUCKET_NAME: 'test-bucket',
+    NODE_ENV: 'test',
+  },
+}));
+
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -17,6 +32,7 @@ import {
   ICATEGORY_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
@@ -31,6 +47,7 @@ describe('Get Products By Category Usecase', () => {
   let catService: ICategoryContract;
   let catRepo: CategoryRepository;
   let productRepo: ProductRepository;
+  let storageService: IStorageGw;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let org_id: string;
@@ -68,6 +85,14 @@ describe('Get Products By Category Usecase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -82,6 +107,7 @@ describe('Get Products By Category Usecase', () => {
     catRepo = modules.get<CategoryRepository>(CategoryRepository);
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const user = await prismaService.user.create({
       data: {
@@ -201,6 +227,7 @@ describe('Get Products By Category Usecase', () => {
     expect(org_id2).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(user_id).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should throw an error if the org_id is invalid', async () => {

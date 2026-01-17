@@ -9,14 +9,12 @@ import { ICategoryContract } from 'src/core/application/contracts/category/ICate
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
-import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import {
   ICATEGORY_CONTRACT,
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
   IPRODUCT_CONTRACT,
-  ISTORAGE_SERVICE,
 } from 'src/shared/constants';
 import { CreateProductDto } from '../dto/create-product.dto';
 
@@ -24,7 +22,7 @@ interface ICreateProductUseCase {
   execute(
     product: CreateProductDto,
     org_id: string,
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<Product>;
 }
 
@@ -39,14 +37,12 @@ export class CreateProductUseCase implements ICreateProductUseCase {
     private readonly ingService: IIngredientContract,
     @Inject(IORGANIZATION_CONTRACT)
     private readonly orgService: IOrganizationContract,
-    @Inject(ISTORAGE_SERVICE)
-    private readonly storageService: IStorageGw,
   ) {}
 
   async execute(
     data: CreateProductDto,
     org_id: string,
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<Product> {
     const org = await this.orgService.get({
       id: org_id,

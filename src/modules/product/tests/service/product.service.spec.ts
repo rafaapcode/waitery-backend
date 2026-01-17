@@ -12,20 +12,40 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import {
   Category,
   createCategoryEntity,
 } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
+import { ISTORAGE_SERVICE } from 'src/shared/constants';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
 
 describe('Products Service', () => {
   let productService: ProductService;
   let prodcutRepo: ProductRepository;
+  let storageService: IStorageGw;
+  const product: Product = createProductEntity({
+    description: faker.person.bio(),
+    discount: false,
+    image_url: faker.image.url(),
+    ingredients: [],
+    name: faker.company.name(),
+    org_id: 'org_id',
+    price: 12,
+    discounted_price: 0,
+    category: createCategoryEntity({
+      icon: '🥗',
+      name: faker.commerce.department(),
+      org_id: '123123',
+      id: 'cat_id123123',
+    }),
+  });
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,11 +65,20 @@ describe('Products Service', () => {
             verifyProdIsRelatedWithOrg: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+            getFileKey: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
     prodcutRepo = module.get<ProductRepository>(ProductRepository);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
   });
 
   beforeEach(() => jest.clearAllMocks());
@@ -57,6 +86,7 @@ describe('Products Service', () => {
   it('Should define all services', () => {
     expect(productService).toBeDefined();
     expect(prodcutRepo).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should create a new product', async () => {
@@ -451,5 +481,72 @@ describe('Products Service', () => {
     expect(product).toBeFalsy();
     expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledTimes(1);
     expect(prodcutRepo.verifyProdIsRelatedWithOrg).toHaveBeenCalledWith(data);
+  });
+
+  it('Should upload a file', async () => {
+    // Arrange
+    const filename = faker.system.fileName();
+    const file = {
+      originalname: filename,
+      buffer: Buffer.from('file-content'),
+      mimetype: 'image/png',
+      size: 1024,
+    } as Express.Multer.File;
+
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'organization/132adad/image.png' });
+
+    // Act
+    const result = await productService.uploadFile({
+      file,
+      product,
+    });
+
+    // Assert
+    expect(storageService.uploadFile).toHaveBeenCalledTimes(1);
+    expect(result).toBeInstanceOf(Product);
+  });
+
+  it('Should delete a file', async () => {
+    // Arrange
+    const filekey = 'organization/132adad/image.png';
+
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: true });
+
+    // Act
+    const result = await productService.deleteFile({
+      key: filekey,
+    });
+
+    // Assert
+    expect(storageService.deleteFile).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteFile).toHaveBeenCalledWith({
+      key: filekey,
+    });
+    expect(result).toBeTruthy();
+  });
+
+  it('Should delete a file if the file key is empty', async () => {
+    // Arrange
+    const filekey = '';
+
+    jest
+      .spyOn(storageService, 'deleteFile')
+      .mockResolvedValue({ success: false });
+
+    // Act
+    const result = await productService.deleteFile({
+      key: filekey,
+    });
+
+    // Assert
+    expect(storageService.deleteFile).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteFile).toHaveBeenCalledWith({
+      key: filekey,
+    });
+    expect(result).toBeFalsy();
   });
 });
