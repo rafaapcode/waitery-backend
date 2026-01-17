@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
@@ -15,7 +16,26 @@ describe('Get Category by Id UseCase', () => {
   let categoryRepo: CategoryRepository;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
-  const owner_id = 'testestes123131';
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.paragraph();
+  const cityName = faker.location.city();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.commerce.department();
+  const nonExistentCatId = faker.string.uuid();
+  const wrongOrgId = faker.string.uuid();
+
+  const owner_id = ownerId;
   let org_id: string;
   let cat_id: string;
 
@@ -50,28 +70,27 @@ describe('Get Category by Id UseCase', () => {
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: orgDescription,
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: cityName,
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: id,
       },
     });
@@ -116,14 +135,14 @@ describe('Get Category by Id UseCase', () => {
   it('Should throw an NotFoundException if the category does not exists', async () => {
     // Assert
     await expect(
-      getByIdCategoryUseCase.execute('cat_id', org_id),
+      getByIdCategoryUseCase.execute(nonExistentCatId, org_id),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an ConflicException if the org does not match', async () => {
     // Assert
     await expect(
-      getByIdCategoryUseCase.execute(cat_id, 'org_id'),
+      getByIdCategoryUseCase.execute(cat_id, wrongOrgId),
     ).rejects.toThrow(ConflictException);
   });
 });

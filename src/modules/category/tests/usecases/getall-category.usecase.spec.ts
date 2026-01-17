@@ -1,7 +1,9 @@
+import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
@@ -10,6 +12,7 @@ import { OrganizationRepo } from 'src/modules/organization/repo/organization.rep
 import {
   ICATEGORY_CONTRACT,
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { CategoryService } from '../../category.service';
@@ -20,11 +23,30 @@ describe('GetAll Categories UseCase', () => {
   let getAllCategoriesUseCase: GetAllCategoryUseCase;
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
+  let storageService: IStorageGw;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
-  const owner_id = 'testestes123131';
+
+  const ownerId = faker.string.uuid();
+  const org1Name = faker.company.name();
+  const org2Name = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.paragraph();
+  const cityName = faker.location.city();
+  const locationCode =
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const categoryIcon = faker.internet.emoji();
+  const baseCategoryName = faker.commerce.department();
+  const nonExistentOrgId = faker.string.uuid();
+
+  const owner_id = ownerId;
   let org_id: string;
   let org_id2: string;
 
@@ -51,6 +73,13 @@ describe('GetAll Categories UseCase', () => {
             generateHash: jest.fn(),
           },
         },
+        {
+          provide: ISTORAGE_SERVICE,
+          useValue: {
+            uploadFile: jest.fn(),
+            deleteFile: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -63,51 +92,55 @@ describe('GetAll Categories UseCase', () => {
     orgRepo = module.get<OrganizationRepo>(OrganizationRepo);
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org1Name,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: orgDescription,
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: cityName,
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
 
     const { id: org2_id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão2',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: org2Name,
+        image_url: faker.image.url(),
+        email: faker.internet.email(),
+        description: faker.lorem.paragraph(),
+        location_code:
+          faker.location.countryCode('alpha-2') +
+          '-' +
+          faker.location.state({ abbreviated: true }) +
+          '-' +
+          faker.string.numeric(3),
+        open_hour: faker.number.int({ min: 6, max: 10 }),
+        close_hour: faker.number.int({ min: 18, max: 23 }),
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
 
     await prismaService.category.createMany({
       data: Array.from({ length: 20 }).map((_, idx) => ({
-        icon: '🍏',
-        name: `Massas ${idx}`,
+        icon: categoryIcon,
+        name: `${baseCategoryName} ${idx}`,
         org_id: id,
       })),
     });
@@ -117,21 +150,9 @@ describe('GetAll Categories UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.category.deleteMany({
-      where: {
-        org_id,
-      },
-    });
-    await prismaService.organization.delete({
-      where: {
-        id: org_id,
-      },
-    });
-    await prismaService.organization.delete({
-      where: {
-        id: org_id2,
-      },
-    });
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -144,6 +165,7 @@ describe('GetAll Categories UseCase', () => {
     expect(org_id).toBeDefined();
     expect(org_id2).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(storageService).toBeDefined();
   });
 
   it('Should get all categories of a org', async () => {
@@ -157,18 +179,15 @@ describe('GetAll Categories UseCase', () => {
 
   it('Should get an empty array if the org has not categories', async () => {
     // Act
-    const allCats = await getAllCategoriesUseCase.execute(org_id2);
-
-    // Assert
+    const allCats = await getAllCategoriesUseCase.execute(org_id2); // Assert
     expect(allCats.length).toBe(0);
     expect(allCats[0]).toBeUndefined();
     expect(allCats).toMatchObject([]);
   });
-
-  it('Should throw a NotFoundException if the Org does not exists', async () => {
+  it('hould throw a NotFoundException if the Org does', async () => {
     // Assert
-    await expect(getAllCategoriesUseCase.execute('org_id2')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      getAllCategoriesUseCase.execute(nonExistentOrgId),
+    ).rejects.toThrow(NotFoundException);
   });
 });

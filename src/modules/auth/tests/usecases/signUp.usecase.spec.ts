@@ -62,9 +62,7 @@ describe('SignUp UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.user.delete({
-      where: { email: userEmail },
-    });
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {

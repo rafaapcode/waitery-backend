@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
@@ -13,6 +14,13 @@ describe('Category Service', () => {
   let categoryService: CategoryService;
   let categoryRepo: CategoryRepository;
   let utilsService: IUtilsContract;
+
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.commerce.department();
+  const updatedCategoryName = faker.commerce.department();
+  const orgId = faker.string.uuid();
+  const categoryId = faker.string.uuid();
+  const catId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,15 +63,15 @@ describe('Category Service', () => {
   it('Should create a new category', async () => {
     // Arrange
     const data: ICategoryContract.CreateParams = createCategoryEntity({
-      icon: '🍕',
-      name: 'Massas',
-      org_id: 'org_id12312313',
+      icon: categoryIcon,
+      name: categoryName,
+      org_id: orgId,
     });
     jest.spyOn(categoryRepo, 'create').mockResolvedValue({
-      icon: '🍕',
-      name: 'Massas',
-      org_id: 'org_id12312313',
-      id: 'haoda183131',
+      icon: categoryIcon,
+      name: categoryName,
+      org_id: orgId,
+      id: categoryId,
     });
 
     // Act
@@ -80,27 +88,27 @@ describe('Category Service', () => {
     jest.spyOn(categoryRepo, 'delete').mockResolvedValue();
 
     // Act
-    await categoryService.delete('category_id');
+    await categoryService.delete(categoryId);
 
     // Assert
     expect(categoryRepo.delete).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.delete).toHaveBeenCalledWith('category_id');
+    expect(categoryRepo.delete).toHaveBeenCalledWith(categoryId);
   });
 
   it('Should update a category', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: 'id_category',
+      id: categoryId,
       category: {
-        icon: '🍕',
-        name: 'Massas2',
+        icon: categoryIcon,
+        name: updatedCategoryName,
       },
     };
     jest.spyOn(categoryRepo, 'update').mockResolvedValue({
-      icon: '🍕',
-      name: 'Massas2',
-      org_id: 'org_id12312313',
-      id: 'id_category',
+      icon: categoryIcon,
+      name: updatedCategoryName,
+      org_id: orgId,
+      id: categoryId,
     });
 
     // Act
@@ -115,19 +123,19 @@ describe('Category Service', () => {
   it('Should get a category', async () => {
     // Arrange
     jest.spyOn(categoryRepo, 'getById').mockResolvedValue({
-      icon: '🍕',
-      name: 'Massas',
-      org_id: 'org_id12312313',
-      id: 'id_category',
+      icon: categoryIcon,
+      name: categoryName,
+      org_id: orgId,
+      id: categoryId,
     });
 
     // Act
-    const cat = await categoryService.getCategory('cat_id');
+    const cat = await categoryService.getCategory(catId);
 
     // Assert
     expect(cat).toBeInstanceOf(Category);
     expect(categoryRepo.getById).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getById).toHaveBeenCalledWith('cat_id');
+    expect(categoryRepo.getById).toHaveBeenCalledWith(catId);
   });
 
   it('Should return null if category does not exist', async () => {
@@ -135,33 +143,33 @@ describe('Category Service', () => {
     jest.spyOn(categoryRepo, 'getById').mockResolvedValue(null);
 
     // Act
-    const cat = await categoryService.getCategory('cat_id');
+    const cat = await categoryService.getCategory(catId);
 
     // Assert
     expect(cat).toBeNull();
     expect(categoryRepo.getById).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getById).toHaveBeenCalledWith('cat_id');
+    expect(categoryRepo.getById).toHaveBeenCalledWith(catId);
   });
 
   it('Should get all categories', async () => {
     // Arrange
     jest.spyOn(categoryRepo, 'getAllCategories').mockResolvedValue(
       Array.from({ length: 3 }).map((_, idx) => ({
-        icon: '🍕',
-        name: `Massas ${idx}`,
-        org_id: `org_id_${idx}`,
-        id: `id_category_${idx}`,
+        icon: categoryIcon,
+        name: `${categoryName} ${idx}`,
+        org_id: `${orgId}_${idx}`,
+        id: `${categoryId}_${idx}`,
       })),
     );
 
     // Act
-    const cat = await categoryService.getAllCategories('org_id');
+    const cat = await categoryService.getAllCategories(orgId);
 
     // Assert
     expect(cat.length).toBe(3);
     expect(cat[0]).toBeInstanceOf(Category);
     expect(categoryRepo.getAllCategories).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getAllCategories).toHaveBeenCalledWith('org_id');
+    expect(categoryRepo.getAllCategories).toHaveBeenCalledWith(orgId);
   });
 
   it('Should return an empty array if 0 cat is found', async () => {
@@ -169,36 +177,36 @@ describe('Category Service', () => {
     jest.spyOn(categoryRepo, 'getAllCategories').mockResolvedValue([]);
 
     // Act
-    const cat = await categoryService.getAllCategories('org_id');
+    const cat = await categoryService.getAllCategories(orgId);
 
     // Assert
     expect(cat.length).toBe(0);
     expect(cat[0]).toBeUndefined();
     expect(categoryRepo.getAllCategories).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getAllCategories).toHaveBeenCalledWith('org_id');
+    expect(categoryRepo.getAllCategories).toHaveBeenCalledWith(orgId);
   });
 
   it('Should get a category by name', async () => {
     // Arrange
     jest.spyOn(categoryRepo, 'getByName').mockResolvedValue({
-      icon: '🍕',
-      name: 'Massas',
-      org_id: 'org_id12312313',
-      id: 'id_category',
+      icon: categoryIcon,
+      name: categoryName,
+      org_id: orgId,
+      id: categoryId,
     });
 
     // Act
     const cat = await categoryService.getCategoryByName({
-      name: 'Massas',
-      org_id: 'org_id12312313',
+      name: categoryName,
+      org_id: orgId,
     });
 
     // Assert
     expect(cat).toBeInstanceOf(Category);
     expect(categoryRepo.getByName).toHaveBeenCalledTimes(1);
     expect(categoryRepo.getByName).toHaveBeenCalledWith({
-      name: 'Massas',
-      org_id: 'org_id12312313',
+      name: categoryName,
+      org_id: orgId,
     });
   });
 
@@ -208,16 +216,16 @@ describe('Category Service', () => {
 
     // Act
     const cat = await categoryService.getCategoryByName({
-      name: 'Massas',
-      org_id: 'org_id12312313',
+      name: categoryName,
+      org_id: orgId,
     });
 
     // Assert
     expect(cat).toBeNull();
     expect(categoryRepo.getByName).toHaveBeenCalledTimes(1);
     expect(categoryRepo.getByName).toHaveBeenCalledWith({
-      name: 'Massas',
-      org_id: 'org_id12312313',
+      name: categoryName,
+      org_id: orgId,
     });
   });
 
@@ -227,16 +235,16 @@ describe('Category Service', () => {
 
     // Act
     const cat = await categoryService.isBeingUsed({
-      cat_id: 'cat_id',
-      org_id: 'org_id12312313',
+      cat_id: catId,
+      org_id: orgId,
     });
 
     // Assert
     expect(cat).toBeTruthy();
     expect(categoryRepo.isBeingUsed).toHaveBeenCalledTimes(1);
     expect(categoryRepo.isBeingUsed).toHaveBeenCalledWith({
-      cat_id: 'cat_id',
-      org_id: 'org_id12312313',
+      cat_id: catId,
+      org_id: orgId,
     });
   });
 
@@ -247,16 +255,16 @@ describe('Category Service', () => {
 
     // Act
     const cat = await categoryService.isBeingUsed({
-      cat_id: 'cat_id',
-      org_id: 'org_id12312313',
+      cat_id: catId,
+      org_id: orgId,
     });
 
     // Assert
     expect(cat).toBeFalsy();
     expect(categoryRepo.isBeingUsed).toHaveBeenCalledTimes(1);
     expect(categoryRepo.isBeingUsed).toHaveBeenCalledWith({
-      cat_id: 'cat_id',
-      org_id: 'org_id12312313',
+      cat_id: catId,
+      org_id: orgId,
     });
   });
 });

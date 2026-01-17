@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   ConflictException,
@@ -18,7 +19,30 @@ describe('Delete Category UseCase', () => {
   let categoryRepo: CategoryRepository;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
-  const owner_id = 'testestes123131';
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.paragraph();
+  const cityName = faker.location.city();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.commerce.department();
+  const productName = faker.commerce.productName();
+  const productDescription = faker.commerce.productDescription();
+  const productPrice = faker.number.int({ min: 10, max: 500 });
+  const ingredientName = faker.lorem.word();
+  const nonExistentCategoryId = faker.string.uuid();
+  const wrongOrgId = faker.string.uuid();
+
+  const owner_id = ownerId;
   let org_id: string;
   let category_id: string;
 
@@ -53,39 +77,38 @@ describe('Delete Category UseCase', () => {
 
     const { id: org_id_db } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: orgDescription,
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: cityName,
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: org_id_db,
       },
     });
 
     await prismaService.product.create({
       data: {
-        name: 'name',
-        description: 'description',
-        image_url: 'image_url',
-        ingredients: ['Ingrediente 1'],
-        price: 120,
+        name: productName,
+        description: productDescription,
+        image_url: faker.image.url(),
+        ingredients: [ingredientName],
+        price: productPrice,
         category_id: cat_id_db,
         org_id: org_id_db,
       },
@@ -96,11 +119,7 @@ describe('Delete Category UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.organization.deleteMany({
-      where: {
-        name: 'Restaurante Fogo de chão',
-      },
-    });
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -116,14 +135,14 @@ describe('Delete Category UseCase', () => {
   it('Should throw an error if the category does not exists', async () => {
     //Assert
     await expect(
-      deleteCategoryUseCAse.execute('category_id', org_id),
+      deleteCategoryUseCAse.execute(nonExistentCategoryId, org_id),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw an error if the organization does not match', async () => {
     //Assert
     await expect(
-      deleteCategoryUseCAse.execute(category_id, 'wrong_org_id'),
+      deleteCategoryUseCAse.execute(category_id, wrongOrgId),
     ).rejects.toThrow(BadRequestException);
   });
 

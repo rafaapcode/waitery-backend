@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
@@ -15,7 +16,30 @@ describe('Update Category UseCase', () => {
   let categoryRepo: CategoryRepository;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
-  const owner_id = 'testestes123131';
+
+  const ownerId = faker.string.uuid();
+  const orgName = faker.company.name();
+  const orgEmail = faker.internet.email();
+  const orgDescription = faker.lorem.paragraph();
+  const cityName = faker.location.city();
+  const locationCode =
+    faker.location.countryCode('alpha-2') +
+    '-' +
+    faker.location.state({ abbreviated: true }) +
+    '-' +
+    faker.string.numeric(3);
+  const openHour = faker.number.int({ min: 6, max: 10 });
+  const closeHour = faker.number.int({ min: 18, max: 23 });
+  const categoryIcon = faker.internet.emoji();
+  const categoryName = faker.commerce.department();
+  const newIcon1 = faker.internet.emoji();
+  const newName1 = faker.commerce.department();
+  const newIcon2 = faker.internet.emoji();
+  const newName2 = faker.commerce.department();
+  const nonExistentCatId = faker.string.uuid();
+  const wrongOrgId = faker.string.uuid();
+
+  const owner_id = ownerId;
   let org_id: string;
   let cat_id: string;
 
@@ -50,28 +74,27 @@ describe('Update Category UseCase', () => {
 
     const { id } = await prismaService.organization.create({
       data: {
-        name: 'Restaurante Fogo de chão',
-        image_url: 'https://example.com/images/clinica.jpg',
-        email: 'contato@bemestar.com',
-        description:
-          'Clínica especializada em atendimento psicológico e terapias.',
-        location_code: 'BR-MG-015',
-        open_hour: 8,
-        close_hour: 18,
-        cep: '30130-010',
-        city: 'Belo Horizonte',
-        neighborhood: 'Funcionários',
-        street: 'Rua da Bahia, 1200',
-        lat: -19.92083,
-        long: -43.937778,
+        name: orgName,
+        image_url: faker.image.url(),
+        email: orgEmail,
+        description: orgDescription,
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+        city: cityName,
+        neighborhood: faker.location.street(),
+        street: faker.location.streetAddress(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
         owner_id,
       },
     });
 
     const { id: cat_id_db } = await prismaService.category.create({
       data: {
-        icon: '🍏',
-        name: 'Massas',
+        icon: categoryIcon,
+        name: categoryName,
         org_id: id,
       },
     });
@@ -81,16 +104,8 @@ describe('Update Category UseCase', () => {
   });
 
   afterAll(async () => {
-    await prismaService.category.delete({
-      where: {
-        id: cat_id,
-      },
-    });
-    await prismaService.organization.delete({
-      where: {
-        id: org_id,
-      },
-    });
+    await prismaService.category.deleteMany({});
+    await prismaService.organization.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -108,7 +123,7 @@ describe('Update Category UseCase', () => {
     const data: ICategoryContract.UpdateParams = {
       id: cat_id,
       category: {
-        icon: '🌶️',
+        icon: newIcon1,
       },
     };
     const old_cat = await prismaService.category.findUnique({
@@ -134,7 +149,7 @@ describe('Update Category UseCase', () => {
     const data: ICategoryContract.UpdateParams = {
       id: cat_id,
       category: {
-        name: 'Gorduroso',
+        name: newName1,
       },
     };
     const old_cat = await prismaService.category.findUnique({
@@ -160,8 +175,8 @@ describe('Update Category UseCase', () => {
     const data: ICategoryContract.UpdateParams = {
       id: cat_id,
       category: {
-        name: 'Saudável',
-        icon: '🍽️',
+        name: newName2,
+        icon: newIcon2,
       },
     };
     const old_cat = await prismaService.category.findUnique({
@@ -188,30 +203,14 @@ describe('Update Category UseCase', () => {
     const data: ICategoryContract.UpdateParams = {
       id: cat_id,
       category: {
-        name: 'Saudável',
-        icon: '🍽️',
+        name: newName2,
+        icon: newIcon2,
       },
     };
 
     // Assert
     await expect(
-      updateCategoryUseCase.execute('data.id', org_id, data.category),
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('Should throw a NotFoundException if the category does not exist', async () => {
-    // Arrange
-    const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
-      category: {
-        name: 'Saudável',
-        icon: '🍽️',
-      },
-    };
-
-    // Assert
-    await expect(
-      updateCategoryUseCase.execute('data.id', org_id, data.category),
+      updateCategoryUseCase.execute(nonExistentCatId, org_id, data.category),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -220,14 +219,14 @@ describe('Update Category UseCase', () => {
     const data: ICategoryContract.UpdateParams = {
       id: cat_id,
       category: {
-        name: 'Saudável',
-        icon: '🍽️',
+        name: newName2,
+        icon: newIcon2,
       },
     };
 
     // Assert
     await expect(
-      updateCategoryUseCase.execute(data.id, 'Wrong_org_id', data.category),
+      updateCategoryUseCase.execute(data.id, wrongOrgId, data.category),
     ).rejects.toThrow(BadRequestException);
   });
 });
