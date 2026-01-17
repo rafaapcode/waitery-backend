@@ -2,11 +2,14 @@ import { faker } from '@faker-js/faker';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
+import { User as UserPrisma } from 'generated/prisma';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { UtilsService } from 'src/utils.service';
 import { AuthService } from '../../auth.service';
 import { SignInUseCase } from '../../usecases/SignInUseCase';
@@ -17,17 +20,17 @@ describe('SignIn UseCase', () => {
   let jwtService: JwtService;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
+  let factoriesService: FactoriesService;
+  let user: UserPrisma;
 
-  const userCpf = faker.string.numeric(11);
-  const userEmail = faker.internet.email();
   const userPassword = faker.internet.password({ length: 15 });
   const token = faker.string.alphanumeric(128);
   const nonExistentEmail = faker.internet.email();
   const wrongPassword = faker.internet.password({ length: 20 });
-  let hashedPassword: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         SignInUseCase,
         PrismaService,
@@ -53,17 +56,9 @@ describe('SignIn UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signInUseCase = module.get<SignInUseCase>(SignInUseCase);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    hashedPassword = await utilsService.generateHash(userPassword);
-
-    await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        email: userEmail,
-        password: hashedPassword,
-        role: 'OWNER',
-      },
-    });
+    user = await factoriesService.generateUserInfo();
   }, 15000);
 
   beforeEach(() => {
@@ -79,13 +74,14 @@ describe('SignIn UseCase', () => {
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
+    expect(factoriesService).toBeDefined();
   });
 
   it('Should signIn a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: userEmail,
-      password: userPassword,
+      email: user.email,
+      password: 'qweasdzxc2003',
     };
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
@@ -120,7 +116,7 @@ describe('SignIn UseCase', () => {
   it('Should not signIn a user with wrong password', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: userEmail,
+      email: user.email,
       password: wrongPassword,
     };
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);

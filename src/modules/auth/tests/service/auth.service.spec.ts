@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
+import { User } from 'generated/prisma';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -21,14 +22,10 @@ describe('AuthService - SignIn', () => {
   let jwtService: JwtService;
   let utilsService: IUtilsContract;
   let factorieService: FactoriesService;
+  let user: User;
 
   const token = faker.string.alphanumeric(128);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const userCpf = faker.string.numeric(11);
   const userPassword = faker.internet.password({ length: 15 });
-  const hashBcrypt =
-    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -60,15 +57,7 @@ describe('AuthService - SignIn', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     factorieService = module.get<FactoriesService>(FactoriesService);
 
-    await prismaService.user.create({
-      data: {
-        name: userName,
-        email: userEmail,
-        cpf: userCpf,
-        password: hashBcrypt,
-        role: UserRole.OWNER,
-      },
-    });
+    user = await factorieService.generateUserInfo();
   });
 
   afterAll(async () => {
@@ -86,7 +75,7 @@ describe('AuthService - SignIn', () => {
   it('Should signIn a valid user', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: userEmail,
+      email: user.email,
       password: userPassword,
     };
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(true);
@@ -118,7 +107,7 @@ describe('AuthService - SignIn', () => {
   it('Should throw if the password is incorrect', async () => {
     // Arrange
     const data: IAuthContract.SignInParams = {
-      email: userEmail,
+      email: user.email,
       password: userPassword,
     };
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(false);

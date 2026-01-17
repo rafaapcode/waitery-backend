@@ -7,36 +7,23 @@ import { PrismaService } from 'src/infra/database/database.service';
 export class FactoriesService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async generateUserInfo(role: UserRole, persistent?: boolean) {
+  async generateUserInfo(role: UserRole = UserRole.OWNER) {
     const userName = faker.person.fullName();
-    const userId = faker.string.uuid();
     const userEmail = faker.internet.email();
     const userCpf = faker.string.numeric(11);
-    const hashBcrypt = faker.string.alphanumeric(60);
+    const hashBcrypt =
+      '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u'; // qweasdzxc2003
 
-    if (persistent) {
-      const user = await this.prismaService.user.create({
-        data: {
-          name: userName,
-          email: userEmail,
-          cpf: userCpf,
-          password: hashBcrypt,
-          role,
-        },
-      });
+    const user = await this.prismaService.user.create({
+      data: {
+        name: userName,
+        email: userEmail,
+        cpf: userCpf,
+        password: hashBcrypt,
+        role,
+      },
+    });
 
-      return user;
-    }
-
-    return {
-      name: userName,
-      id: userId,
-      email: userEmail,
-      cpf: userCpf,
-      password: hashBcrypt,
-      role,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
+    return user;
   }
 }
