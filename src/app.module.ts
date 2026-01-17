@@ -17,6 +17,7 @@ import { env } from './shared/config/env';
 import { IUTILS_SERVICE } from './shared/constants';
 import { UtilsService } from './utils.service';
 import { StorageModule } from './infra/storage/storage.module';
+import { FactoriesModule } from './test/factories/factories.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { StorageModule } from './infra/storage/storage.module';
     ProductModule,
     WsModule,
     StorageModule,
+    FactoriesModule,
   ],
   controllers: [AppController],
   providers: [

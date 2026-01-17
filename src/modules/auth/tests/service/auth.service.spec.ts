@@ -11,6 +11,8 @@ import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContr
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IUTILS_SERVICE } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { AuthService } from '../../auth.service';
 
 describe('AuthService - SignIn', () => {
@@ -18,6 +20,7 @@ describe('AuthService - SignIn', () => {
   let prismaService: PrismaService;
   let jwtService: JwtService;
   let utilsService: IUtilsContract;
+  let factorieService: FactoriesService;
 
   const token = faker.string.alphanumeric(128);
   const userName = faker.person.fullName();
@@ -29,8 +32,10 @@ describe('AuthService - SignIn', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         AuthService,
+        FactoriesService,
         {
           provide: PrismaService,
           useValue: {
@@ -60,6 +65,7 @@ describe('AuthService - SignIn', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    factorieService = module.get<FactoriesService>(FactoriesService);
   });
 
   it('All services must be defined', () => {
@@ -67,6 +73,7 @@ describe('AuthService - SignIn', () => {
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(factorieService).toBeDefined();
   });
 
   it('Should signIn a valid user', async () => {
