@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Organization } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -15,6 +16,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 import { GetAllCategoryUseCase } from '../../usecases/GetAllCategoryUseCase';
@@ -28,30 +31,16 @@ describe('GetAll Categories UseCase', () => {
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
+  let org: Organization;
+  let org2: Organization;
 
-  const ownerId = faker.string.uuid();
-  const org1Name = faker.company.name();
-  const org2Name = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const orgDescription = faker.lorem.paragraph();
-  const cityName = faker.location.city();
-  const locationCode =
-    '-' +
-    faker.location.state({ abbreviated: true }) +
-    '-' +
-    faker.string.numeric(3);
-  const openHour = faker.number.int({ min: 6, max: 10 });
-  const closeHour = faker.number.int({ min: 18, max: 23 });
-  const categoryIcon = faker.internet.emoji();
   const baseCategoryName = faker.commerce.department();
   const nonExistentOrgId = faker.string.uuid();
 
-  const owner_id = ownerId;
-  let org_id: string;
-  let org_id2: string;
-
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetAllCategoryUseCase,
         PrismaService,
@@ -93,65 +82,21 @@ describe('GetAll Categories UseCase', () => {
     orgService = module.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: org1Name,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: orgDescription,
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-        city: cityName,
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id,
-      },
-    });
+    const { organization, owner } =
+      await factoriesService.generateOrganizationWithOwner();
 
-    const { id: org2_id } = await prismaService.organization.create({
-      data: {
-        name: org2Name,
-        image_url: faker.image.url(),
-        email: faker.internet.email(),
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id,
-      },
-    });
+    org = organization;
 
-    await prismaService.category.createMany({
-      data: Array.from({ length: 20 }).map((_, idx) => ({
-        icon: categoryIcon,
-        name: `${baseCategoryName} ${idx}`,
-        org_id: id,
-      })),
-    });
+    org2 = (await factoriesService.generateOrganizationWithOwner(owner.id))
+      .organization;
 
-    org_id = id;
-    org_id2 = org2_id;
+    await factoriesService.generateManyCategories(20, org.id, baseCategoryName);
   });
 
   afterAll(async () => {
     await prismaService.category.deleteMany({});
-    await prismaService.organization.deleteMany({});
     await prismaService.organization.deleteMany({});
   });
 
@@ -162,15 +107,15 @@ describe('GetAll Categories UseCase', () => {
     expect(categoryRepo).toBeDefined();
     expect(orgService).toBeDefined();
     expect(orgRepo).toBeDefined();
-    expect(org_id).toBeDefined();
-    expect(org_id2).toBeDefined();
+    expect(org).toBeDefined();
+    expect(org2).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
   });
 
   it('Should get all categories of a org', async () => {
     // Act
-    const allCats = await getAllCategoriesUseCase.execute(org_id);
+    const allCats = await getAllCategoriesUseCase.execute(org.id);
 
     // Assert
     expect(allCats.length).toBe(20);
@@ -179,7 +124,7 @@ describe('GetAll Categories UseCase', () => {
 
   it('Should get an empty array if the org has not categories', async () => {
     // Act
-    const allCats = await getAllCategoriesUseCase.execute(org_id2); // Assert
+    const allCats = await getAllCategoriesUseCase.execute(org2.id); // Assert
     expect(allCats.length).toBe(0);
     expect(allCats[0]).toBeUndefined();
     expect(allCats).toMatchObject([]);

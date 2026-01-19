@@ -1,11 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Category as CatPrisma, Organization } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
 import { ICATEGORY_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { CategoryService } from '../../category.service';
 import { CategoryRepository } from '../../repo/category.repository';
 import { UpdateCategoryUseCase } from '../../usecases/UpdateCategoryUseCase';
@@ -16,22 +19,10 @@ describe('Update Category UseCase', () => {
   let categoryRepo: CategoryRepository;
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
+  let factoriesService: FactoriesService;
+  let org: Organization;
+  let cat: CatPrisma;
 
-  const ownerId = faker.string.uuid();
-  const orgName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const orgDescription = faker.lorem.paragraph();
-  const cityName = faker.location.city();
-  const locationCode =
-    faker.location.countryCode('alpha-2') +
-    '-' +
-    faker.location.state({ abbreviated: true }) +
-    '-' +
-    faker.string.numeric(3);
-  const openHour = faker.number.int({ min: 6, max: 10 });
-  const closeHour = faker.number.int({ min: 18, max: 23 });
-  const categoryIcon = faker.internet.emoji();
-  const categoryName = faker.commerce.department();
   const newIcon1 = faker.internet.emoji();
   const newName1 = faker.commerce.department();
   const newIcon2 = faker.internet.emoji();
@@ -39,12 +30,9 @@ describe('Update Category UseCase', () => {
   const nonExistentCatId = faker.string.uuid();
   const wrongOrgId = faker.string.uuid();
 
-  const owner_id = ownerId;
-  let org_id: string;
-  let cat_id: string;
-
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         UpdateCategoryUseCase,
         PrismaService,
@@ -71,46 +59,18 @@ describe('Update Category UseCase', () => {
     categoryService = module.get<ICategoryContract>(ICATEGORY_CONTRACT);
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: orgDescription,
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-        city: cityName,
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id,
-      },
-    });
-
-    org_id = id;
+    org = (await factoriesService.generateOrganizationWithOwner()).organization;
   });
 
   beforeEach(async () => {
     // Criar uma nova categoria para cada teste
-    const { id: cat_id_db } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: categoryName,
-        org_id,
-      },
-    });
-    cat_id = cat_id_db;
+    cat = await factoriesService.generateCategoryInfo(org.id);
   });
 
   afterEach(async () => {
-    // Deletar a categoria após cada teste
-    await prismaService.category.delete({
-      where: { id: cat_id },
-    });
+    await prismaService.category.deleteMany({});
   });
 
   afterAll(async () => {
@@ -123,87 +83,87 @@ describe('Update Category UseCase', () => {
     expect(categoryService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(categoryRepo).toBeDefined();
-    expect(org_id).toBeDefined();
-    expect(cat_id).toBeDefined();
+    expect(org).toBeDefined();
+    expect(cat).toBeDefined();
     expect(utilsService).toBeDefined();
   });
 
   it('Should update ONLY THE ICON of a category', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
+      id: cat.id,
       category: {
         icon: newIcon1,
       },
     };
     const old_cat = await prismaService.category.findUnique({
-      where: { id: cat_id },
+      where: { id: cat.id },
     });
 
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
-      org_id,
+      org.id,
       data.category,
     );
 
     // Assert
     expect(updated_cat).toBeInstanceOf(Category);
-    expect(updated_cat.id).toBe(cat_id);
-    expect(updated_cat.org_id).toBe(org_id);
+    expect(updated_cat.id).toBe(cat.id);
+    expect(updated_cat.org_id).toBe(org.id);
     expect(updated_cat.icon).not.toBe(old_cat?.icon);
   });
 
   it('Should update ONLY THE NAME of a category', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
+      id: cat.id,
       category: {
         name: newName1,
       },
     };
     const old_cat = await prismaService.category.findUnique({
-      where: { id: cat_id },
+      where: { id: cat.id },
     });
 
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
-      org_id,
+      org.id,
       data.category,
     );
 
     // Assert
     expect(updated_cat).toBeInstanceOf(Category);
-    expect(updated_cat.id).toBe(cat_id);
-    expect(updated_cat.org_id).toBe(org_id);
+    expect(updated_cat.id).toBe(cat.id);
+    expect(updated_cat.org_id).toBe(org.id);
     expect(updated_cat.name).not.toBe(old_cat?.name);
   });
 
   it('Should update THE BOTH FIELDS of a category', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
+      id: cat.id,
       category: {
         name: newName2,
         icon: newIcon2,
       },
     };
     const old_cat = await prismaService.category.findUnique({
-      where: { id: cat_id },
+      where: { id: cat.id },
     });
 
     // Act
     const updated_cat = await updateCategoryUseCase.execute(
       data.id,
-      org_id,
+      org.id,
       data.category,
     );
 
     // Assert
     expect(updated_cat).toBeInstanceOf(Category);
-    expect(updated_cat.id).toBe(cat_id);
-    expect(updated_cat.org_id).toBe(org_id);
+    expect(updated_cat.id).toBe(cat.id);
+    expect(updated_cat.org_id).toBe(org.id);
     expect(updated_cat.name).not.toBe(old_cat?.name);
     expect(updated_cat.icon).not.toBe(old_cat?.icon);
   });
@@ -211,7 +171,7 @@ describe('Update Category UseCase', () => {
   it('Should throw a NotFoundException if the category does not exist', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
+      id: cat.id,
       category: {
         name: newName2,
         icon: newIcon2,
@@ -220,14 +180,14 @@ describe('Update Category UseCase', () => {
 
     // Assert
     await expect(
-      updateCategoryUseCase.execute(nonExistentCatId, org_id, data.category),
+      updateCategoryUseCase.execute(nonExistentCatId, org.id, data.category),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('Should throw a BadRequestException if the organization does not match', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
-      id: cat_id,
+      id: cat.id,
       category: {
         name: newName2,
         icon: newIcon2,
