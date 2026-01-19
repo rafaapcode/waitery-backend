@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { StorageModule } from 'src/infra/storage/storage.module';
+import { StorageService } from 'src/infra/storage/storage.service';
 import {
   IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
@@ -21,7 +24,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, StorageModule],
   controllers: [UserController],
   providers: [
     UserRepo,
@@ -46,6 +49,10 @@ import { UserService } from './user.service';
     {
       provide: IUTILS_SERVICE,
       useClass: UtilsService,
+    },
+    {
+      provide: ISTORAGE_SERVICE,
+      useClass: StorageService,
     },
   ],
   exports: [UserService, UserRepo],

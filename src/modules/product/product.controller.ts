@@ -40,7 +40,7 @@ export class ProductController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('image'))
   create(
     @UploadedFile() file: Express.Multer.File,
     @Body() data: string,

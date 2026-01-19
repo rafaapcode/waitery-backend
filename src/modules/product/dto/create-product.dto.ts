@@ -20,6 +20,7 @@ export class CreateProductDto {
 
   @IsNumber()
   @IsPositive()
+  @Type(() => Number)
   price: number;
 
   @Validate(CustomULIDValidation)
