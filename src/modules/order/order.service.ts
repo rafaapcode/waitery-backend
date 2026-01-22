@@ -160,7 +160,7 @@ export class OrderService implements IOrderContract {
 
     products_info.forEach((p) => mapProduct.set(p.product_id, p.quantity));
 
-    return products.map((p) => p.toOrderType(mapProduct.get(p.id!)));
+    return products.map((p) => p.toOrderType(mapProduct.get(p.id)));
   }
 
   async getOrderOfUser(

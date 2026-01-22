@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
@@ -36,7 +37,7 @@ export class FactoriesService {
   async generateProductInfo(
     orgId?: string,
     categoryId?: string,
-    ingredientes?: string[],
+    ingredientes?: { name: string; icon: string }[],
   ) {
     let org_id = orgId;
     let category_id = categoryId;
@@ -57,8 +58,14 @@ export class FactoriesService {
     // Cria ingredientes se não enviados
     if (!ingredientsArr || ingredientsArr.length === 0) {
       ingredientsArr = [
-        faker.commerce.productMaterial(),
-        faker.commerce.productMaterial(),
+        {
+          name: faker.commerce.productMaterial(),
+          icon: faker.internet.emoji(),
+        },
+        {
+          name: faker.commerce.productMaterial(),
+          icon: faker.internet.emoji(),
+        },
       ];
     }
 
@@ -71,7 +78,7 @@ export class FactoriesService {
         name: productName,
         description: productDescription,
         image_url: faker.image.url(),
-        ingredients: ingredientsArr,
+        ingredients: ingredientsArr as Prisma.JsonArray,
         price: productPrice,
         category_id,
         org_id,
@@ -187,5 +194,41 @@ export class FactoriesService {
     const ingredient = await this.prismaService.ingredient.create({ data });
 
     return ingredient;
+  }
+
+  async generateOrder(
+    orgId?: string,
+    userId?: string,
+    products?: Prisma.JsonArray,
+  ) {
+    let org_id = orgId;
+    let user_id = userId;
+
+    if (!org_id) {
+      const { organization } = await this.generateOrganizationWithOwner();
+      org_id = organization.id;
+    }
+
+    if (!user_id) {
+      const user = await this.generateUserInfo();
+      user_id = user.id;
+    }
+
+    const order = await this.prismaService.order.create({
+      data: {
+        quantity: faker.number.int({ min: 1, max: 10 }),
+        table: `Mesa ${faker.number.int({ min: 1, max: 50 })}`,
+        total_price: faker.number.float({
+          min: 50,
+          max: 1000,
+          fractionDigits: 2,
+        }),
+        org_id,
+        user_id,
+        products: products ?? ([] as Prisma.JsonArray),
+      },
+    });
+
+    return { order, org_id, user_id };
   }
 }
