@@ -25,7 +25,7 @@ export class FactoriesService {
       org_id,
     }));
     await this.prismaService.category.createMany({ data });
-    // Busca as categorias criadas para retornar
+
     const categorias = await this.prismaService.category.findMany({
       where: { org_id },
       orderBy: { name: 'asc' },
@@ -159,5 +159,33 @@ export class FactoriesService {
     });
 
     return { owner: { id: owner_id_local }, organization };
+  }
+
+  async generateManyIngredients(quantidade = 3, baseName?: string) {
+    const baseIngredientName = baseName || faker.commerce.productMaterial();
+    const baseIcon = faker.internet.emoji();
+    const data = Array.from({ length: quantidade }).map((_, idx) => ({
+      name: `${baseIngredientName} ${idx}`,
+      icon: baseIcon,
+    }));
+    await this.prismaService.ingredient.createMany({ data });
+
+    const ingredientes = await this.prismaService.ingredient.findMany({
+      orderBy: { name: 'asc' },
+      take: quantidade,
+    });
+    return ingredientes;
+  }
+
+  async generateAnIngredient(baseName?: string) {
+    const baseIngredientName = baseName || faker.commerce.productMaterial();
+    const baseIcon = faker.internet.emoji();
+    const data = {
+      name: baseIngredientName,
+      icon: baseIcon,
+    };
+    const ingredient = await this.prismaService.ingredient.create({ data });
+
+    return ingredient;
   }
 }

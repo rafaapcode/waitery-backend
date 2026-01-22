@@ -5,6 +5,8 @@ import { IIngredientContract } from 'src/core/application/contracts/ingredient/I
 import { Ingredient } from 'src/core/domain/entities/ingredient';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { IngredientService } from '../../ingredient.service';
 import { IngredientRepository } from '../../repo/ingredient.repository';
 import { GetAllIngredientUseCase } from '../../usecases/GetAllIngredientUseCase';
@@ -14,12 +16,13 @@ describe('Create Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
 
-  const ingredientIcon = faker.internet.emoji();
   const baseIngredientName = faker.lorem.word().toLowerCase();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetAllIngredientUseCase,
         PrismaService,
@@ -37,13 +40,13 @@ describe('Create Ingredient UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    await prismaService.ingredient.createMany({
-      data: Array.from({ length: 6 }).map((_, idx) => ({
-        icon: ingredientIcon,
-        name: `${baseIngredientName} ${idx}`,
-      })),
-    });
+    await factoriesService.generateManyIngredients(6, baseIngredientName);
+  });
+
+  afterAll(async () => {
+    await prismaService.ingredient.deleteMany({});
   });
 
   it('Should all services be defined', () => {
@@ -51,6 +54,7 @@ describe('Create Ingredient UseCase', () => {
     expect(ingredientService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
+    expect(factoriesService).toBeDefined();
   });
 
   it('Should get all ingredients', async () => {

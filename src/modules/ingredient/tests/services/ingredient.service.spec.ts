@@ -224,6 +224,7 @@ describe('Ingredient Service', () => {
     expect(ingredientRepo.getByName).toHaveBeenCalledTimes(1);
     expect(ingredientRepo.getByName).toHaveBeenCalledWith(ingredientName2);
   });
+
   it('Should return an ingredient entity array filtering by ids', async () => {
     // Arrange
     jest.spyOn(ingredientRepo, 'getAllIngsByIds').mockResolvedValue(

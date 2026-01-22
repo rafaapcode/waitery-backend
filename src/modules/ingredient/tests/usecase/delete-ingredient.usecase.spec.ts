@@ -1,9 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Ingredient } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { IngredientService } from '../../ingredient.service';
 import { IngredientRepository } from '../../repo/ingredient.repository';
 import { DeleteIngredientUseCase } from '../../usecases/DeleteIngredientUseCase';
@@ -13,14 +16,14 @@ describe('Delete Ingredient UseCase', () => {
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
-  let ing_id: string;
+  let factoriesService: FactoriesService;
+  let ing: Ingredient;
 
-  const ingredientIcon = faker.internet.emoji();
-  const ingredientName = faker.lorem.word().toLowerCase();
   const nonExistentIngId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         DeleteIngredientUseCase,
         PrismaService,
@@ -38,14 +41,9 @@ describe('Delete Ingredient UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.ingredient.create({
-      data: {
-        icon: ingredientIcon,
-        name: ingredientName,
-      },
-    });
-    ing_id = id;
+    ing = await factoriesService.generateAnIngredient();
   });
 
   it('Should all services be defined', () => {
@@ -53,7 +51,7 @@ describe('Delete Ingredient UseCase', () => {
     expect(ingredientService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
-    expect(ing_id).toBeDefined();
+    expect(ing).toBeDefined();
   });
 
   it('Should delete a ingredient by id', async () => {
@@ -61,14 +59,14 @@ describe('Delete Ingredient UseCase', () => {
     jest.spyOn(ingredientService, 'delete');
 
     // Act
-    await deleteIngredientUseCase.execute(ing_id);
+    await deleteIngredientUseCase.execute(ing.id);
 
-    const ing = await prismaService.ingredient.findUnique({
-      where: { id: ing_id },
+    const ingresult = await prismaService.ingredient.findUnique({
+      where: { id: ing.id },
     });
 
     // Assert
-    expect(ing).toBeNull();
+    expect(ingresult).toBeNull();
     expect(ingredientService.delete).toHaveBeenCalledTimes(1);
     expect(ingredientService.delete).toHaveBeenCalledTimes(1);
   });
