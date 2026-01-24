@@ -11,20 +11,19 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
-import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Order } from 'src/core/domain/entities/order';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
   IORDER_CONTRACT,
   IORDER_WS_CONTRACT,
   ISTORAGE_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 import { GetOrdersOfUserUseCase } from '../../usecases/GetOrdersOfUserUseCase';
@@ -39,37 +38,11 @@ describe('Get Orders of a User UseCase', () => {
   let user_id2: string;
   let wsGateway: IOrderWSContract;
   let storageService: IStorageGw;
-
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const userPassword =
-    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
-  const user2Cpf = faker.string.numeric(11);
-  const user2Name = faker.person.fullName();
-  const user2Email = faker.internet.email();
-  const orgName = faker.company.name();
-  const orgImageUrl = faker.internet.url();
-  const orgEmail = faker.internet.email();
-  const orgDescription = faker.lorem.sentence();
-  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
-  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
-  const orgCloseHour = faker.number.int({ min: 18, max: 23 });
-  const orgCep = faker.location.zipCode('#####-###');
-  const orgCity = faker.location.city();
-  const orgNeighborhood = faker.location.county();
-  const orgStreet = faker.location.streetAddress();
-  const orgLat = faker.location.latitude();
-  const orgLong = faker.location.longitude();
-  const orderQuantity = faker.number.int({ min: 1, max: 10 });
-  const orderTotalPrice = faker.number.float({
-    min: 50,
-    max: 1000,
-    fractionDigits: 2,
-  });
+  let factoriesService: FactoriesService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetOrdersOfUserUseCase,
         PrismaService,
@@ -103,59 +76,21 @@ describe('Get Orders of a User UseCase', () => {
     orderRepo = module.get<OrderRepository>(OrderRepository);
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: userPassword,
-        role: UserRole.OWNER,
-      },
+    const { organization, owner } =
+      await factoriesService.generateOrganizationWithOwner();
+
+    const user2 = await factoriesService.generateUserInfo();
+
+    await factoriesService.generateManyOrders({
+      quantidade: 67,
+      orgId: organization.id,
+      userId: owner.id,
     });
 
-    const user2 = await prismaService.user.create({
-      data: {
-        cpf: user2Cpf,
-        name: user2Name,
-        email: user2Email,
-        password: userPassword,
-        role: UserRole.ADMIN,
-      },
-    });
-
-    const org = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: orgImageUrl,
-        email: orgEmail,
-        description: orgDescription,
-        location_code: orgLocationCode,
-        open_hour: orgOpenHour,
-        close_hour: orgCloseHour,
-        cep: orgCep,
-        city: orgCity,
-        neighborhood: orgNeighborhood,
-        street: orgStreet,
-        lat: orgLat,
-        long: orgLong,
-        owner_id: user.id,
-      },
-    });
-
-    await prismaService.order.createMany({
-      data: Array.from({ length: 67 }).map((_, idx) => ({
-        quantity: orderQuantity,
-        table: `Mesa ${idx}`,
-        total_price: orderTotalPrice,
-        org_id: org.id,
-        user_id: user.id,
-        products: [] as Prisma.JsonArray,
-      })),
-    });
-
-    org_id = org.id;
-    user_id = user.id;
+    org_id = organization.id;
+    user_id = owner.id;
     user_id2 = user2.id;
   });
 

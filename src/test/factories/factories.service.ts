@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { Order, Prisma } from 'generated/prisma';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
@@ -200,6 +200,8 @@ export class FactoriesService {
     orgId?: string,
     userId?: string,
     products?: Prisma.JsonArray,
+    created_at?: Date,
+    deleted_at?: Date,
   ) {
     let org_id = orgId;
     let user_id = userId;
@@ -226,9 +228,79 @@ export class FactoriesService {
         org_id,
         user_id,
         products: products ?? ([] as Prisma.JsonArray),
+        ...(created_at && { created_at }),
+        ...(deleted_at && { deleted_at }),
       },
     });
 
     return { order, org_id, user_id };
+  }
+
+  async generateManyOrders(
+    options: {
+      quantidade?: number;
+      orgId?: string;
+      userId?: string;
+      productsList?: Prisma.JsonArray[];
+      created_at?: Date;
+      deleted_at?: Date;
+      randomDates?: boolean;
+      randomDateGeneration?: { n1: number; n2: number };
+    } = {},
+  ) {
+    const {
+      quantidade = 10,
+      orgId,
+      userId,
+      productsList,
+      created_at,
+      deleted_at,
+      randomDates = false,
+      randomDateGeneration,
+    } = options;
+
+    let org_id = orgId;
+    let user_id = userId;
+
+    if (!org_id) {
+      const { organization } = await this.generateOrganizationWithOwner();
+      org_id = organization.id;
+    }
+
+    if (!user_id) {
+      const user = await this.generateUserInfo();
+      user_id = user.id;
+    }
+
+    const orders: Order[] = [];
+    for (let i = 0; i < quantidade; i++) {
+      const products =
+        productsList && productsList[i]
+          ? productsList[i]
+          : ([] as Prisma.JsonArray);
+
+      let createdAtToUse = created_at;
+      let deletedAtToUse = deleted_at;
+      if (randomDates) {
+        createdAtToUse =
+          i % (randomDateGeneration?.n1 || 4) === 0
+            ? new Date(2025, 6, i)
+            : undefined;
+        deletedAtToUse =
+          i % (randomDateGeneration?.n2 || 2) === 0
+            ? faker.date.recent()
+            : undefined;
+      }
+
+      const { order } = await this.generateOrder(
+        org_id,
+        user_id,
+        products,
+        createdAtToUse,
+        deletedAtToUse,
+      );
+      orders.push(order);
+    }
+    return { orders, org_id, user_id };
   }
 }

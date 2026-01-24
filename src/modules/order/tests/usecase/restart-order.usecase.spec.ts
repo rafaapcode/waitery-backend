@@ -14,14 +14,12 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from 'generated/prisma';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
@@ -32,6 +30,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
 import { RestartOrdersOfDayUseCase } from '../../usecases/RestartOrdersOfDay';
@@ -49,36 +49,13 @@ describe('Restart Order UseCase', () => {
   let org_id: string;
   let user_id: string;
   let wsGateway: IOrderWSContract;
+  let factoriesService: FactoriesService;
 
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const userPassword =
-    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
-  const orgName = faker.company.name();
-  const orgImageUrl = faker.internet.url();
-  const orgEmail = faker.internet.email();
-  const orgDescription = faker.lorem.sentence();
-  const orgLocationCode = `BR-${faker.location.state({ abbreviated: true })}-${faker.string.numeric(3)}`;
-  const orgOpenHour = faker.number.int({ min: 6, max: 10 });
-  const orgCloseHour = faker.number.int({ min: 18, max: 23 });
-  const orgCep = faker.location.zipCode('#####-###');
-  const orgCity = faker.location.city();
-  const orgNeighborhood = faker.location.county();
-  const orgStreet = faker.location.streetAddress();
-  const orgLat = faker.location.latitude();
-  const orgLong = faker.location.longitude();
-  const orderQuantity = faker.number.int({ min: 1, max: 10 });
-  const orderTable = `Mesa ${faker.number.int({ min: 1, max: 50 })}`;
-  const orderTotalPrice = faker.number.float({
-    min: 50,
-    max: 1000,
-    fractionDigits: 2,
-  });
   const fakeOrgId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         RestartOrdersOfDayUseCase,
         PrismaService,
@@ -128,50 +105,19 @@ describe('Restart Order UseCase', () => {
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: userPassword,
-        role: UserRole.OWNER,
-      },
-    });
+    const { organization, owner } =
+      await factoriesService.generateOrganizationWithOwner();
 
-    const org = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: orgImageUrl,
-        email: orgEmail,
-        description: orgDescription,
-        location_code: orgLocationCode,
-        open_hour: orgOpenHour,
-        close_hour: orgCloseHour,
-        cep: orgCep,
-        city: orgCity,
-        neighborhood: orgNeighborhood,
-        street: orgStreet,
-        lat: orgLat,
-        long: orgLong,
-        owner_id: user.id,
-      },
-    });
+    const order = await factoriesService.generateOrder(
+      organization.id,
+      owner.id,
+    );
 
-    const { id } = await prismaService.order.create({
-      data: {
-        quantity: orderQuantity,
-        table: orderTable,
-        total_price: orderTotalPrice,
-        org_id: org.id,
-        user_id: user.id,
-        products: [] as Prisma.JsonArray,
-      },
-    });
-
-    order_id = id;
-    org_id = org.id;
-    user_id = user.id;
+    order_id = order.order.id;
+    org_id = organization.id;
+    user_id = owner.id;
   });
 
   afterAll(async () => {
