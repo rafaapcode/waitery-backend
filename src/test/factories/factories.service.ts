@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Order, Organization, Prisma, Product } from 'generated/prisma';
+import { Order, Organization, Prisma, Product, User } from 'generated/prisma';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
@@ -155,6 +155,20 @@ export class FactoriesService {
     });
 
     return user;
+  }
+
+  async generateManyUserInfo(
+    quantidade: number = 10,
+    role: UserRole = UserRole.OWNER,
+  ) {
+    const users: User[] = [];
+
+    for (let i = 0; i < quantidade; i++) {
+      const user = await this.generateUserInfo(role);
+      users.push(user);
+    }
+
+    return users;
   }
 
   async generateCategoryInfo(org_id?: string) {

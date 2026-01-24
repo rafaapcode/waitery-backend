@@ -4,13 +4,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { User, UserRole } from 'src/core/domain/entities/user';
+import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
   ISTORAGE_SERVICE,
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { UserRepo } from '../../repo/user.repository';
 import { GetMeUseCase } from '../../usecases/GetMeUseCase';
 import { UserService } from '../../user.service';
@@ -23,16 +25,13 @@ describe('Get Current User UseCase', () => {
   let utilsService: IUtilsContract;
   let user_id: string;
   let storageService: IStorageGw;
+  let factoriesService: FactoriesService;
 
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const hashPassword =
-    '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
   const fakeUserId = faker.string.uuid();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         UserRepo,
         PrismaService,
@@ -65,26 +64,15 @@ describe('Get Current User UseCase', () => {
     getMeUseCase = module.get<GetMeUseCase>(GetMeUseCase);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: hashPassword,
-        role: UserRole.OWNER,
-      },
-    });
+    const user = await factoriesService.generateUserInfo();
 
     user_id = user.id;
   });
 
   afterAll(async () => {
-    await prismaService.user.delete({
-      where: {
-        email: userEmail,
-      },
-    });
+    await prismaService.user.deleteMany({});
   });
 
   it('Should all services be defined', () => {
