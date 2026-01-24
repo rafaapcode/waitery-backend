@@ -19,6 +19,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Category } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
@@ -41,6 +42,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { CreateProductDto } from '../../dto/create-product.dto';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
@@ -59,39 +62,17 @@ describe('Create Product Usecase', () => {
   let utilsService: IUtilsContract;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
   let org_id: string;
-  let cat_id: string;
+  let cat: Category;
   let ing_ids: string[];
 
-  const ownerId = faker.string.uuid();
-  const orgName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const categoryName = faker.commerce.department();
-  const categoryIcon = faker.helpers.arrayElement([
-    '🍏',
-    '🍕',
-    '🍔',
-    '🍟',
-    '🥗',
-    '🍰',
-  ]);
-  const ingredientIcon = faker.helpers.arrayElement([
-    '🥗',
-    '🧀',
-    '🥩',
-    '🥬',
-    '🍅',
-    '🧄',
-  ]);
-  const ingredient1Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
-  const ingredient2Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
-  const ingredient3Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
-  const ingredient4Name = `${faker.commerce.productMaterial()}-${faker.string.uuid()}`;
   const productName = faker.commerce.productName();
   const productPrice = faker.number.int({ min: 50, max: 500 });
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         CreateProductUseCase,
         CategoryRepository,
@@ -148,69 +129,20 @@ describe('Create Product Usecase', () => {
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = modules.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: ownerId,
-      },
-    });
+    const org = await factoriesService.generateOrganizationWithOwner();
 
-    const { id: cat_id_db } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: categoryName,
-        org_id: id,
-      },
-    });
+    const category = await factoriesService.generateCategoryInfo(
+      org.organization.id,
+    );
 
-    const [ing1, ing2, ing3, ing4] = await Promise.all([
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient1Name,
-        },
-      }),
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient2Name,
-        },
-      }),
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient3Name,
-        },
-      }),
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient4Name,
-        },
-      }),
-    ]);
+    const [ing1, ing2, ing3, ing4] =
+      await factoriesService.generateManyIngredients(4);
 
-    org_id = id;
+    org_id = org.organization.id;
     ing_ids = [ing1.id, ing2.id, ing3.id, ing4.id];
-    cat_id = cat_id_db;
+    cat = category;
   });
 
   afterAll(async () => {
@@ -232,7 +164,7 @@ describe('Create Product Usecase', () => {
     expect(orgRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
-    expect(cat_id).toBeDefined();
+    expect(cat).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
     expect(ing_ids.length).toBe(4);
@@ -241,7 +173,7 @@ describe('Create Product Usecase', () => {
   it('Should create a new product', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: cat_id,
+      category_id: cat.id,
       description: faker.lorem.paragraph(),
       name: productName,
       ingredients: ing_ids,
@@ -257,7 +189,7 @@ describe('Create Product Usecase', () => {
     // Assert
     expect(product).toBeInstanceOf(Product);
     expect(product.ingredients.length).toBe(4);
-    expect(product.category.name).toBe(categoryName);
+    expect(product.category.name).toBe(cat.name);
   });
 
   it('Should throw an error if the category does not exists', async () => {
@@ -311,7 +243,7 @@ describe('Create Product Usecase', () => {
   it('Should throw an error if the org does not exists', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: cat_id,
+      category_id: cat.id,
       description: faker.lorem.paragraph(),
       name: faker.commerce.productName(),
       ingredients: ing_ids,
@@ -327,7 +259,7 @@ describe('Create Product Usecase', () => {
   it('Should throw an error if the org does not exists', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: cat_id,
+      category_id: cat.id,
       description: faker.lorem.paragraph(),
       name: faker.commerce.productName(),
       ingredients: ing_ids,
@@ -343,7 +275,7 @@ describe('Create Product Usecase', () => {
   it('Should throw an error if the product already exists with the same name', async () => {
     // Arrange
     const data: CreateProductDto = {
-      category_id: cat_id,
+      category_id: cat.id,
       description: faker.lorem.paragraph(),
       name: productName,
       ingredients: ing_ids,

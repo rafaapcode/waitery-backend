@@ -15,13 +15,12 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from 'generated/prisma';
+import { Category } from 'generated/prisma';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
 import { OrganizationService } from 'src/modules/organization/organization.service';
@@ -32,6 +31,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
 import { GetProductUseCase } from '../../usecases/GetProductUseCase';
@@ -47,37 +48,13 @@ describe('Get Product Usecase', () => {
   let utilsService: IUtilsContract;
   let org_id: string;
   let user_id: string;
-  let cat_id: string;
+  let cat: Category;
   let prod_id: string;
-
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const orgName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const categoryName = faker.commerce.department();
-  const categoryIcon = faker.helpers.arrayElement([
-    '🍏',
-    '🍕',
-    '🍔',
-    '🍟',
-    '🥗',
-    '🍰',
-  ]);
-  const ingredientIcon = faker.helpers.arrayElement([
-    '🥗',
-    '🧀',
-    '🥩',
-    '🥬',
-    '🍅',
-    '🧄',
-  ]);
-  const ingredient1Name = faker.commerce.productMaterial();
-  const ingredient2Name = faker.commerce.productMaterial();
-  const productPrice = faker.number.int({ min: 50, max: 500 });
+  let factoriesService: FactoriesService;
 
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetProductUseCase,
         ProductRepository,
@@ -119,79 +96,29 @@ describe('Get Product Usecase', () => {
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = modules.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: faker.internet.password({ length: 20 }),
-        role: UserRole.OWNER,
-      },
-    });
+    const org = await factoriesService.generateOrganizationWithOwner();
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: user.id,
-      },
-    });
+    const category = await factoriesService.generateCategoryInfo(
+      org.organization.id,
+    );
 
-    const { id: cat_id_db } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: categoryName,
-        org_id: id,
-      },
-    });
+    const [ing1, ing2] = await factoriesService.generateManyIngredients(2);
 
-    const [ing1, ing2] = await Promise.all([
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient1Name,
-        },
-      }),
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient2Name,
-        },
-      }),
-    ]);
+    const ings = [
+      { name: ing1.name, icon: ing1.icon },
+      { name: ing2.name, icon: ing2.icon },
+    ];
+    const prod = await factoriesService.generateProductInfo(
+      org.organization.id,
+      category.id,
+      ings,
+    );
 
-    const prod = await prismaService.product.create({
-      data: {
-        name: faker.commerce.productName(),
-        description: faker.lorem.paragraph(),
-        image_url: faker.image.url(),
-        ingredients: [ing1.name, ing2.name] as Prisma.JsonArray,
-        price: productPrice,
-        category_id: cat_id_db,
-        org_id: id,
-      },
-    });
-
-    org_id = id;
-    cat_id = cat_id_db;
-    user_id = user.id;
+    org_id = org.organization.id;
+    cat = category;
+    user_id = org.owner.id;
     prod_id = prod.id;
   });
 
@@ -212,7 +139,7 @@ describe('Get Product Usecase', () => {
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(org_id).toBeDefined();
-    expect(cat_id).toBeDefined();
+    expect(cat).toBeDefined();
     expect(user_id).toBeDefined();
     expect(prod_id).toBeDefined();
     expect(storageService).toBeDefined();
@@ -248,9 +175,7 @@ describe('Get Product Usecase', () => {
     // Assert
     expect(product).toBeInstanceOf(Product);
     expect(product.ingredients.length).toBe(2);
-    expect(product.category.formatCategory()).toBe(
-      `${categoryIcon} ${categoryName}`,
-    );
+    expect(product.category.formatCategory()).toBe(`${cat.icon} ${cat.name}`);
   });
 
   it('Should return the product if it exists', async () => {
@@ -269,8 +194,6 @@ describe('Get Product Usecase', () => {
     // Assert
     expect(product).toBeInstanceOf(Product);
     expect(product.ingredients.length).toBe(2);
-    expect(product.category.formatCategory()).toBe(
-      `${categoryIcon} ${categoryName}`,
-    );
+    expect(product.category.formatCategory()).toBe(`${cat.icon} ${cat.name}`);
   });
 });

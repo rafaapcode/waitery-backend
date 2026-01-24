@@ -15,13 +15,11 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
@@ -34,6 +32,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { UpdateProductDto } from '../../dto/update-product.dto';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
@@ -50,6 +50,7 @@ describe('Update Product Usecase', () => {
   let ingRepo: IngredientRepository;
   let productRepo: ProductRepository;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
   let org_id: string;
   let org_id2: string;
   let user_id: string;
@@ -57,38 +58,9 @@ describe('Update Product Usecase', () => {
   let prod_id: string;
   let ing_ids: string[];
 
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const org1Name = faker.company.name();
-  const org1Email = faker.internet.email();
-  const org2Name = faker.company.name();
-  const org2Email = faker.internet.email();
-  const categoryName = faker.commerce.department();
-  const categoryIcon = faker.helpers.arrayElement([
-    '🍏',
-    '🍕',
-    '🍔',
-    '🍟',
-    '🥗',
-    '🍰',
-  ]);
-  const ingredientIcon = faker.helpers.arrayElement([
-    '🥗',
-    '🧀',
-    '🥩',
-    '🥬',
-    '🍅',
-    '🧄',
-  ]);
-  const ingredient1Name = faker.commerce.productMaterial();
-  const ingredient2Name = faker.commerce.productMaterial();
-  const productName = faker.commerce.productName();
-  const productDescription = faker.lorem.paragraph();
-  const productPrice = faker.number.int({ min: 50, max: 500 });
-
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         UpdateProductUseCase,
         ProductRepository,
@@ -137,107 +109,33 @@ describe('Update Product Usecase', () => {
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = modules.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: faker.internet.password({ length: 20 }),
-        role: UserRole.OWNER,
-      },
-    });
+    const org = await factoriesService.generateOrganizationWithOwner();
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: org1Name,
-        image_url: faker.image.url(),
-        email: org1Email,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
+    const org2 = await factoriesService.generateOrganizationWithOwner(
+      org.organization.id,
+    );
 
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: user.id,
-      },
-    });
+    const cat = await factoriesService.generateCategoryInfo(
+      org.organization.id,
+    );
 
-    const org2 = await prismaService.organization.create({
-      data: {
-        name: org2Name,
-        image_url: faker.image.url(),
-        email: org2Email,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: user.id,
-      },
-    });
+    const [ing1, ing2] = await factoriesService.generateManyIngredients(2);
 
-    const { id: cat_id_db } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: categoryName,
-        org_id: id,
-      },
-    });
+    const ings = [{ name: ing1.name, icon: ing1.icon }];
+    const prod = await factoriesService.generateProductInfo(
+      org.organization.id,
+      cat.id,
+      ings,
+    );
 
-    const [ing1, ing2] = await Promise.all([
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient1Name,
-        },
-      }),
-      prismaService.ingredient.create({
-        data: {
-          icon: ingredientIcon,
-          name: ingredient2Name,
-        },
-      }),
-    ]);
-
-    const prod = await prismaService.product.create({
-      data: {
-        name: productName,
-        description: productDescription,
-        image_url: faker.image.url(),
-        ingredients: [ing1.name] as Prisma.JsonArray,
-        price: productPrice,
-        category_id: cat_id_db,
-        org_id: id,
-      },
-    });
-
-    org_id = id;
-    cat_id = cat_id_db;
-    user_id = user.id;
+    org_id = org.organization.id;
+    cat_id = cat.id;
+    user_id = org.owner.id;
     prod_id = prod.id;
     ing_ids = [ing1.id, ing2.id];
-    org_id2 = org2.id;
+    org_id2 = org2.organization.id;
   });
 
   afterAll(async () => {

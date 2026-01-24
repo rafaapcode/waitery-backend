@@ -15,14 +15,12 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
-import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
@@ -36,6 +34,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
 import { GetProductByCategoryUseCase } from '../../usecases/GetProductByCategoryUseCase';
@@ -51,32 +51,16 @@ describe('Get Products By Category Usecase', () => {
   let storageService: IStorageGw;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
   let org_id: string;
   let org_id2: string;
   let user_id: string;
   let cat_id: string;
   let cat_id2: string;
 
-  const userCpf = faker.string.numeric(11);
-  const userName = faker.person.fullName();
-  const userEmail = faker.internet.email();
-  const org1Name = faker.company.name();
-  const org1Email = faker.internet.email();
-  const org2Name = faker.company.name();
-  const org2Email = faker.internet.email();
-  const category1Name = faker.commerce.department();
-  const category2Name = faker.commerce.department();
-  const categoryIcon = faker.helpers.arrayElement([
-    '🍏',
-    '🍕',
-    '🍔',
-    '🍟',
-    '🥗',
-    '🍰',
-  ]);
-
   beforeAll(async () => {
     const modules: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetProductByCategoryUseCase,
         CategoryRepository,
@@ -127,97 +111,33 @@ describe('Get Products By Category Usecase', () => {
     prismaService = modules.get<PrismaService>(PrismaService);
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = modules.get<FactoriesService>(FactoriesService);
 
-    const user = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        name: userName,
-        email: userEmail,
-        password: faker.internet.password({ length: 20 }),
-        role: UserRole.OWNER,
-      },
-    });
+    const org = await factoriesService.generateOrganizationWithOwner();
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: org1Name,
-        image_url: faker.image.url(),
-        email: org1Email,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: user.id,
-      },
-    });
+    const org2 = await factoriesService.generateOrganizationWithOwner(
+      org.owner.id,
+    );
 
-    const org2 = await prismaService.organization.create({
-      data: {
-        name: org2Name,
-        image_url: faker.image.url(),
-        email: org2Email,
-        description: faker.lorem.paragraph(),
-        location_code:
-          faker.location.countryCode('alpha-2') +
-          '-' +
-          faker.location.state({ abbreviated: true }) +
-          '-' +
-          faker.string.numeric(3),
-        open_hour: faker.number.int({ min: 6, max: 10 }),
-        close_hour: faker.number.int({ min: 18, max: 23 }),
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: user.id,
-      },
-    });
+    const cat = await factoriesService.generateCategoryInfo(
+      org.organization.id,
+    );
 
-    const { id: cat_id_db } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: category1Name,
-        org_id: id,
-      },
-    });
+    const cat2 = await factoriesService.generateCategoryInfo(
+      org2.organization.id,
+    );
 
-    const { id: cat_id_db2 } = await prismaService.category.create({
-      data: {
-        icon: categoryIcon,
-        name: category2Name,
-        org_id: org2.id,
-      },
-    });
-    await prismaService.product.createMany({
-      data: Array.from({ length: 43 }).map((_, i) => ({
-        name: `${faker.commerce.productName()} - ${i}`,
-        description: faker.lorem.sentence(),
-        image_url: faker.image.url(),
-        ingredients: [] as Prisma.JsonArray,
-        price: faker.number.int({ min: 10, max: 500 }),
-        category_id: cat_id_db,
-        org_id: id,
-      })),
-    });
+    await factoriesService.generateManyProducts(
+      43,
+      org.organization.id,
+      cat.id,
+    );
 
-    org_id = id;
-    cat_id = cat_id_db;
-    user_id = user.id;
-    cat_id2 = cat_id_db2;
-    org_id2 = org2.id;
+    org_id = org.organization.id;
+    cat_id = cat.id;
+    user_id = org.owner.id;
+    cat_id2 = cat2.id;
+    org_id2 = org2.organization.id;
   });
 
   afterAll(async () => {

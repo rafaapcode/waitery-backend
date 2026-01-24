@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Order, Organization, Prisma } from 'generated/prisma';
+import { Order, Organization, Prisma, Product } from 'generated/prisma';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
@@ -86,6 +86,55 @@ export class FactoriesService {
     });
 
     return product;
+  }
+
+  async generateManyProducts(
+    quantidade = 10,
+    orgId?: string,
+    categoryId?: string,
+    ingredientes?: { name: string; icon: string }[],
+  ) {
+    let org_id = orgId;
+    let category_id = categoryId;
+    let ingredientsArr = ingredientes;
+
+    // Cria organização se não enviada
+    if (!org_id) {
+      const { organization } = await this.generateOrganizationWithOwner();
+      org_id = organization.id;
+    }
+
+    // Cria categoria se não enviada
+    if (!category_id) {
+      const category = await this.generateCategoryInfo(org_id);
+      category_id = category.id;
+    }
+
+    // Cria ingredientes se não enviados
+    if (!ingredientsArr || ingredientsArr.length === 0) {
+      ingredientsArr = [
+        {
+          name: faker.commerce.productMaterial(),
+          icon: faker.internet.emoji(),
+        },
+        {
+          name: faker.commerce.productMaterial(),
+          icon: faker.internet.emoji(),
+        },
+      ];
+    }
+
+    const products: Product[] = [];
+    for (let i = 0; i < quantidade; i++) {
+      const prod = await this.generateProductInfo(
+        org_id,
+        category_id,
+        ingredientsArr,
+      );
+      products.push(prod);
+    }
+
+    return products;
   }
 
   async generateUserInfo(role: UserRole = UserRole.OWNER) {
