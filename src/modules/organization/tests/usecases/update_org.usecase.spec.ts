@@ -14,6 +14,7 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Organization as OrgPrisma } from 'generated/prisma';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
@@ -25,6 +26,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { UpdateOrganizationUseCase } from '../../usecases/UpdateOrganizationUseCase';
@@ -37,30 +40,18 @@ describe('Update a Org UseCase', () => {
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
-  let org_id: string;
+  let organization: OrgPrisma;
+  let factoriesService: FactoriesService;
+  let owner_id: string;
 
-  const ownerId = faker.string.uuid();
-  const orgName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const orgDescription = faker.lorem.paragraph();
-  const cityName = faker.location.city();
-  const locationCode =
-    faker.location.countryCode('alpha-2') +
-    '-' +
-    faker.location.state({ abbreviated: true }) +
-    '-' +
-    faker.string.numeric(3);
-  const openHour = faker.number.int({ min: 6, max: 10 });
-  const closeHour = faker.number.int({ min: 18, max: 23 });
   const newOrgName = faker.company.name();
   const newOrgDescription = faker.lorem.paragraph();
   const newCityName = faker.location.city();
   const fileKey = `organization/${faker.string.uuid()}/${faker.system.fileName()}`;
 
-  const owner_id = ownerId;
-
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         UpdateOrganizationUseCase,
         UserRepo,
@@ -98,26 +89,13 @@ describe('Update a Org UseCase', () => {
     );
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: orgDescription,
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-        city: cityName,
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id,
-      },
-    });
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    org_id = id;
+    const { organization: org, owner } =
+      await factoriesService.generateOrganizationWithOwner();
+
+    organization = org;
+    owner_id = owner.id;
   });
 
   afterAll(async () => {
@@ -130,7 +108,7 @@ describe('Update a Org UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
-    expect(org_id).toBeDefined();
+    expect(organization).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
   });
@@ -138,7 +116,7 @@ describe('Update a Org UseCase', () => {
   it('Should update a organization', async () => {
     // Arrange
     const data = {
-      id: org_id,
+      id: organization.id,
       owner_id,
       data: {
         name: newOrgName,
@@ -155,7 +133,7 @@ describe('Update a Org UseCase', () => {
 
     // Act
     const old_org = await prismaService.organization.findUnique({
-      where: { id: org_id },
+      where: { id: organization.id },
     });
     const updated_org = await updateOrgUseCase.execute({
       id: data.id,
@@ -164,21 +142,21 @@ describe('Update a Org UseCase', () => {
     });
 
     // Assert
-    expect(old_org?.name).toBe(orgName);
-    expect(old_org?.description).toBe(orgDescription);
+    expect(old_org?.name).toBe(organization.name);
+    expect(old_org?.description).toBe(organization.description);
     expect(updated_org).toBeInstanceOf(Organization);
     expect(updated_org.name).toBe(data.data.name);
     expect(updated_org.description).toBe(data.data.description);
     expect(updated_org.city).toBe(data.data.city);
-    expect(updated_org.name).not.toBe(orgName);
-    expect(updated_org.description).not.toBe(orgDescription);
-    expect(updated_org.city).not.toBe(cityName);
+    expect(updated_org.name).not.toBe(organization.name);
+    expect(updated_org.description).not.toBe(organization.description);
+    expect(updated_org.city).not.toBe(organization.city);
   });
 
   it('Should throw an error if the user is not associated with the organization', async () => {
     // Arrange
     const data = {
-      id: org_id,
+      id: organization.id,
       owner_id,
       data: {
         name: newOrgName,
@@ -200,7 +178,7 @@ describe('Update a Org UseCase', () => {
   it('Should throw an error if the organization not exists', async () => {
     // Arrange
     const data = {
-      id: org_id,
+      id: organization.id,
       owner_id,
       data: {
         name: newOrgName,

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Order, Prisma } from 'generated/prisma';
+import { Order, Organization, Prisma } from 'generated/prisma';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 
@@ -166,6 +166,22 @@ export class FactoriesService {
     });
 
     return { owner: { id: owner_id_local }, organization };
+  }
+
+  async generateManyOrganizationWithOwner(qtd?: number, owner_id?: string) {
+    const quantidade = qtd || 5;
+    const organizations: Organization[] = [];
+    let owner_id_local = owner_id;
+
+    for (let i = 0; i < quantidade; i++) {
+      const { organization, owner } =
+        await this.generateOrganizationWithOwner(owner_id_local);
+      organizations.push(organization);
+      if (!owner_id_local) {
+        owner_id_local = owner.id;
+      }
+    }
+    return { organizations, owner: { id: owner_id_local } };
   }
 
   async generateManyIngredients(quantidade = 3, baseName?: string) {

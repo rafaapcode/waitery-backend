@@ -24,6 +24,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { GetOrganizationUseCase } from '../../usecases/GetOrganizationUseCase';
@@ -36,23 +38,12 @@ describe('Get Org UseCase', () => {
   let userRepo: UserRepo;
   let prismaService: PrismaService;
   let org_id: string;
-
-  const ownerId = faker.string.uuid();
-  const orgName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const locationCode =
-    faker.location.countryCode('alpha-2') +
-    '-' +
-    faker.location.state({ abbreviated: true }) +
-    '-' +
-    faker.string.numeric(3);
-  const openHour = faker.number.int({ min: 6, max: 10 });
-  const closeHour = faker.number.int({ min: 18, max: 23 });
-
-  const owner_id = ownerId;
+  let factoriesService: FactoriesService;
+  let owner_id: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetOrganizationUseCase,
         UserRepo,
@@ -87,27 +78,13 @@ describe('Get Org UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     getOrgUseCase = module.get<GetOrganizationUseCase>(GetOrganizationUseCase);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.organization.create({
-      data: {
-        name: orgName,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: faker.lorem.paragraph(),
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id,
-      },
-    });
+    const { organization, owner } =
+      await factoriesService.generateOrganizationWithOwner();
 
-    org_id = id;
+    org_id = organization.id;
+    owner_id = owner.id;
   });
 
   afterAll(async () => {

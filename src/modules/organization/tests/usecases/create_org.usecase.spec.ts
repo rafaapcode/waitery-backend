@@ -32,6 +32,8 @@ import {
   IUSER_CONTRACT,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import {
@@ -49,9 +51,8 @@ describe('Create Org UseCase', () => {
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let owner_id: string;
+  let factoriesService: FactoriesService;
 
-  const userCpf = faker.string.numeric(11);
-  const userEmail = faker.internet.email();
   const org1Name = faker.company.name();
   const org1Email = faker.internet.email();
   const org2Email = faker.internet.email();
@@ -77,6 +78,7 @@ describe('Create Org UseCase', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         CreateOrganizationUseCase,
         UserRepo,
@@ -120,15 +122,9 @@ describe('Create Org UseCase', () => {
     createOrgUseCase = module.get<CreateOrganizationUseCase>(
       CreateOrganizationUseCase,
     );
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const { id } = await prismaService.user.create({
-      data: {
-        cpf: userCpf,
-        email: userEmail,
-        password: faker.internet.password({ length: 20 }),
-        role: 'OWNER',
-      },
-    });
+    const { id } = await factoriesService.generateUserInfo();
     owner_id = id;
   });
 

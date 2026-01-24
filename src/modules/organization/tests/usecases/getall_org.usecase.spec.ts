@@ -24,6 +24,8 @@ import {
   ISTORAGE_SERVICE,
   IUTILS_SERVICE,
 } from 'src/shared/constants';
+import { FactoriesModule } from 'src/test/factories/factories.module';
+import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrganizationService } from '../../organization.service';
 import { OrganizationRepo } from '../../repo/organization.repo';
 import { GetAllOrganizationUseCase } from '../../usecases/GetAllOrganizationUseCase';
@@ -35,25 +37,17 @@ describe('GetAll Orgs UseCase', () => {
   let orgRepo: OrganizationRepo;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
+  let factoriesService: FactoriesService;
 
   const ownerIdWithOrgs = faker.string.uuid();
   const ownerIdWithoutOrgs = faker.string.uuid();
-  const orgBaseName = faker.company.name();
-  const orgEmail = faker.internet.email();
-  const locationCode =
-    faker.location.countryCode('alpha-2') +
-    '-' +
-    faker.location.state({ abbreviated: true }) +
-    '-' +
-    faker.string.numeric(3);
-  const openHour = faker.number.int({ min: 6, max: 10 });
-  const closeHour = faker.number.int({ min: 18, max: 23 });
 
   const owner_id_with_orgs = ownerIdWithOrgs;
   const owner_id_without_orgs = ownerIdWithoutOrgs;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [FactoriesModule],
       providers: [
         GetAllOrganizationUseCase,
         UserRepo,
@@ -90,25 +84,12 @@ describe('GetAll Orgs UseCase', () => {
       GetAllOrganizationUseCase,
     );
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    await prismaService.organization.createMany({
-      data: Array.from({ length: 3 }).map((_, idx) => ({
-        name: `${orgBaseName} ${idx}`,
-        image_url: faker.image.url(),
-        email: orgEmail,
-        description: faker.lorem.paragraph(),
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-        city: faker.location.city(),
-        neighborhood: faker.location.street(),
-        street: faker.location.streetAddress(),
-        lat: faker.location.latitude(),
-        long: faker.location.longitude(),
-        owner_id: owner_id_with_orgs,
-      })),
-    });
+    await factoriesService.generateManyOrganizationWithOwner(
+      3,
+      owner_id_with_orgs,
+    );
   });
 
   afterAll(async () => {
