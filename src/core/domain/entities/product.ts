@@ -27,7 +27,12 @@ export class Product {
     this.description = data.description;
     this.image_url = data.image_url;
     this.price = data.price;
-    this.ingredients = data.ingredients;
+    this.ingredients = Array.isArray(data.ingredients)
+      ? data.ingredients.filter(
+          (item, index, self) =>
+            index === self.findIndex((i) => i.value === item.value),
+        )
+      : [];
     this.category = data.category;
     this.discounted_price = data.discounted_price ?? 0;
     this.discount = data.discount ?? false;

@@ -193,6 +193,28 @@ describe('Create Product Usecase', () => {
     expect(product.category.name).toBe(cat.name);
   });
 
+  it('Should merge the ingredients repetead whena creating a new product', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: cat.id,
+      description: faker.lorem.paragraph(),
+      name: `${productName} with repeated ingredients`,
+      ingredients: [ing_ids[0], ing_ids[1], ...ing_ids],
+      price: productPrice,
+    };
+    jest
+      .spyOn(storageService, 'uploadFile')
+      .mockResolvedValue({ fileKey: 'https://test-cdn.com/file.jpg' });
+
+    // Act
+    const product = await createProductUseCase.execute(data, org_id);
+
+    // Assert
+    expect(product).toBeInstanceOf(Product);
+    expect(product.ingredients.length).toBe(4);
+    expect(product.category.name).toBe(cat.name);
+  });
+
   it('Should throw an error if the category does not exists', async () => {
     // Arrange
     const data: CreateProductDto = {
