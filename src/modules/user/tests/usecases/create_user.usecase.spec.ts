@@ -254,4 +254,25 @@ describe('Create User UseCase', () => {
       NotFoundException,
     );
   });
+
+  it('Should throw an error if the user is trying to create a new OWNER', async () => {
+    // Arrange
+    const data: IUserContract.CreateParams = {
+      data: {
+        cpf: conflictCpf,
+        name: newUserName,
+        email: newUserEmail,
+        password: newUserPassword,
+        role: UserRole.OWNER,
+      },
+      org_id,
+    };
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
+
+    // Assert
+    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
+    await expect(createUserUseCase.execute(data)).rejects.toThrow(
+      ConflictException,
+    );
+  });
 });

@@ -1,5 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
+import { UserRole } from 'src/core/domain/entities/user';
 import { IUSER_CONTRACT } from 'src/shared/constants';
 
 interface IDeleteUserUseCase {
@@ -17,6 +23,10 @@ export class DeleteUserUseCase implements IDeleteUserUseCase {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (user.role === UserRole.OWNER) {
+      throw new ConflictException('Cannot delete owner user');
     }
 
     await this.userContract.delete({ id });

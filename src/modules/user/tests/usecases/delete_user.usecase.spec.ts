@@ -1,9 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from 'generated/prisma';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
+import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
   ISTORAGE_SERVICE,
@@ -23,6 +24,7 @@ describe('Delete User UseCase', () => {
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
   let user: User;
+  let userOwner: User;
   let storageService: IStorageGw;
   let factoriesService: FactoriesService;
 
@@ -63,8 +65,12 @@ describe('Delete User UseCase', () => {
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const usercreated = await factoriesService.generateUserInfo();
-    user = usercreated;
+    const usercreatedAdmin = await factoriesService.generateUserInfo(
+      UserRole.ADMIN,
+    );
+    const usercreatedOwner = await factoriesService.generateUserInfo();
+    user = usercreatedAdmin;
+    userOwner = usercreatedOwner;
   });
 
   it('Should all services be defined', () => {
@@ -92,6 +98,13 @@ describe('Delete User UseCase', () => {
     // Assert
     await expect(deleteUserUseCase.execute(user.id)).rejects.toThrow(
       NotFoundException,
+    );
+  });
+
+  it('Should throw an error if the user is an OWNER', async () => {
+    // Assert
+    await expect(deleteUserUseCase.execute(userOwner.id)).rejects.toThrow(
+      ConflictException,
     );
   });
 });

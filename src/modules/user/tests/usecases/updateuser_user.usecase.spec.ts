@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { User } from 'src/core/domain/entities/user';
+import { User, UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
   ISTORAGE_SERVICE,
@@ -24,6 +24,7 @@ describe('Update a user UseCase', () => {
   let prismaService: PrismaService;
   let utilsService: IUtilsContract;
   let user_id: string;
+  let user_owner_id: string;
   let storageService: IStorageGw;
   let factoriesService: FactoriesService;
 
@@ -70,9 +71,11 @@ describe('Update a user UseCase', () => {
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
 
-    const user = await factoriesService.generateUserInfo();
+    const user = await factoriesService.generateUserInfo(UserRole.ADMIN);
+    const userOwner = await factoriesService.generateUserInfo();
 
     user_id = user.id;
+    user_owner_id = userOwner.id;
   });
 
   afterAll(async () => {
@@ -124,7 +127,23 @@ describe('Update a user UseCase', () => {
     );
   });
 
-  it('Should  throw an error if the email is already beingg used', async () => {
+  it('Should  throw an error if the user is an OWNER', async () => {
+    // Arrange
+    const data: IUserContract.UpdateParams = {
+      id: user_owner_id,
+      data: {
+        name: updatedName,
+        email: updatedEmail,
+      },
+    };
+
+    // Assert
+    await expect(updateUserUseCase.execute(data)).rejects.toThrow(
+      ConflictException,
+    );
+  });
+
+  it('Should  throw an error if the email is already being used', async () => {
     // Arrange
     const data: IUserContract.UpdateParams = {
       id: user_id,
