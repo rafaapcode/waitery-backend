@@ -26,7 +26,8 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { Product } from 'src/core/domain/entities/product';
+import { createCategoryEntity } from 'src/core/domain/entities/category';
+import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
@@ -286,5 +287,53 @@ describe('Create Product Usecase', () => {
     await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
       ConflictException,
     );
+  });
+
+  it('Should upload a file and create the imageUrl if the image_file is provided', async () => {
+    // Arrange
+    const image_file = {
+      originalname: faker.system.fileName(),
+      buffer: Buffer.from('file_buffer'),
+      mimetype: 'image/png',
+      size: 1024,
+    } as Express.Multer.File;
+    const data: CreateProductDto = {
+      category_id: cat.id,
+      description: faker.lorem.paragraph(),
+      name: `${productName} With Image`,
+      ingredients: ing_ids,
+      price: productPrice,
+    };
+    const productValueMocked = createProductEntity({
+      id: faker.string.uuid(),
+      description: faker.lorem.paragraph(),
+      name: `${productName} With Image`,
+      price: productPrice,
+      category: createCategoryEntity({
+        ...cat,
+      }),
+      ingredients: ing_ids.map((id) => ({
+        value: id,
+        label: faker.commerce.productName(),
+      })),
+      org_id: org_id,
+      image_url: 'https://test-cdn.com/file.jpg',
+    });
+    jest
+      .spyOn(productService, 'uploadFile')
+      .mockResolvedValue(productValueMocked);
+
+    // Act
+    const product = await createProductUseCase.execute(
+      data,
+      org_id,
+      image_file,
+    );
+
+    // Assert
+    expect(product).toBeInstanceOf(Product);
+    expect(product.ingredients.length).toBe(4);
+    expect(product.category.name).toBe(cat.name);
+    expect(productService.uploadFile).toHaveBeenCalledTimes(1);
   });
 });

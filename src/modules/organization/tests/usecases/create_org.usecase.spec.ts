@@ -56,7 +56,6 @@ describe('Create Org UseCase', () => {
   const org1Name = faker.company.name();
   const org1Email = faker.internet.email();
   const org2Email = faker.internet.email();
-  const org3Email = faker.internet.email();
   const locationCode =
     faker.location.countryCode('alpha-2') +
     '-' +
@@ -204,6 +203,7 @@ describe('Create Org UseCase', () => {
     expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
     expect(newOrg).toBeInstanceOf(Organization);
     expect(newOrg.owner_id).toBe(owner_id);
+    expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
   });
 
   it('Should thrown an error if the owner not exists', async () => {
@@ -298,46 +298,5 @@ describe('Create Org UseCase', () => {
     expect(newOrg.owner_id).toBe(owner_id);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(orgService.uploadFile).toHaveBeenCalledTimes(1);
-  });
-
-  it('Should not Upload a file if the image_file is not provided', async () => {
-    // Arrange
-    const data: CreateOrganizationParams = {
-      owner_id,
-      data: {
-        name: faker.company.name(),
-        email: org3Email,
-        description: faker.lorem.paragraph(),
-        location_code: locationCode,
-        open_hour: openHour,
-        close_hour: closeHour,
-        cep: faker.location.zipCode(),
-      },
-    };
-    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
-    const infos = await orgService.getAddressInformation(data.data.cep);
-    jest.spyOn(orgService, 'uploadFile').mockResolvedValue(
-      createOganizationEntity({
-        ...data.data,
-        close_hour: Number(data.data.close_hour),
-        open_hour: Number(data.data.open_hour),
-        owner_id,
-        city: infos ? `${infos.localidade}-${infos.uf}` : '',
-        neighborhood: infos ? infos.bairro : '',
-        street: infos ? infos.logradouro : '',
-        lat: 0,
-        long: 0,
-      }),
-    );
-
-    // Act
-    const newOrg = await createOrgUseCase.execute(data);
-
-    //Assert
-    expect(newOrg).toBeInstanceOf(Organization);
-    expect(newOrg.image_url).toBeFalsy();
-    expect(newOrg.owner_id).toBe(owner_id);
-    expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
-    expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
   });
 });
