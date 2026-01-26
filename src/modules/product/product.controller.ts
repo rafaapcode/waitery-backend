@@ -52,12 +52,20 @@ export class ProductController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Put(':product_id')
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @GetOrgId() org_id: string,
     @Param('product_id', ParseULIDPipe) product_id: string,
-    @Body() data: UpdateProductDto,
+    @Body() data: string,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    await this.updateProductUseCase.execute(org_id, product_id, data);
+    const parsedData = plainToInstance(UpdateProductDto, data);
+    await this.updateProductUseCase.execute(
+      org_id,
+      product_id,
+      parsedData,
+      file,
+    );
     return { message: 'Product updated successfully' };
   }
 

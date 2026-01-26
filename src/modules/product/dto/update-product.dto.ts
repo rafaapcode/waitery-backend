@@ -18,6 +18,7 @@ export class UpdateProductDto {
 
   @IsNumber()
   @IsPositive()
+  @Type(() => Number)
   @IsOptional()
   price?: number;
 
