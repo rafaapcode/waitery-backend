@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category as CatPrisma, Organization } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
@@ -96,10 +96,10 @@ describe('Get Category by Id UseCase', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('Should throw an ConflicException if the org does not match', async () => {
+  it('Should throw an NotFoundException if the org does not match', async () => {
     // Assert
     await expect(
       getByIdCategoryUseCase.execute(cat.id, wrongOrgId),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toThrow(NotFoundException);
   });
 });

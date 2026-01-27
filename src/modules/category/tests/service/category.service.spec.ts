@@ -130,12 +130,15 @@ describe('Category Service', () => {
     });
 
     // Act
-    const cat = await categoryService.getCategory(catId);
+    const cat = await categoryService.getCategory({ id: catId, orgId: orgId });
 
     // Assert
     expect(cat).toBeInstanceOf(Category);
     expect(categoryRepo.getById).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getById).toHaveBeenCalledWith(catId);
+    expect(categoryRepo.getById).toHaveBeenCalledWith({
+      id: catId,
+      orgId: orgId,
+    });
   });
 
   it('Should return null if category does not exist', async () => {
@@ -143,12 +146,15 @@ describe('Category Service', () => {
     jest.spyOn(categoryRepo, 'getById').mockResolvedValue(null);
 
     // Act
-    const cat = await categoryService.getCategory(catId);
+    const cat = await categoryService.getCategory({ id: catId, orgId: orgId });
 
     // Assert
     expect(cat).toBeNull();
     expect(categoryRepo.getById).toHaveBeenCalledTimes(1);
-    expect(categoryRepo.getById).toHaveBeenCalledWith(catId);
+    expect(categoryRepo.getById).toHaveBeenCalledWith({
+      id: catId,
+      orgId: orgId,
+    });
   });
 
   it('Should get all categories', async () => {

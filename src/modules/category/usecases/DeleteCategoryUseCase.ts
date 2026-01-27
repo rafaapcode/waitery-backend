@@ -19,7 +19,7 @@ export class DeleteCategoryUseCase implements IDeleteCategoryUseCase {
     private readonly catContract: ICategoryContract,
   ) {}
   async execute(id: string, org_id: string): Promise<void> {
-    const catExists = await this.catContract.getCategory(id);
+    const catExists = await this.catContract.getCategory({ id });
 
     if (!catExists) throw new NotFoundException('Category not found');
 

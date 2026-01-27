@@ -45,7 +45,10 @@ export class GetProductByCategoryUseCase
 
     if (!org_exists) throw new NotFoundException('Organization not found');
 
-    const cat_exists = await this.catService.getCategory(category_id);
+    const cat_exists = await this.catService.getCategory({
+      id: category_id,
+      orgId: org_id,
+    });
 
     if (!cat_exists) throw new NotFoundException('Category not found');
 

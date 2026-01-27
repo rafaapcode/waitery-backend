@@ -28,7 +28,10 @@ export class UpdateCategoryUseCase implements IUpdateCategoryUseCase {
     org_id: string,
     data: UpdateCategoryDto,
   ): Promise<Category> {
-    const cat_exists = await this.catContract.getCategory(id);
+    const cat_exists = await this.catContract.getCategory({
+      id,
+      orgId: org_id,
+    });
 
     if (!cat_exists) throw new NotFoundException('Category not found');
 

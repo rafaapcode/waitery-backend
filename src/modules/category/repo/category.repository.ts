@@ -33,10 +33,10 @@ export class CategoryRepository {
   }
 
   async getById(
-    id: ICategoryContract.GetCategoryParams,
+    data: ICategoryContract.GetCategoryParams,
   ): Promise<Category | null> {
     const updated_category = await this.prismaService.category.findUnique({
-      where: { id },
+      where: { id: data.id, ...(data.orgId && { org_id: data.orgId }) },
     });
 
     return updated_category;

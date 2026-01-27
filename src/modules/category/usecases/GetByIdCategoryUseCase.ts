@@ -19,7 +19,7 @@ export class GetByIdCategoryUseCase implements IGetByIdCategoryUseCase {
     private readonly catContract: ICategoryContract,
   ) {}
   async execute(id: string, org_id: string): Promise<Category> {
-    const cat = await this.catContract.getCategory(id);
+    const cat = await this.catContract.getCategory({ id, orgId: org_id });
 
     if (!cat) throw new NotFoundException('Category not found');
 

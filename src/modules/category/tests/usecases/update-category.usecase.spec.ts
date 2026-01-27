@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category as CatPrisma, Organization } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
@@ -184,7 +184,7 @@ describe('Update Category UseCase', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('Should throw a BadRequestException if the organization does not match', async () => {
+  it('Should throw a NotFoundException if the organization does not match', async () => {
     // Arrange
     const data: ICategoryContract.UpdateParams = {
       id: cat.id,
@@ -197,6 +197,6 @@ describe('Update Category UseCase', () => {
     // Assert
     await expect(
       updateCategoryUseCase.execute(data.id, wrongOrgId, data.category),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(NotFoundException);
   });
 });

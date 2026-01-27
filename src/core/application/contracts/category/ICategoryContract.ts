@@ -44,7 +44,7 @@ export namespace ICategoryContract {
   export type DeleteParams = string;
   export type DeleteOutput = void;
 
-  export type GetCategoryParams = string;
+  export type GetCategoryParams = { id: string; orgId?: string };
   export type GetCategoryOutput = Category | null;
 
   export type GetAllCategoriesOfOrgParams = string;

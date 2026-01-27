@@ -13,11 +13,7 @@ jest.mock('src/shared/config/env', () => ({
 }));
 
 import { faker } from '@faker-js/faker';
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
@@ -66,6 +62,7 @@ describe('Create Product Usecase', () => {
   let factoriesService: FactoriesService;
   let org_id: string;
   let cat: Category;
+  let cat2: Category;
   let ing_ids: string[];
 
   const productName = faker.commerce.productName();
@@ -134,8 +131,14 @@ describe('Create Product Usecase', () => {
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
+    const org2 = await factoriesService.generateOrganizationWithOwner();
+
     const category = await factoriesService.generateCategoryInfo(
       org.organization.id,
+    );
+
+    const category2 = await factoriesService.generateCategoryInfo(
+      org2.organization.id,
     );
 
     const [ing1, ing2, ing3, ing4] =
@@ -144,6 +147,7 @@ describe('Create Product Usecase', () => {
     org_id = org.organization.id;
     ing_ids = [ing1.id, ing2.id, ing3.id, ing4.id];
     cat = category;
+    cat2 = category2;
   });
 
   afterAll(async () => {
@@ -166,6 +170,7 @@ describe('Create Product Usecase', () => {
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
     expect(cat).toBeDefined();
+    expect(cat2).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
     expect(ing_ids.length).toBe(4);
@@ -227,7 +232,23 @@ describe('Create Product Usecase', () => {
 
     // Assert
     await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
-      BadRequestException,
+      NotFoundException,
+    );
+  });
+
+  it('Should throw an error if the category is not from the org', async () => {
+    // Arrange
+    const data: CreateProductDto = {
+      category_id: cat2.id,
+      description: faker.lorem.paragraph(),
+      name: faker.commerce.productName(),
+      ingredients: ing_ids,
+      price: faker.number.int({ min: 50, max: 500 }),
+    };
+
+    // Assert
+    await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
+      NotFoundException,
     );
   });
 
@@ -243,11 +264,11 @@ describe('Create Product Usecase', () => {
 
     // Assert
     await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
-      BadRequestException,
+      NotFoundException,
     );
   });
 
-  it('Should throw an error if the ingredients os greater then the ingredients on the db', async () => {
+  it('Should throw an error if the ingredients is greater than the ingredients on the db', async () => {
     // Arrange
     const data: CreateProductDto = {
       category_id: faker.string.uuid(),
@@ -259,7 +280,7 @@ describe('Create Product Usecase', () => {
 
     // Assert
     await expect(createProductUseCase.execute(data, org_id)).rejects.toThrow(
-      BadRequestException,
+      NotFoundException,
     );
   });
 

@@ -63,10 +63,13 @@ export class CreateProductUseCase implements ICreateProductUseCase {
       );
     }
 
-    const category = await this.catService.getCategory(data.category_id);
+    const category = await this.catService.getCategory({
+      id: data.category_id,
+      orgId: org_id,
+    });
 
     if (!category) {
-      throw new BadRequestException('Category not found');
+      throw new NotFoundException('Category not found');
     }
 
     const ingredients = await this.ingService.getByManyByIds(data.ingredients);
