@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IORGANIZATION_CONTRACT } from 'src/shared/constants';
 
 interface IDeleteOrganizationUseCase {
@@ -12,6 +12,7 @@ export class DeleteOrganizationUseCase implements IDeleteOrganizationUseCase {
   constructor(
     @Inject(IORGANIZATION_CONTRACT)
     private readonly orgService: IOrganizationContract,
+    private readonly observabilityService: ObservabilityService,
   ) {}
 
   async execute(id: string, owner_id: string): Promise<void> {
@@ -35,8 +36,10 @@ export class DeleteOrganizationUseCase implements IDeleteOrganizationUseCase {
         key: this.getImageKeyFromUrl(org.image_url),
       })
       .catch((err) =>
-        sentry.logger.error(
+        this.observabilityService.error(
+          'DeleteOrganizationUseCase',
           `Error deleting organization image file ${JSON.stringify(err)}`,
+          '',
         ),
       );
 

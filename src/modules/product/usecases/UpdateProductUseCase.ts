@@ -4,11 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import * as sentry from '@sentry/nestjs';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { Ingredient } from 'src/core/domain/entities/ingredient';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
   IINGREDIENT_CONTRACT,
   IORGANIZATION_CONTRACT,
@@ -34,6 +34,7 @@ export class UpdateProductUseCase implements IUpdateProductUseCase {
     private readonly orgService: IOrganizationContract,
     @Inject(IINGREDIENT_CONTRACT)
     private readonly ingService: IIngredientContract,
+    private readonly observabilityService: ObservabilityService,
   ) {}
 
   async execute(
@@ -73,8 +74,10 @@ export class UpdateProductUseCase implements IUpdateProductUseCase {
             key: this.getImageKeyFromUrl(productExists.image_url),
           })
           .catch((err) =>
-            sentry.logger.error(
+            this.observabilityService.error(
+              'UpdateProductUseCase',
               `Error deleting product image file ${JSON.stringify(err)}`,
+              '',
             ),
           );
       }

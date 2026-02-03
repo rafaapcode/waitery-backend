@@ -4,10 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import * as sentry from '@sentry/nestjs';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { createOganizationEntity } from 'src/core/domain/entities/organization';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
 import { CreateOrganizationDTO } from '../dto/create-organization.dto';
 
@@ -30,6 +30,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly orgService: IOrganizationContract,
     @Inject(IUSER_CONTRACT)
     private readonly userService: IUserContract,
+    private readonly observabilityService: ObservabilityService,
   ) {}
 
   async execute({
@@ -42,7 +43,10 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     );
 
     if (!getAddressInformation || 'erro' in getAddressInformation) {
-      sentry.logger.warn(`Address information not found for CEP: ${data.cep}`);
+      this.observabilityService.warn(
+        'CreateOrganizationUseCase',
+        `Address information not found for CEP: ${data.cep}`,
+      );
     }
 
     const organization = createOganizationEntity({
