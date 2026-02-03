@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { IORDER_CONTRACT, IORDER_WS_CONTRACT } from 'src/shared/constants';
 import { OrganizationModule } from '../organization/organization.module';
 import WsGateway from '../ws/ws.gateway';
@@ -19,7 +20,7 @@ import { RestartOrdersOfDayUseCase } from './usecases/RestartOrdersOfDay';
 import { UpdateOrderStatusUseCase } from './usecases/UpdateOrderStatusUseCase';
 
 @Module({
-  imports: [DatabaseModule, OrganizationModule, WsModule],
+  imports: [DatabaseModule, OrganizationModule, WsModule, ObservabilityModule],
   controllers: [OrderController],
   providers: [
     OrderRepository,

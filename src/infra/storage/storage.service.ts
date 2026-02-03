@@ -4,14 +4,14 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
-import * as sentry from '@sentry/nestjs';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { env } from 'src/shared/config/env';
+import { ObservabilityService } from '../observability/observability.service';
 
 @Injectable()
 export class StorageService implements IStorageGw {
   private client: S3Client;
-  constructor() {
+  constructor(private readonly observabilityService: ObservabilityService) {
     this.client = new S3Client({ region: 'us-east-1' });
   }
 
@@ -19,7 +19,11 @@ export class StorageService implements IStorageGw {
     filePath: IStorageGw.DeleteFileParams,
   ): Promise<IStorageGw.DeleteFileOutput> {
     if (!filePath.key) {
-      sentry.logger.error('File key is required to delete a file from S3.');
+      this.observabilityService.error(
+        'StorageService',
+        'File key is required to delete a file from S3.',
+        'No stack found',
+      );
       return { success: false };
     }
 
@@ -33,7 +37,11 @@ export class StorageService implements IStorageGw {
     const status = res.$metadata.httpStatusCode;
 
     if (status !== 200) {
-      sentry.logger.error(`Error deleting file from S3. Status: ${status}`);
+      this.observabilityService.error(
+        'StorageService',
+        `Error deleting file from S3. Status: ${status}`,
+        'No stack found',
+      );
       return { success: false };
     }
 
@@ -72,7 +80,11 @@ export class StorageService implements IStorageGw {
     const status = res.$metadata.httpStatusCode;
 
     if (status !== 200) {
-      sentry.logger.error(`Error uploading file to S3. Status: ${status}`);
+      this.observabilityService.error(
+        'StorageService',
+        `Error uploading file to S3. Status: ${status}`,
+        'No stack found',
+      );
       return { fileKey: '' };
     }
 

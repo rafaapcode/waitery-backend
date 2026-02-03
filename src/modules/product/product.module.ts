@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { StorageModule } from 'src/infra/storage/storage.module';
 import { StorageService } from 'src/infra/storage/storage.service';
 import {
@@ -28,7 +29,7 @@ import { GetProductUseCase } from './usecases/GetProductUseCase';
 import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
 
 @Module({
-  imports: [DatabaseModule, StorageModule],
+  imports: [DatabaseModule, StorageModule, ObservabilityModule],
   controllers: [ProductController],
   providers: [
     ProductRepository,

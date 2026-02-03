@@ -5,6 +5,9 @@ import { SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { ExceptionFilterWithSentry } from './common/filters/exception.filter';
 import { AuthGuard } from './common/guards/auth-guard.guard';
+import { ObservabilityModule } from './infra/observability/observability.module';
+import { ObservabilityService } from './infra/observability/observability.service';
+import { StorageModule } from './infra/storage/storage.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoryModule } from './modules/category/category.module';
 import { IngredientModule } from './modules/ingredient/ingredient.module';
@@ -15,10 +18,8 @@ import { UserModule } from './modules/user/user.module';
 import { WsModule } from './modules/ws/ws.module';
 import { env } from './shared/config/env';
 import { IUTILS_SERVICE } from './shared/constants';
-import { UtilsService } from './utils.service';
-import { StorageModule } from './infra/storage/storage.module';
 import { FactoriesModule } from './test/factories/factories.module';
-import { ObservabilityModule } from './infra/observability/observability.module';
+import { UtilsService } from './utils.service';
 
 @Module({
   imports: [
@@ -51,7 +52,11 @@ import { ObservabilityModule } from './infra/observability/observability.module'
       useClass: ExceptionFilterWithSentry,
     },
     { provide: IUTILS_SERVICE, useClass: UtilsService },
+    ObservabilityService,
   ],
-  exports: [{ provide: IUTILS_SERVICE, useClass: UtilsService }],
+  exports: [
+    { provide: IUTILS_SERVICE, useClass: UtilsService },
+    ObservabilityService,
+  ],
 })
 export class AppModule {}

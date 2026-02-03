@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { StorageModule } from 'src/infra/storage/storage.module';
 import { StorageService } from 'src/infra/storage/storage.service';
 import {
@@ -24,7 +25,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [DatabaseModule, StorageModule],
+  imports: [DatabaseModule, StorageModule, ObservabilityModule],
   controllers: [UserController],
   providers: [
     UserRepo,

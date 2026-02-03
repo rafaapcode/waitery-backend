@@ -4,14 +4,16 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
-import * as sentry from '@sentry/nestjs';
 import { Request, Response } from 'express';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { env } from 'src/shared/config/env';
 
 @Catch(HttpException)
 export class ExceptionFilterWithSentry<T extends HttpException>
   implements ExceptionFilter
 {
+  constructor(private readonly observabilityService: ObservabilityService) {}
+
   catch(exception: T, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
@@ -27,13 +29,15 @@ export class ExceptionFilterWithSentry<T extends HttpException>
 
     if (env.NODE_ENV === 'PROD') {
       if (statusCode >= 500) {
-        sentry.logger.error(
+        this.observabilityService.error(
+          ExceptionFilterWithSentry.name,
           JSON.stringify({
             ...err,
             date: new Date().toISOString(),
             url: req.url,
             stack: exception.stack || 'No stack found',
           }),
+          exception.stack || 'No stack found',
         );
       }
     }

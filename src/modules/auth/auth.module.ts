@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { UtilsService } from 'src/utils.service';
 import { AuthController } from './auth.controller';
@@ -8,7 +9,7 @@ import { SignInUseCase } from './usecases/SignInUseCase';
 import { SignUpUseCase } from './usecases/SignUpUseCase';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, ObservabilityModule],
   controllers: [AuthController],
   providers: [
     SignInUseCase,

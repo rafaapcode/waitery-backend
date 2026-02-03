@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { StorageModule } from 'src/infra/storage/storage.module';
 import { StorageService } from 'src/infra/storage/storage.service';
 import {
@@ -21,7 +22,7 @@ import { GetOrganizationUseCase } from './usecases/GetOrganizationUseCase';
 import { UpdateOrganizationUseCase } from './usecases/UpdateOrganizationUseCase';
 
 @Module({
-  imports: [DatabaseModule, StorageModule],
+  imports: [DatabaseModule, StorageModule, ObservabilityModule],
   controllers: [OrganizationController],
   providers: [
     OrganizationRepo,
