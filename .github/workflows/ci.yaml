@@ -3,11 +3,15 @@ name: Waitery CI
 on:
   push:
     branches: main
+  merge:
+    branches: main
+  pull_request:
+    branches: main
 
 jobs:
   continuos-integration:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:17-alpine
@@ -43,7 +47,6 @@ jobs:
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
-
 
       - name: Setup test environment
         run: |
