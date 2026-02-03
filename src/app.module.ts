@@ -18,6 +18,7 @@ import { IUTILS_SERVICE } from './shared/constants';
 import { UtilsService } from './utils.service';
 import { StorageModule } from './infra/storage/storage.module';
 import { FactoriesModule } from './test/factories/factories.module';
+import { ObservabilityModule } from './infra/observability/observability.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { FactoriesModule } from './test/factories/factories.module';
     WsModule,
     StorageModule,
     FactoriesModule,
+    ObservabilityModule,
   ],
   controllers: [AppController],
   providers: [
