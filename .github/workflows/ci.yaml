@@ -3,10 +3,6 @@ name: Waitery CI
 on:
   push:
     branches: main
-  merge:
-    branches: main
-  pull_request:
-    branches: main
 
 jobs:
   continuos-integration:
