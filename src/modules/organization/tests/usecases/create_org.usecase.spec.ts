@@ -24,6 +24,7 @@ import {
   Organization,
 } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import { UserService } from 'src/modules/user/user.service';
 import {
@@ -43,6 +44,7 @@ import {
 
 describe('Create Org UseCase', () => {
   let createOrgUseCase: CreateOrganizationUseCase;
+  let observabilityService: ObservabilityService;
   let orgService: IOrganizationContract;
   let storageService: IStorageGw;
   let userService: IUserContract;
@@ -83,6 +85,7 @@ describe('Create Org UseCase', () => {
         UserRepo,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IUTILS_SERVICE,
           useValue: {
@@ -122,6 +125,8 @@ describe('Create Org UseCase', () => {
       CreateOrganizationUseCase,
     );
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { id } = await factoriesService.generateUserInfo();
     owner_id = id;
@@ -143,6 +148,8 @@ describe('Create Org UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(storageService).toBeDefined();
     expect(owner_id).toBeDefined();
+    expect(createOrgUseCase).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should create a new Organization', async () => {

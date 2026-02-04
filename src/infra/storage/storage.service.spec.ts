@@ -13,18 +13,22 @@ jest.mock('src/shared/config/env', () => ({
 
 import { S3Client } from '@aws-sdk/client-s3';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ObservabilityService } from '../observability/observability.service';
 import { StorageService } from './storage.service';
 
 describe('StorageService', () => {
   let storageService: StorageService;
+  let observabilityService: ObservabilityService;
   let sendSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StorageService],
+      providers: [StorageService, ObservabilityService],
     }).compile();
 
     storageService = module.get<StorageService>(StorageService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
     sendSpy = jest.spyOn(S3Client.prototype, 'send');
   });
 
@@ -35,6 +39,7 @@ describe('StorageService', () => {
   it('All services must be defined', () => {
     expect(storageService).toBeDefined();
     expect(sendSpy).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('should return a file_key when the upload is successful', async () => {

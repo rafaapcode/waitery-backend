@@ -21,6 +21,7 @@ import { IProductContract } from 'src/core/application/contracts/product/IProduc
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
 import { OrganizationService } from 'src/modules/organization/organization.service';
@@ -41,6 +42,7 @@ import { UpdateProductUseCase } from '../../usecases/UpdateProductUseCase';
 
 describe('Update Product Usecase', () => {
   let updateProductUseCase: UpdateProductUseCase;
+  let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
@@ -67,6 +69,7 @@ describe('Update Product Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -110,6 +113,8 @@ describe('Update Product Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
@@ -163,6 +168,8 @@ describe('Update Product Usecase', () => {
     expect(ing_ids).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should not be able to update a product if organization does not exist', async () => {

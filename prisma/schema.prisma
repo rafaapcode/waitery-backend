@@ -3,9 +3,13 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_TEST")
 }
 
 enum Role {
@@ -119,6 +123,7 @@ model Product {
   category_id      String
   discounted_price Float   @default(0)
   discount         Boolean @default(false)
+  /// [IngredientsMetaType]
   ingredients      Json
 
   org      Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)

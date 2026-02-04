@@ -18,6 +18,7 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import {
   IORGANIZATION_CONTRACT,
@@ -32,6 +33,7 @@ import { GetAllOrganizationUseCase } from '../../usecases/GetAllOrganizationUseC
 
 describe('GetAll Orgs UseCase', () => {
   let getAllOrgUsecase: GetAllOrganizationUseCase;
+  let observabilityService: ObservabilityService;
   let orgService: IOrganizationContract;
   let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
@@ -53,6 +55,7 @@ describe('GetAll Orgs UseCase', () => {
         UserRepo,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IUTILS_SERVICE,
           useValue: {
@@ -85,6 +88,8 @@ describe('GetAll Orgs UseCase', () => {
     );
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     await factoriesService.generateManyOrganizationWithOwner(
       3,
@@ -103,6 +108,8 @@ describe('GetAll Orgs UseCase', () => {
     expect(userRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get all organizations', async () => {

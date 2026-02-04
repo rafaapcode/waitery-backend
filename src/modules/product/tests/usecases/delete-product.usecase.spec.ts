@@ -23,6 +23,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
@@ -46,6 +47,7 @@ import { DeleteProductUseCase } from '../../usecases/DeleteProductUseCase';
 describe('Delete Product Usecase', () => {
   let deleteProductUseCase: DeleteProductUseCase;
   let productService: IProductContract;
+  let observabilityService: ObservabilityService;
   let catService: ICategoryContract;
   let storageService: IStorageGw;
   let catRepo: CategoryRepository;
@@ -75,6 +77,7 @@ describe('Delete Product Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -125,6 +128,8 @@ describe('Delete Product Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const user = await factoriesService.generateUserInfo();
 
@@ -190,6 +195,8 @@ describe('Delete Product Usecase', () => {
     expect(user_id2).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the product does not exist', async () => {

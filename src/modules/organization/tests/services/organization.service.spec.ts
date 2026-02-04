@@ -20,6 +20,7 @@ import {
   createOganizationEntity,
   Organization,
 } from 'src/core/domain/entities/organization';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
 import { ulid } from 'ulid';
 import { OrganizationService } from '../../organization.service';
@@ -30,6 +31,7 @@ describe('OrganizationService', () => {
   let orgrepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let storageService: IStorageGw;
+  let observabilityService: ObservabilityService;
 
   const ownerId = faker.string.uuid();
   const orgId = faker.string.uuid();
@@ -66,6 +68,7 @@ describe('OrganizationService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrganizationService,
+        ObservabilityService,
         {
           provide: OrganizationRepo,
           useValue: {
@@ -102,6 +105,8 @@ describe('OrganizationService', () => {
     orgrepo = module.get<OrganizationRepo>(OrganizationRepo);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
   });
 
   it('All services must be defined', () => {
@@ -109,6 +114,7 @@ describe('OrganizationService', () => {
     expect(orgrepo).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should create an organization', async () => {

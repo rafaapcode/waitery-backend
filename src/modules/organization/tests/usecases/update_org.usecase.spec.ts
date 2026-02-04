@@ -20,6 +20,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Organization } from 'src/core/domain/entities/organization';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import {
   IORGANIZATION_CONTRACT,
@@ -36,6 +37,7 @@ describe('Update a Org UseCase', () => {
   let updateOrgUseCase: UpdateOrganizationUseCase;
   let orgService: IOrganizationContract;
   let storageService: IStorageGw;
+  let observabilityService: ObservabilityService;
   let orgRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let userRepo: UserRepo;
@@ -57,6 +59,7 @@ describe('Update a Org UseCase', () => {
         UserRepo,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
@@ -90,6 +93,8 @@ describe('Update a Org UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { organization: org, owner } =
       await factoriesService.generateOrganizationWithOwner();
@@ -111,6 +116,9 @@ describe('Update a Org UseCase', () => {
     expect(organization).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(owner_id).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should update a organization', async () => {

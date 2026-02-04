@@ -18,6 +18,7 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import {
   IORGANIZATION_CONTRACT,
@@ -32,6 +33,7 @@ import { DeleteOrganizationUseCase } from '../../usecases/DeleteOrganizationUseC
 
 describe('Delete Org UseCase', () => {
   let deleteOrgUseCase: DeleteOrganizationUseCase;
+  let observabilityService: ObservabilityService;
   let orgService: IOrganizationContract;
   let storageService: IStorageGw;
   let orgRepo: OrganizationRepo;
@@ -50,6 +52,7 @@ describe('Delete Org UseCase', () => {
         UserRepo,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IORGANIZATION_CONTRACT,
           useClass: OrganizationService,
@@ -83,6 +86,8 @@ describe('Delete Org UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { organization } =
       await factoriesService.generateOrganizationWithOwner();
@@ -98,6 +103,10 @@ describe('Delete Org UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(org_id).toBeDefined();
+    expect(owner_id).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should delete a organization', async () => {
