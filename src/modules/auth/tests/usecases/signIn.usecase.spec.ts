@@ -86,16 +86,18 @@ describe('SignIn UseCase', () => {
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Act
-    const user_signedIn = await signInUseCase.execute(data);
+    const user_signedIn = await signInUseCase.execute(data, '', '');
 
     // Asssert
     expect(user_signedIn.access_token).toBe(token);
     expect(user_signedIn.user).toBeInstanceOf(User);
     expect(user_signedIn.user.id).toBeTruthy();
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
-    expect(jwtService.sign).toHaveBeenCalledWith(
-      user_signedIn.user.fromEntity(),
-    );
+    expect(jwtService.sign).toHaveBeenCalledWith({
+      ...user_signedIn.user.fromEntity(),
+      user_agent: '',
+      ip_address: '',
+    });
   });
 
   it('Should not signIn a user that dont exists', async () => {
@@ -108,7 +110,7 @@ describe('SignIn UseCase', () => {
 
     // Asssert
     expect(jwtService.sign).toHaveBeenCalledTimes(0);
-    await expect(signInUseCase.execute(data)).rejects.toThrow(
+    await expect(signInUseCase.execute(data, '', '')).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -123,7 +125,7 @@ describe('SignIn UseCase', () => {
 
     // Asssert
     expect(jwtService.sign).toHaveBeenCalledTimes(0);
-    await expect(signInUseCase.execute(data)).rejects.toThrow(
+    await expect(signInUseCase.execute(data, '', '')).rejects.toThrow(
       BadRequestException,
     );
   });

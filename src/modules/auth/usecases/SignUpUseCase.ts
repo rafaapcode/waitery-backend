@@ -5,6 +5,8 @@ import { IAUTH_CONTRACT } from 'src/shared/constants';
 interface ISignUpUseCase {
   execute(
     data: IAuthContract.SignUpParams,
+    user_agent: string,
+    ip_address: string,
   ): Promise<IAuthContract.SignUpOutput>;
 }
 
@@ -16,8 +18,10 @@ export class SignUpUseCase implements ISignUpUseCase {
 
   async execute(
     data: IAuthContract.SignUpParams,
+    user_agent: string,
+    ip_address: string,
   ): Promise<IAuthContract.SignUpOutput> {
-    const user = await this.authService.signUp(data);
+    const user = await this.authService.signUp(data, user_agent, ip_address);
     return user;
   }
 }

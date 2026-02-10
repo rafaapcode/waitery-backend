@@ -82,12 +82,16 @@ describe('AuthService - SignIn', () => {
     jest.spyOn(jwtService, 'sign').mockImplementation(() => token);
 
     // Act
-    const signInUser = await authService.signIn(data);
+    const signInUser = await authService.signIn(data, '', '');
 
     // Assert
     expect(utilsService.validateHash).toHaveBeenCalledTimes(1);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
-    expect(jwtService.sign).toHaveBeenCalledWith(signInUser.user.fromEntity());
+    expect(jwtService.sign).toHaveBeenCalledWith({
+      ...signInUser.user.fromEntity(),
+      user_agent: '',
+      ip_address: '',
+    });
     expect(signInUser.user).toBeDefined();
     expect(signInUser.user.password).toBeUndefined();
     expect(signInUser.access_token).toBe(token);
@@ -101,7 +105,9 @@ describe('AuthService - SignIn', () => {
     };
 
     // Assert
-    await expect(authService.signIn(data)).rejects.toThrow(NotFoundException);
+    await expect(authService.signIn(data, '', '')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('Should throw if the password is incorrect', async () => {
@@ -113,7 +119,9 @@ describe('AuthService - SignIn', () => {
     jest.spyOn(utilsService, 'validateHash').mockResolvedValue(false);
 
     // Assert
-    await expect(authService.signIn(data)).rejects.toThrow(BadRequestException);
+    await expect(authService.signIn(data, '', '')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });
 
@@ -203,7 +211,7 @@ describe('AuthService - SignUp', () => {
     (jwtService.sign as jest.Mock).mockImplementation(() => token);
 
     // Act
-    const signUpUser = await authService.signUp(data);
+    const signUpUser = await authService.signUp(data, '', '');
 
     // Assert
     expect(prismaService.user.create).toHaveBeenCalledWith({
@@ -218,7 +226,11 @@ describe('AuthService - SignUp', () => {
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(utilsService.generateHash).toHaveBeenCalledWith(data.password);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
-    expect(jwtService.sign).toHaveBeenCalledWith(signUpUser.user.fromEntity());
+    expect(jwtService.sign).toHaveBeenCalledWith({
+      ...signUpUser.user.fromEntity(),
+      user_agent: '',
+      ip_address: '',
+    });
     expect(signUpUser.user).toBeDefined();
     expect(signUpUser.user.id).toBe(userId);
     expect(signUpUser.user.password).toBe(hashBcrypt);
@@ -245,6 +257,8 @@ describe('AuthService - SignUp', () => {
     });
 
     // Assert
-    await expect(authService.signUp(data)).rejects.toThrow(ConflictException);
+    await expect(authService.signUp(data, '', '')).rejects.toThrow(
+      ConflictException,
+    );
   });
 });

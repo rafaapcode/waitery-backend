@@ -24,6 +24,8 @@ export class AuthService implements IAuthContract {
 
   async signIn(
     data: IAuthContract.SignInParams,
+    user_agent: string,
+    ip_address: string,
   ): Promise<IAuthContract.SignInOutput> {
     const getUser = await this.prismaService.user.findUnique({
       where: { email: data.email },
@@ -50,7 +52,11 @@ export class AuthService implements IAuthContract {
       id: getUser.id,
     });
 
-    const token = this.jwtService.sign(user.fromEntity());
+    const token = this.jwtService.sign({
+      ...user.fromEntity(),
+      user_agent,
+      ip_address,
+    });
     user.id = getUser.id;
 
     return {
@@ -61,6 +67,8 @@ export class AuthService implements IAuthContract {
 
   async signUp(
     data: IAuthContract.SignUpParams,
+    user_agent: string,
+    ip_address: string,
   ): Promise<IAuthContract.SignUpOutput> {
     const userExists = await this.prismaService.user.findFirst({
       where: { OR: [{ email: data.email }, { cpf: data.cpf }] },
@@ -91,7 +99,11 @@ export class AuthService implements IAuthContract {
     });
 
     user.id = userCreated.id;
-    const token = this.jwtService.sign(user.fromEntity());
+    const token = this.jwtService.sign({
+      ...user.fromEntity(),
+      user_agent,
+      ip_address,
+    });
 
     return {
       user,

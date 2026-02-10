@@ -3,9 +3,13 @@ import { User } from 'src/core/domain/entities/user';
 export interface IAuthContract {
   signIn: (
     data: IAuthContract.SignInParams,
+    user_agent: string,
+    ip_address: string,
   ) => Promise<IAuthContract.SignInOutput>;
   signUp: (
     data: IAuthContract.SignUpParams,
+    user_agent: string,
+    ip_address: string,
   ) => Promise<IAuthContract.SignUpOutput>;
 }
 

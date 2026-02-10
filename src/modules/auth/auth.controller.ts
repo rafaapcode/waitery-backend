@@ -1,4 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Ip,
+  Post,
+  Request,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { IsPublic } from 'src/common/decorators/IsPublic';
 import { SignInAuthDTO } from './dto/signIn-auth.dto';
@@ -17,8 +27,19 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  async signin(@Body() data: SignInAuthDTO) {
-    const { user, access_token } = await this.signInUseCase.execute(data);
+  async signin(
+    @Body() data: SignInAuthDTO,
+    @Request() request: Request,
+    @Ip() ip: string,
+  ) {
+    const userAgent = request.headers['user-agent'] || 'unknown';
+
+    const { user, access_token } = await this.signInUseCase.execute(
+      data,
+      userAgent,
+      ip,
+    );
+
     return {
       ...user.fromEntity(),
       access_token,
@@ -26,8 +47,17 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signup(@Body() data: SignUpAuthDTO) {
-    const { user, access_token } = await this.signUpUseCase.execute(data);
+  async signup(
+    @Body() data: SignUpAuthDTO,
+    @Request() request: Request,
+    @Ip() ip: string,
+  ) {
+    const userAgent = request.headers['user-agent'] || 'unknown';
+    const { user, access_token } = await this.signUpUseCase.execute(
+      data,
+      userAgent,
+      ip,
+    );
     return {
       ...user.fromEntity(),
       access_token,

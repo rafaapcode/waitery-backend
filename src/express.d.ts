@@ -7,6 +7,8 @@ export interface JwtPayload {
   email: string;
   cpf: string;
   role: UserRole;
+  user_agent: string;
+  ip_address: string;
 }
 
 declare global {

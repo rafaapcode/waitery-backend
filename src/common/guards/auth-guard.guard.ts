@@ -24,6 +24,7 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    const req = context.switchToHttp().getRequest<Request>();
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -52,12 +53,24 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Unauthorized to do this.');
       }
 
+      if (
+        !this.verifyTheOriginOfRequest(
+          req.headers['user-agent'] || 'unknown',
+          req.ip || '',
+          payload,
+        )
+      ) {
+        throw new UnauthorizedException('Invalid Token');
+      }
+
       request.user = {
         cpf: payload.cpf,
         email: payload.email,
         id: payload.id,
         name: payload.name,
         role: UserRole[payload.role as keyof UserRole],
+        user_agent: payload.user_agent,
+        ip_address: payload.ip_address,
       };
       request.role = payload.role;
 
@@ -76,5 +89,15 @@ export class AuthGuard implements CanActivate {
       return undefined;
     }
     return token;
+  }
+
+  private verifyTheOriginOfRequest(
+    userAgent: string,
+    ipAddress: string,
+    jwtPayload: JwtPayload,
+  ): boolean {
+    return (
+      userAgent === jwtPayload.user_agent && ipAddress === jwtPayload.ip_address
+    );
   }
 }

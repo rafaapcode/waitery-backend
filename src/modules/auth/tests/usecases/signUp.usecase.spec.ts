@@ -84,7 +84,7 @@ describe('SignUp UseCase', () => {
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(bcryptHash);
 
     // Act
-    const newUser = await signUpUseCase.execute(data);
+    const newUser = await signUpUseCase.execute(data, '', '');
 
     // Assert
     expect(newUser.user.id).toBeDefined();
@@ -92,7 +92,11 @@ describe('SignUp UseCase', () => {
     expect(newUser.access_token).toBe(token);
     expect(newUser.user.password).toBe(bcryptHash);
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
-    expect(jwtService.sign).toHaveBeenCalledWith(newUser.user.fromEntity());
+    expect(jwtService.sign).toHaveBeenCalledWith({
+      ...newUser.user.fromEntity(),
+      user_agent: '',
+      ip_address: '',
+    });
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(utilsService.generateHash).toHaveBeenCalledWith(data.password);
   });
@@ -109,7 +113,7 @@ describe('SignUp UseCase', () => {
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(bcryptHash);
 
     // Assert
-    await expect(signUpUseCase.execute(data)).rejects.toThrow(
+    await expect(signUpUseCase.execute(data, '', '')).rejects.toThrow(
       ConflictException,
     );
     expect(jwtService.sign).toHaveBeenCalledTimes(0);
