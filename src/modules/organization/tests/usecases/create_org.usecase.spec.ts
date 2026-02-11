@@ -215,7 +215,7 @@ describe('Create Org UseCase', () => {
     //Assert
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
-      data.data.cep,
+      data.data.cep.replace(/\D+/g, ''),
     );
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(orgService.uploadFile).toHaveBeenCalledTimes(0);

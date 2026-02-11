@@ -8,6 +8,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
+    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -459,7 +460,9 @@ describe('OrganizationService', () => {
 
     // Assert
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
-    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
+      cep.replace(/\D+/g, ''),
+    );
     expect(result).toBeNull();
   });
 

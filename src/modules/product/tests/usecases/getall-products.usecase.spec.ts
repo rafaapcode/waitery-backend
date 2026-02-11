@@ -9,6 +9,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
+    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
