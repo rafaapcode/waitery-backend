@@ -16,7 +16,7 @@ export class UtilsService implements IUtilsContract {
     try {
       const address = `${addressInfo.logradouro}, ${addressInfo.bairro}, ${addressInfo.localidade} - ${addressInfo.uf}, ${addressInfo.cep}, Brazil`;
       const res = await request(
-        `${env.OPEN_STREET_MAP_URL}?q=${encodeURIComponent(address)}&format=json&limit=1`,
+        `${env.OPEN_STREET_MAP_URL}?q=${address}&format=json&limit=1`,
       );
 
       const data = (await res.body.json()) as { lat: string; lon: string }[];
