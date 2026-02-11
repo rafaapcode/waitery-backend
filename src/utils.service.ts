@@ -10,6 +10,29 @@ import { env } from './shared/config/env';
 
 @Injectable()
 export class UtilsService implements IUtilsContract {
+  async getLatAndLongFromAddress(
+    addressInfo: GetAddressInfoOutput,
+  ): Promise<{ lat: number; lon: number } | undefined> {
+    try {
+      const address = `${addressInfo.logradouro}, ${addressInfo.bairro}, ${addressInfo.localidade} - ${addressInfo.uf}, ${addressInfo.cep}, Brazil`;
+      const res = await request(
+        `${env.OPEN_STREET_MAP_URL}?q=${encodeURIComponent(address)}&format=json&limit=1`,
+      );
+
+      const data = (await res.body.json()) as { lat: string; lon: string }[];
+
+      if (data.length === 0) {
+        return undefined;
+      }
+
+      const { lat, lon } = data[0];
+      return { lat: parseFloat(lat), lon: parseFloat(lon) };
+    } catch (error) {
+      console.log('Error fetching geolocation:', error);
+      return undefined;
+    }
+  }
+
   async getCepAddressInformations(
     cep: string,
   ): Promise<GetAddressInfoOutput | null | { erro: string }> {

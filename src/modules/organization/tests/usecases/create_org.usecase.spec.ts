@@ -9,11 +9,16 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
+    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
 import { faker } from '@faker-js/faker';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
@@ -93,6 +98,7 @@ describe('Create Org UseCase', () => {
             validateHash: jest.fn(),
             generateHash: jest.fn(),
             getCepAddressInformations: jest.fn(),
+            getLatAndLongFromAddress: jest.fn(),
           },
         },
         {
@@ -182,7 +188,12 @@ describe('Create Org UseCase', () => {
       ddd: faker.string.numeric(2),
       siafi: faker.string.numeric(4),
     });
+    jest.spyOn(utilsService, 'getLatAndLongFromAddress').mockResolvedValue({
+      lat: faker.location.latitude(),
+      lon: faker.location.longitude(),
+    });
     const infos = await orgService.getAddressInformation(data.data.cep);
+    const infosLatLon = await orgService.getLatLongFromAddress(infos!);
     jest.clearAllMocks();
     jest.spyOn(orgService, 'uploadFile').mockResolvedValue(
       createOganizationEntity({
@@ -193,8 +204,8 @@ describe('Create Org UseCase', () => {
         city: infos ? `${infos.localidade}-${infos.uf}` : '',
         neighborhood: infos ? infos.bairro : '',
         street: infos ? infos.logradouro : '',
-        lat: 0,
-        long: 0,
+        lat: infosLatLon?.lat || 0,
+        long: infosLatLon?.lon || 0,
       }),
     );
 
@@ -209,6 +220,8 @@ describe('Create Org UseCase', () => {
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
     expect(newOrg).toBeInstanceOf(Organization);
+    expect(newOrg.lat).toBe(infosLatLon?.lat);
+    expect(newOrg.long).toBe(infosLatLon?.lon);
     expect(newOrg.owner_id).toBe(owner_id);
     expect(orgService.uploadFile).toHaveBeenCalledTimes(0);
   });
@@ -305,5 +318,49 @@ describe('Create Org UseCase', () => {
     expect(newOrg.owner_id).toBe(owner_id);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(0);
     expect(orgService.uploadFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('Should throw an error if the CEP is invalid', async () => {
+    // Arrange
+    const data: CreateOrganizationParams = {
+      owner_id,
+      data: {
+        name: org1Name,
+        email: org1Email,
+        description: faker.lorem.paragraph(),
+        location_code: locationCode,
+        open_hour: openHour,
+        close_hour: closeHour,
+        cep: faker.location.zipCode(),
+      },
+    };
+    jest.spyOn(utilsService, 'generateHash').mockResolvedValue('hash_password');
+    jest
+      .spyOn(utilsService, 'getCepAddressInformations')
+      .mockResolvedValue(null);
+    jest
+      .spyOn(utilsService, 'getLatAndLongFromAddress')
+      .mockResolvedValue(undefined);
+    const infos = await orgService.getAddressInformation(data.data.cep);
+    const infosLatLon = await orgService.getLatLongFromAddress(infos!);
+    jest.clearAllMocks();
+    jest.spyOn(orgService, 'uploadFile').mockResolvedValue(
+      createOganizationEntity({
+        ...data.data,
+        close_hour: Number(data.data.close_hour),
+        open_hour: Number(data.data.open_hour),
+        owner_id,
+        city: infos ? `${infos.localidade}-${infos.uf}` : '',
+        neighborhood: infos ? infos.bairro : '',
+        street: infos ? infos.logradouro : '',
+        lat: infosLatLon?.lat || 0,
+        long: infosLatLon?.lon || 0,
+      }),
+    );
+
+    //Assert
+    await expect(createOrgUseCase.execute(data)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

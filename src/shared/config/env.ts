@@ -40,6 +40,10 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
+  OPEN_STREET_MAP_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
   NODE_ENV: 'DEV' | 'PROD';
 }
 
@@ -52,6 +56,7 @@ export const env = plainToInstance(Env, {
   CDN_URL: process.env.CDN_URL,
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
   BUCKET_NAME: process.env.BUCKET_NAME,
+  OPEN_STREET_MAP_URL: process.env.OPEN_STREET_MAP_URL,
 });
 
 const errors = validateSync(env);

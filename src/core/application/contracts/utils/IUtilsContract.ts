@@ -24,4 +24,8 @@ export interface IUtilsContract {
   getCepAddressInformations(
     cep: string,
   ): Promise<GetAddressInfoOutput | null | { erro: string }>;
+
+  getLatAndLongFromAddress(
+    addressInfo: GetAddressInfoOutput,
+  ): Promise<{ lat: number; lon: number } | undefined>;
 }

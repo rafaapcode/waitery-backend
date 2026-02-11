@@ -53,7 +53,9 @@ export class OrganizationService implements IOrganizationContract {
   async getAddressInformation(
     cep: string,
   ): Promise<IOrganizationContract.GetAddressInformationOutput | null> {
-    const address = await this.utilsService.getCepAddressInformations(cep);
+    const address = await this.utilsService.getCepAddressInformations(
+      cep.replace(/\D/g, ''),
+    );
     if (!address) return null;
 
     return 'erro' in address ? null : address;
@@ -62,7 +64,7 @@ export class OrganizationService implements IOrganizationContract {
   verifyCep(
     params: IOrganizationContract.VerifyCepParams,
   ): Promise<IOrganizationContract.VerifyCepOutput> {
-    return this.utilsService.verifyCepService(params);
+    return this.utilsService.verifyCepService(params.replace(/\D/g, ''));
   }
 
   async create(
@@ -121,5 +123,14 @@ export class OrganizationService implements IOrganizationContract {
     const org = await this.orgRepo.verifyOrgByName(params);
     if (!org) return false;
     return true;
+  }
+
+  async getLatLongFromAddress(
+    params: IOrganizationContract.GetAddressInformationOutput,
+  ): Promise<IOrganizationContract.GetLatLongFromAddressOutput> {
+    const address = await this.utilsService.getLatAndLongFromAddress(params);
+    if (!address) return undefined;
+
+    return address;
   }
 }

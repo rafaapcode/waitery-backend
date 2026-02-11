@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -47,6 +48,18 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
         'CreateOrganizationUseCase',
         `Address information not found for CEP: ${data.cep}`,
       );
+      throw new BadRequestException('Invalid CEP provided');
+    }
+
+    const latLong = await this.orgService.getLatLongFromAddress(
+      getAddressInformation,
+    );
+
+    if (!latLong) {
+      this.observabilityService.warn(
+        'CreateOrganizationUseCase',
+        `Lat and Long of address was not found: ${data.cep}`,
+      );
     }
 
     const organization = createOganizationEntity({
@@ -59,8 +72,8 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
         : '',
       neighborhood: getAddressInformation ? getAddressInformation.bairro : '',
       street: getAddressInformation ? getAddressInformation.logradouro : '',
-      lat: 0,
-      long: 0,
+      lat: latLong?.lat || 0,
+      long: latLong?.lon || 0,
     });
 
     const [org, owner] = await Promise.all([

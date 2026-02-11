@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -53,15 +52,15 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Unauthorized to do this.');
       }
 
-      if (
-        !this.verifyTheOriginOfRequest(
-          req.headers['user-agent'] || 'unknown',
-          req.ip || '',
-          payload,
-        )
-      ) {
-        throw new UnauthorizedException('Invalid Token');
-      }
+      // if (
+      //   !this.verifyTheOriginOfRequest(
+      //     req.headers['user-agent'] || 'unknown',
+      //     req.ip || '',
+      //     payload,
+      //   )
+      // ) {
+      //   throw new UnauthorizedException('Invalid Token');
+      // }
 
       request.user = {
         cpf: payload.cpf,

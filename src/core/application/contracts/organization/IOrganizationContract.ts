@@ -38,6 +38,10 @@ export interface IOrganizationContract {
     params: string,
   ): Promise<IOrganizationContract.GetAddressInformationOutput | null>;
 
+  getLatLongFromAddress(
+    params: IOrganizationContract.GetAddressInformationOutput,
+  ): Promise<IOrganizationContract.GetLatLongFromAddressOutput>;
+
   uploadFile(
     params: IOrganizationContract.UploadFileParams,
   ): Promise<IOrganizationContract.UploadFileOutput>;
@@ -137,4 +141,8 @@ export namespace IOrganizationContract {
     key: string;
   };
   export type DeleteFileOutput = boolean;
+
+  export type GetLatLongFromAddressOutput =
+    | { lat: number; lon: number }
+    | undefined;
 }

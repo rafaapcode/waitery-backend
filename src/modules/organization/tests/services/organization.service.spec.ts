@@ -88,6 +88,7 @@ describe('OrganizationService', () => {
             validateHash: jest.fn(),
             generateHash: jest.fn(),
             getCepAddressInformations: jest.fn(),
+            getLatAndLongFromAddress: jest.fn(),
           },
         },
         {
@@ -477,6 +478,72 @@ describe('OrganizationService', () => {
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
     expect(result).toBeNull();
+  });
+
+  it('Should return informations about the Latitude and Longitude', async () => {
+    // Arrange
+    const addressInfo = {
+      cep: faker.location.zipCode(),
+      logradouro: faker.location.street(),
+      complemento: '',
+      unidade: '',
+      bairro: faker.location.streetAddress(),
+      localidade: cityName,
+      uf: stateAbbr,
+      estado: stateName,
+      regiao: regionName,
+      ibge: faker.string.numeric(7),
+      gia: faker.string.numeric(4),
+      ddd: faker.string.numeric(2),
+      siafi: faker.string.numeric(4),
+    };
+    jest.spyOn(utilsService, 'getLatAndLongFromAddress').mockResolvedValue({
+      lat: faker.location.latitude(),
+      lon: faker.location.longitude(),
+    });
+
+    // Act
+    const result = await orgService.getLatLongFromAddress(addressInfo);
+
+    // Assert
+    expect(utilsService.getLatAndLongFromAddress).toHaveBeenCalledTimes(1);
+    expect(utilsService.getLatAndLongFromAddress).toHaveBeenCalledWith(
+      addressInfo,
+    );
+    expect(result).toHaveProperty('lat');
+    expect(result).toHaveProperty('lon');
+  });
+
+  it('Should return undefined the Latitude and Longitude if the address is invalid', async () => {
+    // Arrange
+    const addressInfo = {
+      cep: faker.location.zipCode(),
+      logradouro: faker.location.street(),
+      complemento: '',
+      unidade: '',
+      bairro: faker.location.streetAddress(),
+      localidade: cityName,
+      uf: stateAbbr,
+      estado: stateName,
+      regiao: regionName,
+      ibge: faker.string.numeric(7),
+      gia: faker.string.numeric(4),
+      ddd: faker.string.numeric(2),
+      siafi: faker.string.numeric(4),
+    };
+    jest
+      .spyOn(utilsService, 'getLatAndLongFromAddress')
+      .mockResolvedValue(undefined);
+
+    // Act
+    const result = await orgService.getLatLongFromAddress(addressInfo);
+
+    // Assert
+    expect(utilsService.getLatAndLongFromAddress).toHaveBeenCalledTimes(1);
+    expect(utilsService.getLatAndLongFromAddress).toHaveBeenCalledWith(
+      addressInfo,
+    );
+    expect(result).toBeUndefined();
   });
 
   it('Should upload a file', async () => {
