@@ -444,7 +444,7 @@ describe('OrganizationService', () => {
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
       cep.replace(/\D+/g, ''),
     );
-    expect(result).toHaveProperty('cep', cep.replace(/\D+/g, ''));
+    expect(result).toHaveProperty('cep', cep);
     expect(result).toHaveProperty('localidade', cityName);
     expect(result).toHaveProperty('uf', stateAbbr);
   });
