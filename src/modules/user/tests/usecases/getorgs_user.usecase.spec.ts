@@ -11,6 +11,7 @@ jest.mock('src/shared/config/env', () => ({
     OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
+
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';

@@ -441,8 +441,10 @@ describe('OrganizationService', () => {
 
     // Assert
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
-    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
-    expect(result).toHaveProperty('cep', cep);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
+      cep.replace(/\D+/g, ''),
+    );
+    expect(result).toHaveProperty('cep', cep.replace(/\D+/g, ''));
     expect(result).toHaveProperty('localidade', cityName);
     expect(result).toHaveProperty('uf', stateAbbr);
   });
@@ -479,7 +481,9 @@ describe('OrganizationService', () => {
 
     // Assert
     expect(utilsService.getCepAddressInformations).toHaveBeenCalledTimes(1);
-    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(cep);
+    expect(utilsService.getCepAddressInformations).toHaveBeenCalledWith(
+      cep.replace(/\D+/g, ''),
+    );
     expect(result).toBeNull();
   });
 
