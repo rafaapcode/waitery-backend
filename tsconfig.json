@@ -11,7 +11,7 @@
     "outDir": "./dist",
     "rootDir": "src",
     "baseUrl": "./",
-    "incremental": true,
+    "incremental": false,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
@@ -23,6 +23,7 @@
     // Set `sourceRoot` to  "/" to strip the build path prefix
     // from generated source code references.
     // This improves issue grouping in Sentry.
-    "sourceRoot": "/"
+    "sourceRoot": "/",
+    "types": ["jest", "multer"],
   }
 }
