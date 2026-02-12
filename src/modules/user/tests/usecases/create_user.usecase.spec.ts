@@ -9,15 +9,15 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
 import { faker } from '@faker-js/faker';
 import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
+    BadRequestException,
+    ConflictException,
+    NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
@@ -29,10 +29,10 @@ import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-  IORGANIZATION_CONTRACT,
-  ISTORAGE_SERVICE,
-  IUSER_CONTRACT,
-  IUTILS_SERVICE,
+    IORGANIZATION_CONTRACT,
+    ISTORAGE_SERVICE,
+    IUSER_CONTRACT,
+    IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

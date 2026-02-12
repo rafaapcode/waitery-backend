@@ -8,7 +8,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -24,9 +24,9 @@ import { PrismaService } from 'src/infra/database/database.service';
 import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { UserRepo } from 'src/modules/user/repo/user.repository';
 import {
-  IORGANIZATION_CONTRACT,
-  ISTORAGE_SERVICE,
-  IUTILS_SERVICE,
+    IORGANIZATION_CONTRACT,
+    ISTORAGE_SERVICE,
+    IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

@@ -9,7 +9,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -22,9 +22,9 @@ import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContr
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
-  ISTORAGE_SERVICE,
-  IUSER_CONTRACT,
-  IUTILS_SERVICE,
+    ISTORAGE_SERVICE,
+    IUSER_CONTRACT,
+    IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

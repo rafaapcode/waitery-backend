@@ -1,3 +1,4 @@
+import { Client } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
 import { compare, genSalt, hash } from 'bcryptjs';
 import cep from 'cep-promise';
@@ -14,19 +15,27 @@ export class UtilsService implements IUtilsContract {
     addressInfo: GetAddressInfoOutput,
   ): Promise<{ lat: number; lon: number } | undefined> {
     try {
-      const address = `${addressInfo.logradouro}, ${addressInfo.bairro}, ${addressInfo.localidade} - ${addressInfo.uf}, ${addressInfo.cep}, Brazil`;
-      const res = await request(
-        `${env.OPEN_STREET_MAP_URL}?q=${address}&format=json&limit=1`,
-      );
+      const googleClient = new Client({});
+      const address = `${addressInfo.logradouro}, ${addressInfo.bairro}, ${addressInfo.localidade} - ${addressInfo.uf}, ${addressInfo.cep}`;
 
-      const data = (await res.body.json()) as { lat: string; lon: string }[];
+      const response = await googleClient.geocode({
+        params: {
+          address: address,
+          key: env.GOOGLE_MAPS_API_KEY,
+          language: 'pt-BR',
+          region: 'BR',
+        },
+      });
 
-      if (data.length === 0) {
+      if (response.data.results.length === 0) {
         return undefined;
       }
 
-      const { lat, lon } = data[0];
-      return { lat: parseFloat(lat), lon: parseFloat(lon) };
+      const location = response.data.results[0].geometry.location;
+      return {
+        lat: location.lat,
+        lon: location.lng,
+      };
     } catch (error) {
       console.log('Error fetching geolocation:', error);
       return undefined;

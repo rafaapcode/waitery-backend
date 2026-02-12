@@ -9,7 +9,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -325,7 +325,7 @@ describe('Create Org UseCase', () => {
     const data: CreateOrganizationParams = {
       owner_id,
       data: {
-        name: org1Name,
+        name: `org1Name-teste1`,
         email: org1Email,
         description: faker.lorem.paragraph(),
         location_code: locationCode,

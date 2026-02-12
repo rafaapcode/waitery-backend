@@ -9,7 +9,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -18,8 +18,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import {
-  Category,
-  createCategoryEntity,
+    Category,
+    createCategoryEntity,
 } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';

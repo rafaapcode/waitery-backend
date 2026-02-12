@@ -9,7 +9,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -33,12 +33,12 @@ import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.rep
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-  ICATEGORY_CONTRACT,
-  IINGREDIENT_CONTRACT,
-  IORGANIZATION_CONTRACT,
-  IPRODUCT_CONTRACT,
-  ISTORAGE_SERVICE,
-  IUTILS_SERVICE,
+    ICATEGORY_CONTRACT,
+    IINGREDIENT_CONTRACT,
+    IORGANIZATION_CONTRACT,
+    IPRODUCT_CONTRACT,
+    ISTORAGE_SERVICE,
+    IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

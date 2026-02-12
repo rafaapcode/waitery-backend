@@ -39,6 +39,24 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     owner_id,
     image_file,
   }: CreateOrganizationParams): Promise<IOrganizationContract.CreateOutput> {
+    const [org, owner] = await Promise.all([
+      this.orgService.verifyOrgByName({
+        name: data.name,
+        owner_id: owner_id,
+      }),
+      this.userService.get({ id: owner_id }),
+    ]);
+
+    if (!owner) {
+      throw new NotFoundException('Owner not found');
+    }
+
+    if (org) {
+      throw new ConflictException(
+        `Organization with the name '${data.name}' already exist`,
+      );
+    }
+
     const getAddressInformation = await this.orgService.getAddressInformation(
       data.cep,
     );
@@ -75,24 +93,6 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
       lat: latLong?.lat || 0,
       long: latLong?.lon || 0,
     });
-
-    const [org, owner] = await Promise.all([
-      this.orgService.verifyOrgByName({
-        name: organization.name,
-        owner_id: organization.owner_id,
-      }),
-      this.userService.get({ id: organization.owner_id }),
-    ]);
-
-    if (!owner) {
-      throw new NotFoundException('Owner not found');
-    }
-
-    if (org) {
-      throw new ConflictException(
-        `Organization with the name '${organization.name}' already exist`,
-      );
-    }
 
     if (image_file) {
       const organizationWithImageUrl = await this.orgService.uploadFile({

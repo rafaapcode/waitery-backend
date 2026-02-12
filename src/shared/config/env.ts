@@ -40,7 +40,7 @@ class Env {
 
   @IsString()
   @IsNotEmpty()
-  OPEN_STREET_MAP_URL: string;
+  GOOGLE_MAPS_API_KEY: string;
 
   @IsString()
   @IsNotEmpty()
@@ -56,7 +56,7 @@ export const env = plainToInstance(Env, {
   CDN_URL: process.env.CDN_URL,
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
   BUCKET_NAME: process.env.BUCKET_NAME,
-  OPEN_STREET_MAP_URL: process.env.OPEN_STREET_MAP_URL,
+  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
 });
 
 const errors = validateSync(env);

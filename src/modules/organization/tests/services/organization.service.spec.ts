@@ -8,7 +8,7 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
-    OPEN_STREET_MAP_URL: 'https://nominatim_teste.openstreetmap.org/search',
+    GOOGLE_MAPS_API_KEY: 'https://nominatim_teste.openstreetmap.org/search',
   },
 }));
 
@@ -18,8 +18,8 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import {
-  createOganizationEntity,
-  Organization,
+    createOganizationEntity,
+    Organization,
 } from 'src/core/domain/entities/organization';
 import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
