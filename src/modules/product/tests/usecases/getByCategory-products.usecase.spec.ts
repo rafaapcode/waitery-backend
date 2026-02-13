@@ -29,11 +29,11 @@ import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.rep
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    ICATEGORY_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    IPRODUCT_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  ICATEGORY_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

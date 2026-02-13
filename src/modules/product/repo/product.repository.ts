@@ -39,8 +39,8 @@ export class ProductRepository {
     return product;
   }
 
-  async update(data: IProductContract.UpdateParams): Promise<void> {
-    await this.prisma.product.update({
+  async update(data: IProductContract.UpdateParams): Promise<Product | null> {
+    const product = await this.prisma.product.update({
       where: { id: data.id },
       data: {
         ...data.data,
@@ -49,6 +49,7 @@ export class ProductRepository {
         }),
       },
     });
+    return product;
   }
 
   async delete({

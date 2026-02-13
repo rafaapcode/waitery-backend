@@ -219,4 +219,70 @@ export class ProductService implements IProductContract {
 
     return isRelated !== null;
   }
+
+  async addDiscount(
+    params: IProductContract.AddDiscountParams,
+  ): Promise<IProductContract.AddDiscountOutput> {
+    const getProduct = await this.productRepo.get({
+      org_id: params.org_id,
+      product_id: params.product_id,
+    });
+
+    if (!getProduct) {
+      return null;
+    }
+
+    const productUpdated = await this.productRepo.update({
+      id: getProduct?.id || '',
+      data: {
+        discount: true,
+        discounted_price: params.discounted_price,
+      },
+    });
+
+    return createProductEntity({
+      ...getProduct,
+      discount: productUpdated?.discount || getProduct.discount,
+      discounted_price:
+        productUpdated?.discounted_price || getProduct.discounted_price,
+      ingredients: Product.toCategoryIngredients(
+        getProduct.ingredients as Prisma.JsonArray,
+      ),
+      category: createCategoryEntity({
+        ...getProduct.category,
+      }),
+    });
+  }
+  async removeDiscount(
+    params: IProductContract.RemoveDiscountParams,
+  ): Promise<IProductContract.RemoveDiscountOutput> {
+    const getProduct = await this.productRepo.get({
+      org_id: params.org_id,
+      product_id: params.product_id,
+    });
+
+    if (!getProduct) {
+      return null;
+    }
+
+    const productUpdated = await this.productRepo.update({
+      id: getProduct?.id || '',
+      data: {
+        discount: false,
+        discounted_price: 0,
+      },
+    });
+
+    return createProductEntity({
+      ...getProduct,
+      discount: productUpdated?.discount || false,
+      discounted_price: productUpdated?.discounted_price || 0,
+      ingredients: Product.toCategoryIngredients(
+        getProduct.ingredients as Prisma.JsonArray,
+      ),
+      category: createCategoryEntity({
+        ...getProduct.category,
+      }),
+    });
+  }
 }

@@ -13,7 +13,6 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
-import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
@@ -36,13 +35,12 @@ import {
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
-import { UpdateProductDto } from '../../dto/update-product.dto';
 import { ProductService } from '../../product.service';
 import { ProductRepository } from '../../repo/product.repository';
-import { UpdateProductUseCase } from '../../usecases/UpdateProductUseCase';
+import { AddDiscountToProductUseCase } from '../../usecases/AddDiscountToProductUseCase';
 
-describe('Update Product Usecase', () => {
-  let updateProductUseCase: UpdateProductUseCase;
+describe('Add Discount to a Product Usecase', () => {
+  let addDiscountUseCase: AddDiscountToProductUseCase;
   let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let orgService: IOrganizationContract;
@@ -55,7 +53,6 @@ describe('Update Product Usecase', () => {
   let prismaService: PrismaService;
   let factoriesService: FactoriesService;
   let org_id: string;
-  let org_id2: string;
   let user_id: string;
   let cat_id: string;
   let prod_id: string;
@@ -65,7 +62,7 @@ describe('Update Product Usecase', () => {
     const modules: TestingModule = await Test.createTestingModule({
       imports: [FactoriesModule],
       providers: [
-        UpdateProductUseCase,
+        AddDiscountToProductUseCase,
         ProductRepository,
         IngredientRepository,
         OrganizationRepo,
@@ -102,8 +99,9 @@ describe('Update Product Usecase', () => {
       ],
     }).compile();
 
-    updateProductUseCase =
-      modules.get<UpdateProductUseCase>(UpdateProductUseCase);
+    addDiscountUseCase = modules.get<AddDiscountToProductUseCase>(
+      AddDiscountToProductUseCase,
+    );
     productService = modules.get<ProductService>(IPRODUCT_CONTRACT);
     productRepo = modules.get<ProductRepository>(ProductRepository);
     orgService = modules.get<IOrganizationContract>(IORGANIZATION_CONTRACT);
@@ -118,10 +116,6 @@ describe('Update Product Usecase', () => {
       modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
-
-    const org2 = await factoriesService.generateOrganizationWithOwner(
-      org.organization.id,
-    );
 
     const cat = await factoriesService.generateCategoryInfo(
       org.organization.id,
@@ -141,7 +135,6 @@ describe('Update Product Usecase', () => {
     user_id = org.owner.id;
     prod_id = prod.id;
     ing_ids = [ing1.id, ing2.id];
-    org_id2 = org2.organization.id;
   });
 
   afterAll(async () => {
@@ -153,7 +146,7 @@ describe('Update Product Usecase', () => {
   });
 
   it('Should all services be defined', () => {
-    expect(updateProductUseCase).toBeDefined();
+    expect(addDiscountUseCase).toBeDefined();
     expect(productService).toBeDefined();
     expect(productRepo).toBeDefined();
     expect(orgService).toBeDefined();
@@ -162,7 +155,6 @@ describe('Update Product Usecase', () => {
     expect(ingRepo).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(org_id).toBeDefined();
-    expect(org_id2).toBeDefined();
     expect(cat_id).toBeDefined();
     expect(user_id).toBeDefined();
     expect(prod_id).toBeDefined();
@@ -173,95 +165,26 @@ describe('Update Product Usecase', () => {
     expect(observabilityService).toBeDefined();
   });
 
-  it('Should not be able to update a product if organization does not exist', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: faker.commerce.productName(),
-      price: faker.number.int({ min: 50, max: 500 }),
-    };
-    // Assert
+  it('Should throw NotFoundException if organization does not exist', async () => {
     await expect(
-      updateProductUseCase.execute(faker.string.uuid(), prod_id, data),
+      addDiscountUseCase.execute('non-existing-org-id', prod_id, 9.99),
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('Should not be able to update a product if product does not exist', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: faker.commerce.productName(),
-      price: faker.number.int({ min: 50, max: 500 }),
-    };
-
-    // Assert
+  it('Should throw NotFoundException if product does not exist', async () => {
     await expect(
-      updateProductUseCase.execute(org_id, faker.string.uuid(), data),
+      addDiscountUseCase.execute(org_id, 'non-existing-prod-id', 9.99),
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('Should not be able to update a product if product is not related with the org', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: faker.commerce.productName(),
-      price: faker.number.int({ min: 50, max: 500 }),
-    };
-
-    // Assert
-    await expect(
-      updateProductUseCase.execute(org_id2, prod_id, data),
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('Should  be able to update a product', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: faker.commerce.productName(),
-      price: faker.number.int({ min: 200, max: 600 }),
-    };
-    const old_product = await prismaService.product.findUnique({
-      where: { id: prod_id },
+  it('Should add a discount to a product', async () => {
+    const discountedPrice = 9.99;
+    await addDiscountUseCase.execute(org_id, prod_id, discountedPrice);
+    const updatedProduct = await productService.get({
+      product_id: prod_id,
+      org_id,
     });
-
-    // Act
-    await updateProductUseCase.execute(org_id, prod_id, data);
-
-    const new_product = await prismaService.product.findUnique({
-      where: { id: prod_id },
-    });
-
-    // Assert
-    expect(old_product).toBeDefined();
-    expect(new_product).toBeDefined();
-    expect(old_product!.id).toEqual(new_product!.id);
-    expect(old_product!.name).not.toEqual(new_product!.name);
-    expect(old_product!.price).not.toEqual(new_product!.price);
-    expect(new_product!.name).toEqual(data.name);
-    expect(new_product!.price).toEqual(data.price);
-    expect(new_product!.discount).toBeFalsy();
-    expect(old_product!.ingredients).toEqual(new_product!.ingredients);
-  });
-
-  it('Should  be able to update a product with new ingredients', async () => {
-    // Arrange
-    const data: UpdateProductDto = {
-      name: faker.commerce.productName(),
-      ingredients: ing_ids,
-    };
-    const old_product = await prismaService.product.findUnique({
-      where: { id: prod_id },
-    });
-
-    // Act
-    await updateProductUseCase.execute(org_id, prod_id, data);
-
-    const new_product = await prismaService.product.findUnique({
-      where: { id: prod_id },
-    });
-
-    // Assert
-    expect(old_product).toBeDefined();
-    expect(new_product).toBeDefined();
-    expect(old_product!.id).toEqual(new_product!.id);
-    expect(old_product!.name).not.toEqual(new_product!.name);
-    expect(old_product!.ingredients).not.toEqual(new_product!.ingredients);
+    expect(updatedProduct?.discounted_price).toBe(discountedPrice);
+    expect(updatedProduct?.discount).toBeTruthy();
   });
 });

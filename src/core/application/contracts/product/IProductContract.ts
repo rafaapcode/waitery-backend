@@ -45,6 +45,14 @@ export interface IProductContract {
   deleteFile(
     params: IProductContract.DeleteFileParams,
   ): Promise<IProductContract.DeleteFileOutput>;
+
+  addDiscount(
+    params: IProductContract.AddDiscountParams,
+  ): Promise<IProductContract.AddDiscountOutput>;
+
+  removeDiscount(
+    params: IProductContract.RemoveDiscountParams,
+  ): Promise<IProductContract.RemoveDiscountOutput>;
 }
 
 export namespace IProductContract {
@@ -134,4 +142,17 @@ export namespace IProductContract {
     key: string;
   };
   export type DeleteFileOutput = boolean;
+
+  export type AddDiscountParams = {
+    product_id: string;
+    org_id: string;
+    discounted_price: number;
+  };
+  export type AddDiscountOutput = Product | null;
+
+  export type RemoveDiscountParams = {
+    product_id: string;
+    org_id: string;
+  };
+  export type RemoveDiscountOutput = Product | null;
 }

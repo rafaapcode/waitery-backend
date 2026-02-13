@@ -18,8 +18,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import {
-    Category,
-    createCategoryEntity,
+  Category,
+  createCategoryEntity,
 } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { UserRole } from 'src/core/domain/entities/user';
@@ -146,7 +146,7 @@ describe('Products Service', () => {
         image_url: 'http://locaho',
       },
     };
-    jest.spyOn(prodcutRepo, 'update').mockResolvedValue();
+    jest.spyOn(prodcutRepo, 'update').mockResolvedValue(null);
 
     // Act
     await productService.update(data);
@@ -549,5 +549,96 @@ describe('Products Service', () => {
       key: filekey,
     });
     expect(result).toBeFalsy();
+  });
+
+  it('Should add a discounted price to a product', async () => {
+    // Arrange
+    jest.spyOn(prodcutRepo, 'get').mockResolvedValue({
+      description: 'description',
+      discount: false,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 0,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+      category: {
+        icon: '💪',
+        name: 'nam,e',
+        org_id: 'org_id',
+        id: '123123',
+      },
+    });
+    jest.spyOn(prodcutRepo, 'update').mockResolvedValue({
+      description: 'description',
+      discount: true,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 10,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+    });
+
+    // Act
+    const productWithDiscount = await productService.addDiscount({
+      product_id: 'product.id',
+      org_id: 'org_id',
+      discounted_price: 10,
+    });
+
+    // Assert
+    expect(productWithDiscount).toBeInstanceOf(Product);
+    expect(productWithDiscount?.discounted_price).toBe(10);
+    expect(productWithDiscount?.discount).toBeTruthy();
+  });
+
+  it('Should remove a discounted price from a product', async () => {
+    // Arrange
+    jest.spyOn(prodcutRepo, 'get').mockResolvedValue({
+      description: 'description',
+      discount: true,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 10,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+      category: {
+        icon: '💪',
+        name: 'nam,e',
+        org_id: 'org_id',
+        id: '123123',
+      },
+    });
+    jest.spyOn(prodcutRepo, 'update').mockResolvedValue({
+      description: 'description',
+      discount: false,
+      image_url: 'http://locaho',
+      ingredients: [],
+      name: 'Produto 1',
+      org_id: 'org_id',
+      price: 12,
+      discounted_price: 0,
+      category_id: 'cateory_id1231',
+      id: '12312313',
+    });
+
+    // Act
+    const productWithoutDiscount = await productService.removeDiscount({
+      product_id: 'product.id',
+      org_id: 'org_id',
+    });
+
+    // Assert
+    expect(productWithoutDiscount).toBeInstanceOf(Product);
+    expect(productWithoutDiscount?.discounted_price).toBe(0);
+    expect(productWithoutDiscount?.discount).toBeFalsy();
   });
 });
