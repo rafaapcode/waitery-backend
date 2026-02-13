@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   UploadedFile,
@@ -18,13 +19,16 @@ import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
+import { AddDiscountToProductDto } from './dto/add-discount-to-product.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AddDiscountToProductUseCase } from './usecases/AddDiscountToProductUseCase';
 import { CreateProductUseCase } from './usecases/CreateProductUseCase';
 import { DeleteProductUseCase } from './usecases/DeleteProductUseCase';
 import { GetAllProductUseCase } from './usecases/GetAllProductsUseCase';
 import { GetProductByCategoryUseCase } from './usecases/GetProductByCategoryUseCase';
 import { GetProductUseCase } from './usecases/GetProductUseCase';
+import { RemoveDiscountToProductUseCase } from './usecases/RemoveDiscountToProductUseCase';
 import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
 
 @Controller('products')
@@ -36,6 +40,8 @@ export class ProductController {
     private readonly getAllProductsProductUseCase: GetAllProductUseCase,
     private readonly GetProductProductUseCase: GetProductUseCase,
     private readonly getProductByCategoryProductUseCase: GetProductByCategoryUseCase,
+    private readonly addDiscountToProductUseCase: AddDiscountToProductUseCase,
+    private readonly removeDiscountToProductUseCase: RemoveDiscountToProductUseCase,
   ) {}
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
@@ -83,6 +89,33 @@ export class ProductController {
       me.role as UserRole,
     );
     return { message: 'Product deleted successfully' };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Patch('discount/add/:product_id')
+  @UseInterceptors(FileInterceptor('image'))
+  async add_discount(
+    @GetOrgId() org_id: string,
+    @Param('product_id', ParseULIDPipe) product_id: string,
+    @Body() data: AddDiscountToProductDto,
+  ) {
+    await this.addDiscountToProductUseCase.execute(
+      org_id,
+      product_id,
+      data.discounted_price,
+    );
+    return { message: 'Discount added successfully' };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Patch('discount/remove/:product_id')
+  @UseInterceptors(FileInterceptor('image'))
+  async remove_discount(
+    @GetOrgId() org_id: string,
+    @Param('product_id', ParseULIDPipe) product_id: string,
+  ) {
+    await this.removeDiscountToProductUseCase.execute(org_id, product_id);
+    return { message: 'Discount removed successfully' };
   }
 
   @Get('all/:page')

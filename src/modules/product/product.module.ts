@@ -21,11 +21,13 @@ import { OrganizationRepo } from '../organization/repo/organization.repo';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { ProductRepository } from './repo/product.repository';
+import { AddDiscountToProductUseCase } from './usecases/AddDiscountToProductUseCase';
 import { CreateProductUseCase } from './usecases/CreateProductUseCase';
 import { DeleteProductUseCase } from './usecases/DeleteProductUseCase';
 import { GetAllProductUseCase } from './usecases/GetAllProductsUseCase';
 import { GetProductByCategoryUseCase } from './usecases/GetProductByCategoryUseCase';
 import { GetProductUseCase } from './usecases/GetProductUseCase';
+import { RemoveDiscountToProductUseCase } from './usecases/RemoveDiscountToProductUseCase';
 import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
 
 @Module({
@@ -42,6 +44,8 @@ import { UpdateProductUseCase } from './usecases/UpdateProductUseCase';
     GetAllProductUseCase,
     GetProductByCategoryUseCase,
     GetProductUseCase,
+    AddDiscountToProductUseCase,
+    RemoveDiscountToProductUseCase,
     {
       provide: IPRODUCT_CONTRACT,
       useClass: ProductService,
