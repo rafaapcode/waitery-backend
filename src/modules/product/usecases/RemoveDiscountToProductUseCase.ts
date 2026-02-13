@@ -6,7 +6,7 @@ import {
   IPRODUCT_CONTRACT,
 } from 'src/shared/constants';
 
-interface IAddDiscountToAProductUseCase {
+interface IRemoveDiscountToAProductUseCase {
   execute(
     org_id: string,
     product_id: string,
@@ -15,7 +15,7 @@ interface IAddDiscountToAProductUseCase {
 }
 
 @Injectable()
-export class AddDiscountToProductUseCase implements IAddDiscountToAProductUseCase {
+export class RemoveDiscountToProductUseCase implements IRemoveDiscountToAProductUseCase {
   constructor(
     @Inject(IPRODUCT_CONTRACT)
     private readonly prodService: IProductContract,
@@ -23,11 +23,7 @@ export class AddDiscountToProductUseCase implements IAddDiscountToAProductUseCas
     private readonly orgService: IOrganizationContract,
   ) {}
 
-  async execute(
-    org_id: string,
-    product_id: string,
-    discounted_price: number,
-  ): Promise<void> {
+  async execute(org_id: string, product_id: string): Promise<void> {
     const orgExists = await this.orgService.get({ id: org_id });
 
     if (!orgExists) throw new NotFoundException('Organization not found');
@@ -38,11 +34,5 @@ export class AddDiscountToProductUseCase implements IAddDiscountToAProductUseCas
     });
 
     if (!productExists) throw new NotFoundException('Product not found');
-
-    await this.prodService.addDiscount({
-      discounted_price,
-      org_id,
-      product_id,
-    });
   }
 }
