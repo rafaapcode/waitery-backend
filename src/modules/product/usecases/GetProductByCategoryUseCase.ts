@@ -21,9 +21,7 @@ interface IGetProductByCategoryUseCase {
 }
 
 @Injectable()
-export class GetProductByCategoryUseCase
-  implements IGetProductByCategoryUseCase
-{
+export class GetProductByCategoryUseCase implements IGetProductByCategoryUseCase {
   constructor(
     @Inject(IPRODUCT_CONTRACT)
     private readonly prodService: IProductContract,

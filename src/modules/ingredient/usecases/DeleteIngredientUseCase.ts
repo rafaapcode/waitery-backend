@@ -15,7 +15,7 @@ export class DeleteIngredientUseCase implements IDeleteIngredientUseCase {
 
   async execute(id: string): Promise<void> {
     const ingExists = await this.ingContract.get(id);
-    if (!ingExists) throw new NotFoundException('Ingredientdoes not exists');
+    if (!ingExists) throw new NotFoundException('Ingredient does not exist');
     await this.ingContract.delete(id);
   }
 }

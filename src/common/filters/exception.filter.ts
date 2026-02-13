@@ -9,9 +9,9 @@ import { ObservabilityService } from 'src/infra/observability/observability.serv
 import { env } from 'src/shared/config/env';
 
 @Catch(HttpException)
-export class ExceptionFilterWithSentry<T extends HttpException>
-  implements ExceptionFilter
-{
+export class ExceptionFilterWithSentry<
+  T extends HttpException,
+> implements ExceptionFilter {
   constructor(private readonly observabilityService: ObservabilityService) {}
 
   catch(exception: T, host: ArgumentsHost) {

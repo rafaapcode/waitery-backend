@@ -64,7 +64,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     if (!getAddressInformation || 'erro' in getAddressInformation) {
       this.observabilityService.warn(
         'CreateOrganizationUseCase',
-        `Address information not found for CEP: ${data.cep}`,
+        `Address information not found for CEP`,
       );
       throw new BadRequestException('Invalid CEP provided');
     }
@@ -76,7 +76,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     if (!latLong) {
       this.observabilityService.warn(
         'CreateOrganizationUseCase',
-        `Lat and Long of address was not found: ${data.cep}`,
+        `Lat and Long of address was not found`,
       );
     }
 
