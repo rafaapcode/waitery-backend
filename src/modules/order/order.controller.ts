@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,17 +13,22 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
 import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
+import { OrderStatus } from 'src/core/domain/entities/order';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { FiltersOrdersDto } from './dto/filters-orders.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { CancelOrderUseCase } from './usecases/CancelOrderUseCase';
 import { CreateOrderUseCase } from './usecases/CreateOrderUseCase';
 import { DeleteOrderUseCase } from './usecases/DeleteOrderUseCase';
+import { GetAllFilteredOrdersOfOrgUseCase } from './usecases/GetAllFilteredOrdersUseCase';
 import { GetAllOrdersOfTodayUseCase } from './usecases/GetAllOrdersOfTodayUseCase';
 import { GetAllOrdersOfOrgUseCase } from './usecases/GetAllOrdersUseCase';
 import { GetMyOrderUseCase } from './usecases/GetMyOrdersUseCase';
@@ -44,6 +50,7 @@ export class OrderController {
     private readonly getOrderUseCase: GetOrderUseCase,
     private readonly updateOrderStatusUseCase: UpdateOrderStatusUseCase,
     private readonly restartOrdersOfDayUseCase: RestartOrdersOfDayUseCase,
+    private readonly getAllOrdersFilteredUseCase: GetAllFilteredOrdersOfOrgUseCase,
   ) {}
 
   @Post()
@@ -94,6 +101,29 @@ export class OrderController {
         canceled_orders,
       },
     );
+  }
+
+  @Get('get-all/filtered')
+  @HttpCode(HttpStatus.OK)
+  async getAllFilteredOrders(
+    @GetOrgId() org_id: string,
+    @Query('filters') filters?: { status?: OrderStatus; table?: string },
+    @Query('page', ParseIntPipe) page?: number,
+  ) {
+    if (filters) {
+      const errorsValidationFilter = await validate(
+        plainToInstance(FiltersOrdersDto, filters),
+      );
+      if (errorsValidationFilter.length > 0) {
+        throw new BadRequestException('Invalid filters');
+      }
+    }
+
+    return this.getAllOrdersFilteredUseCase.execute({
+      org_id,
+      filters,
+      page,
+    });
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

@@ -20,7 +20,7 @@ import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSC
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
-import { Order } from 'src/core/domain/entities/order';
+import { Order, OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
@@ -35,10 +35,10 @@ import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
 import { OrderService } from '../../order.service';
 import { OrderRepository } from '../../repo/order.repository';
-import { GetAllOrdersOfOrgUseCase } from '../../usecases/GetAllOrdersUseCase';
+import { GetAllFilteredOrdersOfOrgUseCase } from '../../usecases/GetAllFilteredOrdersUseCase';
 
-describe('Get All Orders UseCase', () => {
-  let getAllOrdersUseCase: GetAllOrdersOfOrgUseCase;
+describe('Get All Filtered Orders UseCase', () => {
+  let getAllFilteredOrdersUseCase: GetAllFilteredOrdersOfOrgUseCase;
   let orderService: IOrderContract;
   let storageService: IStorageGw;
   let orderRepo: OrderRepository;
@@ -57,7 +57,7 @@ describe('Get All Orders UseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [FactoriesModule],
       providers: [
-        GetAllOrdersOfOrgUseCase,
+        GetAllFilteredOrdersOfOrgUseCase,
         PrismaService,
         OrderRepository,
         OrganizationRepo,
@@ -94,8 +94,8 @@ describe('Get All Orders UseCase', () => {
       ],
     }).compile();
 
-    getAllOrdersUseCase = module.get<GetAllOrdersOfOrgUseCase>(
-      GetAllOrdersOfOrgUseCase,
+    getAllFilteredOrdersUseCase = module.get<GetAllFilteredOrdersOfOrgUseCase>(
+      GetAllFilteredOrdersOfOrgUseCase,
     );
     prismaService = module.get<PrismaService>(PrismaService);
     orderService = module.get<IOrderContract>(IORDER_CONTRACT);
@@ -127,7 +127,7 @@ describe('Get All Orders UseCase', () => {
   });
 
   it('Should all services be defined', () => {
-    expect(getAllOrdersUseCase).toBeDefined();
+    expect(getAllFilteredOrdersUseCase).toBeDefined();
     expect(orderService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(orderRepo).toBeDefined();
@@ -140,9 +140,35 @@ describe('Get All Orders UseCase', () => {
     expect(storageService).toBeDefined();
   });
 
+  it('Should get all orders with 25 orders in the first page if the status filtered is WAITING', async () => {
+    // Act
+    const orders = await getAllFilteredOrdersUseCase.execute({
+      org_id,
+      filters: { status: OrderStatus.WAITING },
+    });
+
+    // Assert
+    expect(orders.has_next).toBeTruthy();
+    expect(orders.orders.length).toBe(25);
+    expect(orders.orders[0]).toBeInstanceOf(Order);
+  });
+
+  it('Should get 0 orders if the table filtered by any status except WAITING', async () => {
+    // Act
+    const orders = await getAllFilteredOrdersUseCase.execute({
+      org_id,
+      filters: { status: OrderStatus.CANCELED },
+    });
+
+    // Assert
+    expect(orders.has_next).toBeFalsy();
+    expect(orders.orders.length).toBe(0);
+    expect(orders.orders[0]).toBeUndefined();
+  });
+
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {
     // Act
-    const orders = await getAllOrdersUseCase.execute({
+    const orders = await getAllFilteredOrdersUseCase.execute({
       org_id,
     });
 
@@ -154,7 +180,7 @@ describe('Get All Orders UseCase', () => {
 
   it('Should get all orders with 25 orders in the first page with the page parameter', async () => {
     // Act
-    const orders = await getAllOrdersUseCase.execute({
+    const orders = await getAllFilteredOrdersUseCase.execute({
       org_id,
       page: 0,
     });
@@ -167,10 +193,10 @@ describe('Get All Orders UseCase', () => {
 
   it('Should get all orders with 25 orders in the second page', async () => {
     // Act
-    const orders = await getAllOrdersUseCase.execute({
+    const orders = await getAllFilteredOrdersUseCase.execute({
       org_id,
     });
-    const orders2 = await getAllOrdersUseCase.execute({
+    const orders2 = await getAllFilteredOrdersUseCase.execute({
       org_id,
       page: 1,
     });
@@ -187,11 +213,11 @@ describe('Get All Orders UseCase', () => {
 
   it('Should get all orders with 18 orders in the third page', async () => {
     // Act
-    const orders2 = await getAllOrdersUseCase.execute({
+    const orders2 = await getAllFilteredOrdersUseCase.execute({
       org_id,
       page: 1,
     });
-    const orders3 = await getAllOrdersUseCase.execute({
+    const orders3 = await getAllFilteredOrdersUseCase.execute({
       org_id,
       page: 2,
     });
@@ -208,7 +234,7 @@ describe('Get All Orders UseCase', () => {
 
   it('Should return 0 orders in the Fourth page', async () => {
     // Act
-    const orders = await getAllOrdersUseCase.execute({
+    const orders = await getAllFilteredOrdersUseCase.execute({
       org_id,
       page: 3,
     });
@@ -222,7 +248,7 @@ describe('Get All Orders UseCase', () => {
   it('Should throw an error if the org does not exists', async () => {
     // Asser
     await expect(
-      getAllOrdersUseCase.execute({
+      getAllFilteredOrdersUseCase.execute({
         org_id: fakeOrgId,
       }),
     ).rejects.toThrow(NotFoundException);

@@ -194,4 +194,37 @@ export class OrderService implements IOrderContract {
       ),
     };
   }
+
+  async getAllOrdersFilteredBy(
+    params: IOrderContract.GetAllOrdersFilteredByParams,
+  ): Promise<IOrderContract.GetAllOrdersFilteredByOutput> {
+    const { org_id, page, filters } = params;
+    const LIMIT = 25;
+    const PAGE = page ? (page >= 0 ? page : 0) : 0;
+    const OFFSET = PAGE * LIMIT;
+
+    const orders = await this.orderRepo.getAllOrdersFilteredBy(
+      org_id,
+      OFFSET,
+      LIMIT + 1,
+      filters,
+    );
+    let has_next = false;
+
+    if (orders.length > LIMIT) has_next = true;
+
+    return {
+      has_next,
+      orders: orders.slice(0, LIMIT).map((order) =>
+        createOrderEntity({
+          ...order,
+          status: order.status as OrderStatus,
+          products: Order.productsFromPrismaJson(
+            order.products as Prisma.JsonArray,
+          ),
+          deleted_at: order.deleted_at ?? undefined,
+        }),
+      ),
+    };
+  }
 }

@@ -138,6 +138,25 @@ export class OrderRepository {
     return orders;
   }
 
+  async getAllOrdersFilteredBy(
+    org_id: string,
+    offset: number,
+    limit: number,
+    filters?: { status?: OrderStatus; table?: string },
+  ): Promise<Order[]> {
+    const orders = await this.prismaService.order.findMany({
+      take: limit,
+      skip: offset,
+      where: {
+        org_id,
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.table && { table: filters.table }),
+      },
+    });
+
+    return orders;
+  }
+
   async getAllOrdersOfToday({
     org_id,
     orders_canceled,

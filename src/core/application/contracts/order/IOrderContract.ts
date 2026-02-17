@@ -33,6 +33,9 @@ export interface IOrderContract {
     user_id: IOrderContract.GetOrdersOfUserParams,
   ) => Promise<IOrderContract.GetOrdersOfUserOutput>;
   restartsTheOrdersOfDay: (org_id: string) => Promise<void>;
+  getAllOrdersFilteredBy: (
+    params: IOrderContract.GetAllOrdersFilteredByParams,
+  ) => Promise<IOrderContract.GetAllOrdersFilteredByOutput>;
 }
 
 export namespace IOrderContract {
@@ -93,4 +96,14 @@ export namespace IOrderContract {
     user_id: string;
   };
   export type VerifyUserOrdersOutput = boolean;
+
+  export type GetAllOrdersFilteredByParams = {
+    org_id: string;
+    page?: number;
+    filters?: { status?: OrderStatus; table?: string };
+  };
+  export type GetAllOrdersFilteredByOutput = {
+    orders: Order[];
+    has_next: boolean;
+  };
 }

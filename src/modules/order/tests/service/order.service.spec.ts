@@ -18,9 +18,9 @@ import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSC
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import {
-    createOrderEntity,
-    Order,
-    OrderStatus,
+  createOrderEntity,
+  Order,
+  OrderStatus,
 } from 'src/core/domain/entities/order';
 import { createProductEntity } from 'src/core/domain/entities/product';
 import { IORDER_WS_CONTRACT, ISTORAGE_SERVICE } from 'src/shared/constants';
@@ -76,6 +76,7 @@ describe('Order Service', () => {
             updateOrder: jest.fn(),
             verifyOrder: jest.fn(),
             restartsTheOrdersOfDay: jest.fn(),
+            getAllOrdersFilteredBy: jest.fn(),
           },
         },
         {
@@ -472,5 +473,227 @@ describe('Order Service', () => {
     // Assert
     expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledTimes(1);
     expect(orderRepo.restartsTheOrdersOfDay).toHaveBeenCalledWith(orgId);
+  });
+
+  it('Should return all orders of page 0 filteredByStatus', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 26 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 0,
+      filters: { status: OrderStatus.DONE },
+    });
+
+    // Assert
+    expect(has_next).toBeTruthy();
+    expect(orders.length).toBe(25);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      0,
+      26,
+      { status: OrderStatus.DONE },
+    );
+  });
+
+  it('Should return all orders of page 0 filteredByTable', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 26 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 0,
+      filters: { table: '01' },
+    });
+
+    // Assert
+    expect(has_next).toBeTruthy();
+    expect(orders.length).toBe(25);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      0,
+      26,
+      { table: '01' },
+    );
+  });
+
+  it('Should return all orders of page 0 filteredByBoth', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 26 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 0,
+      filters: { table: '01', status: OrderStatus.DONE },
+    });
+
+    // Assert
+    expect(has_next).toBeTruthy();
+    expect(orders.length).toBe(25);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      0,
+      26,
+      { table: '01', status: OrderStatus.DONE },
+    );
+  });
+
+  it('Should return all orders of page 1 filteredByStatus', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 6 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 1,
+      filters: { status: OrderStatus.DONE },
+    });
+
+    // Assert
+    expect(has_next).toBeFalsy();
+    expect(orders.length).toBe(6);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      25,
+      26,
+      { status: OrderStatus.DONE },
+    );
+  });
+
+  it('Should return all orders of page 1 filteredByTable', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 6 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 1,
+      filters: { table: '01' },
+    });
+
+    // Assert
+    expect(has_next).toBeFalsy();
+    expect(orders.length).toBe(6);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      25,
+      26,
+      { table: '01' },
+    );
+  });
+
+  it('Should return all orders of page 1 filteredByBoth', async () => {
+    // Arrange
+    jest.spyOn(orderRepo, 'getAllOrdersFilteredBy').mockResolvedValue(
+      Array.from({ length: 6 }).map((_, idx) => ({
+        org_id: `${idx}`.repeat(10),
+        quantity: orderQuantity,
+        status: orderStatus,
+        table: `${idx}`.repeat(2),
+        total_price: idx * 4.5,
+        user_id: `${userId}-${idx}`,
+        created_at: new Date(),
+        deleted_at: null,
+        id: `${idx}`.repeat(5),
+        products: [],
+      })),
+    );
+
+    // Act
+    const { orders, has_next } = await orderService.getAllOrdersFilteredBy({
+      org_id: orgId2,
+      page: 1,
+      filters: { table: '01', status: OrderStatus.DONE },
+    });
+
+    // Assert
+    expect(has_next).toBeFalsy();
+    expect(orders.length).toBe(6);
+    expect(orders[0]).toBeInstanceOf(Order);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledTimes(1);
+    expect(orderRepo.getAllOrdersFilteredBy).toHaveBeenCalledWith(
+      orgId2,
+      25,
+      26,
+      { table: '01', status: OrderStatus.DONE },
+    );
   });
 });
