@@ -15,9 +15,9 @@ jest.mock('src/shared/config/env', () => ({
 
 import { faker } from '@faker-js/faker';
 import {
-    BadRequestException,
-    ConflictException,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
@@ -29,10 +29,10 @@ import { PrismaService } from 'src/infra/database/database.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    IORGANIZATION_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUSER_CONTRACT,
-    IUTILS_SERVICE,
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -48,7 +48,7 @@ describe('Create User UseCase', () => {
   let organizationRepo: OrganizationRepo;
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
-  let org_id: string;
+  let org_ids: string[];
   let user_id: string;
   let storageService: IStorageGw;
   let factoriesService: FactoriesService;
@@ -109,15 +109,21 @@ describe('Create User UseCase', () => {
     factoriesService = module.get<FactoriesService>(FactoriesService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
+    const org2 = await factoriesService.generateOrganizationWithOwner(
+      org.owner.id,
+    );
+    const org3 = await factoriesService.generateOrganizationWithOwner(
+      org.owner.id,
+    );
 
-    await prismaService.userOrg.create({
-      data: {
-        org_id: org.organization.id,
-        user_id: org.owner.id,
-      },
-    });
+    // await prismaService.userOrg.create({
+    //   data: {
+    //     org_id: org.organization.id,
+    //     user_id: org.owner.id,
+    //   },
+    // });
 
-    org_id = org.organization.id;
+    org_ids = [org.organization.id, org2.organization.id, org3.organization.id];
     user_id = org.owner.id;
   });
 
@@ -137,7 +143,7 @@ describe('Create User UseCase', () => {
     expect(organizationRepo).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(prismaService).toBeDefined();
-    expect(org_id).toBeDefined();
+    expect(org_ids).toBeDefined();
     expect(user_id).toBeDefined();
     expect(storageService).toBeDefined();
   });
@@ -152,15 +158,25 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id,
+      org_ids,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
     // Act
     const user = await createUserUseCase.execute(data);
+    const getUserOrgRelations = await prismaService.userOrg.findMany({
+      where: {
+        user_id: user.id,
+      },
+    });
+    const orgIdsRelated = getUserOrgRelations.map(
+      (relation) => relation.org_id,
+    );
 
     // Assert
     expect(user).toBeInstanceOf(User);
+    expect(user.org_ids).toEqual(org_ids);
+    expect(orgIdsRelated).toEqual(org_ids);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(user.password).toBe(hashPassword);
   });
@@ -175,7 +191,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id,
+      org_ids,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
@@ -196,7 +212,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id,
+      org_ids,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
@@ -217,7 +233,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id: '',
+      org_ids: [],
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
@@ -238,7 +254,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.OWNER,
       },
-      org_id,
+      org_ids,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
@@ -259,7 +275,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.ADMIN,
       },
-      org_id: fakeOrgId,
+      org_ids: [fakeOrgId],
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 
@@ -280,7 +296,7 @@ describe('Create User UseCase', () => {
         password: newUserPassword,
         role: UserRole.OWNER,
       },
-      org_id,
+      org_ids,
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashPassword);
 

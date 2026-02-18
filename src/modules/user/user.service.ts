@@ -15,7 +15,7 @@ export class UserService implements IUserContract {
   ) {}
 
   async create({
-    org_id,
+    org_ids,
     data,
   }: IUserContract.CreateParams): Promise<IUserContract.CreateOutput> {
     const user = new User({
@@ -23,7 +23,7 @@ export class UserService implements IUserContract {
       email: data.email,
       name: data.name,
       role: UserRole[data.role],
-      org_id: org_id,
+      org_ids: org_ids,
     });
 
     user.password = await this.utilsService.generateHash(data.password);
@@ -35,7 +35,7 @@ export class UserService implements IUserContract {
 
     user.id = userCreated.id;
 
-    await this.createRelationUserOrg(user.id, user.org_id!);
+    await this.createRelationUserOrg(user.id, user.org_ids);
 
     return user;
   }
@@ -213,8 +213,8 @@ export class UserService implements IUserContract {
 
   private async createRelationUserOrg(
     user_id: string,
-    org_id: string,
+    org_ids: string[],
   ): Promise<void> {
-    await this.userRepo.createRelationWithOrg(org_id, user_id);
+    await this.userRepo.createRelationWithOrg(org_ids, user_id);
   }
 }

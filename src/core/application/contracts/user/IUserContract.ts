@@ -41,7 +41,7 @@ export interface IUserContract {
 
 export namespace IUserContract {
   export type CreateParams = {
-    org_id: string;
+    org_ids: string[];
     data: {
       name: string;
       email: string;

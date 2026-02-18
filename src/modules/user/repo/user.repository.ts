@@ -105,12 +105,15 @@ export class UserRepo {
     return org;
   }
 
-  async createRelationWithOrg(org_id: string, user_id: string): Promise<void> {
-    await this.prisma.userOrg.create({
-      data: {
+  async createRelationWithOrg(
+    org_ids: string[],
+    user_id: string,
+  ): Promise<void> {
+    await this.prisma.userOrg.createMany({
+      data: org_ids.map((org_id) => ({
         org_id,
         user_id,
-      },
+      })),
     });
   }
 

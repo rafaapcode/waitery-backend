@@ -1,7 +1,9 @@
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -31,4 +33,9 @@ export class CreateUserDTO {
   @IsNotEmpty()
   @MinLength(11, { message: '"cpf" must be at least 11 characters' })
   cpf: string;
+
+  @IsString()
+  @IsOptional()
+  @IsArray()
+  org_ids?: string[];
 }

@@ -82,6 +82,17 @@ export class OrganizationRepo {
     return org;
   }
 
+  async getAllByOrgId({
+    org_ids,
+  }: IOrganizationContract.GetAllByOrgIdParams): Promise<
+    Organization[] | null
+  > {
+    const org = await this.prisma.organization.findMany({
+      where: { id: { in: org_ids } },
+    });
+    return org;
+  }
+
   async verifyOrgById({
     org_id,
     owner_id,

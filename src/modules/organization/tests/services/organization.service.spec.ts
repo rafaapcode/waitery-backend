@@ -18,8 +18,8 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import {
-    createOganizationEntity,
-    Organization,
+  createOganizationEntity,
+  Organization,
 } from 'src/core/domain/entities/organization';
 import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { ISTORAGE_SERVICE, IUTILS_SERVICE } from 'src/shared/constants';
@@ -80,6 +80,7 @@ describe('OrganizationService', () => {
             getAll: jest.fn(),
             verifyOrgById: jest.fn(),
             verifyOrgByName: jest.fn(),
+            getAllByOrgId: jest.fn(),
           },
         },
         {
@@ -291,6 +292,42 @@ describe('OrganizationService', () => {
     // Assert
     expect(orgrepo.getAll).toHaveBeenCalledTimes(1);
     expect(orgrepo.getAll).toHaveBeenCalledWith(orgData);
+    expect(org?.length).toBe(3);
+    expect(org?.[0]).toBeInstanceOf(Organization);
+  });
+
+  it('Should getAll valid organizations by OrgIds', async () => {
+    // Arrange
+    const orgData: IOrganizationContract.GetAllByOrgIdParams = {
+      org_ids: [orgId, `${orgId}-1`, `${orgId}-2`],
+    };
+
+    jest.spyOn(orgrepo, 'getAllByOrgId').mockResolvedValue(
+      Array.from({ length: 3 }).map((_, idx) => ({
+        cep: faker.location.zipCode(),
+        city: faker.location.city(),
+        close_hour: 23,
+        id: `${orgId}-${idx}`,
+        name: `${faker.company.name()} ${idx}`,
+        description: faker.person.bio(),
+        email: faker.internet.email(),
+        image_url: faker.image.url(),
+        lat: faker.location.latitude(),
+        long: faker.location.longitude(),
+        open_hour: 8,
+        location_code: faker.location.buildingNumber(),
+        neighborhood: faker.location.street(),
+        street: faker.location.street(),
+        owner_id: ownerId,
+      })),
+    );
+
+    // Act
+    const org = await orgService.getAllByOrgId(orgData);
+
+    // Assert
+    expect(orgrepo.getAllByOrgId).toHaveBeenCalledTimes(1);
+    expect(orgrepo.getAllByOrgId).toHaveBeenCalledWith(orgData);
     expect(org?.length).toBe(3);
     expect(org?.[0]).toBeInstanceOf(Organization);
   });

@@ -26,12 +26,19 @@ export class CreateUserUseCase implements ICreateUserUseCase {
 
   async execute({
     data,
-    org_id,
+    org_ids,
   }: IUserContract.CreateParams): Promise<IUserContract.CreateOutput> {
-    const orgExists = await this.organizationContract.get({ id: org_id });
+    if (!org_ids || org_ids.length === 0) {
+      throw new BadRequestException(
+        'At least one organization is required to create a new user',
+      );
+    }
+    const orgExists = await this.organizationContract.getAllByOrgId({
+      org_ids,
+    });
     const newUser = createUserEntity({
       ...data,
-      org_id,
+      org_ids,
     });
     const [userExistEmail, userExistCpf] = await Promise.all([
       this.userContract.getuserByEmail({ email: data.email }),
@@ -46,13 +53,14 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       throw new ConflictException('User already exists');
     }
 
-    if (!newUser.org_id) {
+    if (!newUser.org_ids || newUser.org_ids.length === 0) {
       throw new BadRequestException(
         'Organization is required to create a new user',
       );
     }
 
-    if (!orgExists) throw new NotFoundException('Organization not found');
+    if (!orgExists || orgExists.length === 0)
+      throw new NotFoundException('Organization not found');
 
     const user = await this.userContract.create({
       data: {
@@ -62,7 +70,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
         password: data.password,
         role: data.role,
       },
-      org_id: newUser.org_id,
+      org_ids: newUser.org_ids,
     });
 
     return user;

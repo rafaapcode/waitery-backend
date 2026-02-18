@@ -35,6 +35,7 @@ describe('UserService', () => {
   const userPassword = faker.internet.password();
   const userId = faker.string.uuid();
   const orgId = faker.string.uuid();
+  const orgId2 = faker.string.uuid();
   const ownerId = faker.string.uuid();
   const hashBcrypt =
     '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
@@ -112,7 +113,7 @@ describe('UserService', () => {
         password: userPassword,
         role: UserRole.OWNER,
       },
-      org_id: orgId,
+      org_ids: [orgId, orgId2],
     };
     jest.spyOn(utilsService, 'generateHash').mockResolvedValue(hashBcrypt);
     jest.spyOn(userRepo, 'create').mockResolvedValue({
@@ -133,15 +134,20 @@ describe('UserService', () => {
     // Assert
     expect(userCreated).toBeDefined();
     expect(userCreated.password).toBe(hashBcrypt);
+    expect(userCreated.org_ids).toEqual(data.org_ids);
     expect(utilsService.generateHash).toHaveBeenCalledTimes(1);
     expect(utilsService.generateHash).toHaveBeenCalledWith(data.data.password);
     expect(userRepo.create).toHaveBeenCalledTimes(1);
     expect(userRepo.create).toHaveBeenCalledWith({
       ...data.data,
-      org_id: data.org_id,
+      org_ids: data.org_ids,
       password: hashBcrypt,
     });
     expect(userRepo.createRelationWithOrg).toHaveBeenCalledTimes(1);
+    expect(userRepo.createRelationWithOrg).toHaveBeenCalledWith(
+      data.org_ids,
+      userId,
+    );
   });
 
   it('Should update a user without password', async () => {

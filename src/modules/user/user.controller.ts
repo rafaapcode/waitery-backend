@@ -50,7 +50,7 @@ export class UserController {
   async create(@Body() data: CreateUserDTO, @GetOrgId() org_id: string) {
     const user = await this.createUserUseCase.execute({
       data,
-      org_id,
+      org_ids: [org_id, ...(data.org_ids || [])],
     });
     return { user: user.fromEntity() };
   }

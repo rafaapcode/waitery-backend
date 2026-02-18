@@ -17,6 +17,15 @@ export class OrganizationService implements IOrganizationContract {
     private readonly storageService: IStorageGw,
   ) {}
 
+  async getAllByOrgId(
+    params: IOrganizationContract.GetAllByOrgIdParams,
+  ): Promise<IOrganizationContract.GetAllByOrgIdOutput> {
+    const orgs = await this.orgRepo.getAllByOrgId(params);
+    if (!orgs) return null;
+
+    return orgs.map((org) => new Organization(org));
+  }
+
   async deleteFile(
     params: IOrganizationContract.DeleteFileParams,
   ): Promise<IOrganizationContract.DeleteFileOutput> {

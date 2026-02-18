@@ -22,6 +22,10 @@ export interface IOrganizationContract {
     params: IOrganizationContract.GetAllParams,
   ): Promise<IOrganizationContract.GetAllOutput>;
 
+  getAllByOrgId(
+    params: IOrganizationContract.GetAllByOrgIdParams,
+  ): Promise<IOrganizationContract.GetAllByOrgIdOutput>;
+
   verifyOrgById(
     params: IOrganizationContract.VerifyOrgsParamsById,
   ): Promise<IOrganizationContract.VerifyOrgsOutput>;
@@ -112,6 +116,12 @@ export namespace IOrganizationContract {
   };
 
   export type GetAllOutput = Organization[] | null;
+
+  export type GetAllByOrgIdParams = {
+    org_ids: string[];
+  };
+
+  export type GetAllByOrgIdOutput = Organization[] | null;
 
   export type VerifyOrgsParamsById = {
     owner_id: string;

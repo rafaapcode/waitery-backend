@@ -7,7 +7,7 @@ export enum UserRole {
 
 export class User {
   id?: string;
-  readonly org_id?: string;
+  readonly org_ids: string[];
   readonly name: string;
   readonly email: string;
   readonly cpf: string;
@@ -21,7 +21,7 @@ export class User {
     this.email = data.email;
     this.role = data.role;
     this.cpf = data.cpf;
-    this.org_id = data.org_id;
+    this.org_ids = data.org_ids ?? [];
   }
 
   fromEntity() {
@@ -31,7 +31,7 @@ export class User {
       email: this.email,
       cpf: this.cpf,
       role: this.role,
-      org_id: this.org_id,
+      org_ids: this.org_ids,
     };
   }
 
@@ -42,7 +42,7 @@ export class User {
       email: this.email,
       cpf: this.cpf,
       role: this.role,
-      org_id: this.org_id,
+      org_ids: this.org_ids,
       password: this.password,
     };
   }
@@ -51,7 +51,7 @@ export class User {
 namespace User {
   export type Attr = {
     id?: string;
-    org_id?: string;
+    org_ids?: string[];
     name: string;
     email: string;
     cpf: string;
