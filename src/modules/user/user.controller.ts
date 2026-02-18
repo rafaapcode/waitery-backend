@@ -19,6 +19,7 @@ import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { RemoveUserFromOrgDTO } from './dto/remove-user-from-org.dto';
 import { UpdateCurrentUserDTO } from './dto/update-current-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { CreateUserUseCase } from './usecases/CreateUserUseCase';
@@ -27,6 +28,7 @@ import { GetAllUserUseCase } from './usecases/GetAllUserUseCase';
 import { GetMeUseCase } from './usecases/GetMeUseCase';
 import { GetOrgsOfUserUseCase } from './usecases/GetOrgsOfUserUseCase';
 import { GetUserUseCase } from './usecases/GetUserUseCase';
+import { RemoveUserFromOrgUseCase } from './usecases/RemoveUserFromOrgUseCase';
 import { UpdateMeUseCase } from './usecases/UpdateMeUseCase';
 import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
 
@@ -43,6 +45,7 @@ export class UserController {
     private readonly updateMeUseCase: UpdateMeUseCase,
     private readonly getAllUserUseCase: GetAllUserUseCase,
     private readonly getOrgsOfUserUseCase: GetOrgsOfUserUseCase,
+    private readonly removeUserFromOrgUseCase: RemoveUserFromOrgUseCase,
   ) {}
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
@@ -108,6 +111,21 @@ export class UserController {
     await this.deleteUserUseCase.execute(userId);
 
     return { message: 'Delete with sucess !' };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Post('orgs/:id')
+  @HttpCode(HttpStatus.OK)
+  async removeUserFromOrg(
+    @Body() data: RemoveUserFromOrgDTO,
+    @Param('id', ParseULIDPipe) userId: string,
+  ) {
+    await this.removeUserFromOrgUseCase.execute({
+      user_id: userId,
+      org_ids: data.org_ids,
+    });
+
+    return { message: 'User removed from organization successfully!' };
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

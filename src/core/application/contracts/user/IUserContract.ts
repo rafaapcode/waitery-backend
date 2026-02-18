@@ -37,6 +37,10 @@ export interface IUserContract {
   getOrgs(
     params: IUserContract.GetOrgsParams,
   ): Promise<IUserContract.GetOrgsOutput>;
+
+  removeUserFromOrg(
+    params: IUserContract.RemoveUserFromOrgParams,
+  ): Promise<IUserContract.RemoveUserFromOrgOutput>;
 }
 
 export namespace IUserContract {
@@ -114,4 +118,10 @@ export namespace IUserContract {
     owner_id: string;
   };
   export type GetOrgsOutput = Organization[];
+
+  export type RemoveUserFromOrgParams = {
+    user_id: string;
+    org_ids: string[];
+  };
+  export type RemoveUserFromOrgOutput = void;
 }

@@ -116,13 +116,6 @@ describe('Create User UseCase', () => {
       org.owner.id,
     );
 
-    // await prismaService.userOrg.create({
-    //   data: {
-    //     org_id: org.organization.id,
-    //     user_id: org.owner.id,
-    //   },
-    // });
-
     org_ids = [org.organization.id, org2.organization.id, org3.organization.id];
     user_id = org.owner.id;
   });

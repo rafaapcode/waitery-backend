@@ -22,9 +22,9 @@ import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContr
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 import {
-    ISTORAGE_SERVICE,
-    IUSER_CONTRACT,
-    IUTILS_SERVICE,
+  ISTORAGE_SERVICE,
+  IUSER_CONTRACT,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';

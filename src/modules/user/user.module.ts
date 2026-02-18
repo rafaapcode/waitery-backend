@@ -19,6 +19,7 @@ import { GetAllUserUseCase } from './usecases/GetAllUserUseCase';
 import { GetMeUseCase } from './usecases/GetMeUseCase';
 import { GetOrgsOfUserUseCase } from './usecases/GetOrgsOfUserUseCase';
 import { GetUserUseCase } from './usecases/GetUserUseCase';
+import { RemoveUserFromOrgUseCase } from './usecases/RemoveUserFromOrgUseCase';
 import { UpdateMeUseCase } from './usecases/UpdateMeUseCase';
 import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
 import { UserController } from './user.controller';
@@ -39,6 +40,7 @@ import { UserService } from './user.service';
     UpdateMeUseCase,
     GetAllUserUseCase,
     GetOrgsOfUserUseCase,
+    RemoveUserFromOrgUseCase,
     {
       provide: IUSER_CONTRACT,
       useClass: UserService,

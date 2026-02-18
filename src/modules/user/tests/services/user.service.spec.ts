@@ -72,6 +72,7 @@ describe('UserService', () => {
             getuserByCpf: jest.fn(),
             getUserOrgs: jest.fn(),
             verifyOrgById: jest.fn(),
+            removeRelationWithOrg: jest.fn(),
           },
         },
         {
@@ -722,5 +723,24 @@ describe('UserService', () => {
       owner_id: data.owner_id,
     });
     expect(orgs.length).toBe(0);
+  });
+
+  it('Should remove a user from organizations', async () => {
+    // Arrange
+    const data: IUserContract.RemoveUserFromOrgParams = {
+      user_id: userId,
+      org_ids: [orgId],
+    };
+    jest.spyOn(userRepo, 'removeRelationWithOrg').mockResolvedValue();
+
+    // Act
+    await userService.removeUserFromOrg(data);
+
+    // Assert
+    expect(userRepo.removeRelationWithOrg).toHaveBeenCalledTimes(1);
+    expect(userRepo.removeRelationWithOrg).toHaveBeenCalledWith(
+      data.org_ids,
+      data.user_id,
+    );
   });
 });

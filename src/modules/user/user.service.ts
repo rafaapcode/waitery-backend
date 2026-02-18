@@ -211,10 +211,23 @@ export class UserService implements IUserContract {
     return org.map((org) => new Organization(org));
   }
 
+  async removeUserFromOrg(
+    params: IUserContract.RemoveUserFromOrgParams,
+  ): Promise<IUserContract.RemoveUserFromOrgOutput> {
+    await this.removeRelationUserOrg(params.user_id, params.org_ids);
+  }
+
   private async createRelationUserOrg(
     user_id: string,
     org_ids: string[],
   ): Promise<void> {
     await this.userRepo.createRelationWithOrg(org_ids, user_id);
+  }
+
+  private async removeRelationUserOrg(
+    user_id: string,
+    org_ids: string[],
+  ): Promise<void> {
+    await this.userRepo.removeRelationWithOrg(org_ids, user_id);
   }
 }

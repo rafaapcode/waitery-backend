@@ -117,6 +117,20 @@ export class UserRepo {
     });
   }
 
+  async removeRelationWithOrg(
+    org_ids: string[],
+    user_id: string,
+  ): Promise<void> {
+    await this.prisma.userOrg.deleteMany({
+      where: {
+        OR: org_ids.map((org_id) => ({
+          org_id,
+          user_id,
+        })),
+      },
+    });
+  }
+
   async verifyOrgById(org_id: string, owner_id: string): Promise<boolean> {
     const org = await this.prisma.organization.findFirst({
       where: {
