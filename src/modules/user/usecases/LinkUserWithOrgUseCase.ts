@@ -3,14 +3,14 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IORGANIZATION_CONTRACT, IUSER_CONTRACT } from 'src/shared/constants';
 
-interface IRemoveUserFromOrgUseCase {
+interface ILinkUserWithOrgsUseCase {
   execute(
-    org_ids: IUserContract.RemoveUserFromOrgParams,
-  ): Promise<IUserContract.RemoveUserFromOrgOutput>;
+    org_ids: IUserContract.LinkUserWithOrgsParams,
+  ): Promise<IUserContract.LinkUserWithOrgsOutput>;
 }
 
 @Injectable()
-export class RemoveUserFromOrgUseCase implements IRemoveUserFromOrgUseCase {
+export class LinkUserWithOrgsUseCase implements ILinkUserWithOrgsUseCase {
   constructor(
     @Inject(IUSER_CONTRACT) private readonly userContract: IUserContract,
     @Inject(IORGANIZATION_CONTRACT)
@@ -20,7 +20,7 @@ export class RemoveUserFromOrgUseCase implements IRemoveUserFromOrgUseCase {
   async execute({
     org_ids,
     user_id,
-  }: IUserContract.RemoveUserFromOrgParams): Promise<IUserContract.RemoveUserFromOrgOutput> {
+  }: IUserContract.LinkUserWithOrgsParams): Promise<IUserContract.LinkUserWithOrgsOutput> {
     const user = await this.userContract.get({ id: user_id });
 
     if (!user) throw new NotFoundException('User not found');
@@ -31,7 +31,7 @@ export class RemoveUserFromOrgUseCase implements IRemoveUserFromOrgUseCase {
       throw new NotFoundException('Organization not found');
     }
 
-    await this.userContract.removeUserFromOrg({
+    await this.userContract.linkUserWithOrgs({
       user_id,
       org_ids: orgs.map((org) => org.id),
     });

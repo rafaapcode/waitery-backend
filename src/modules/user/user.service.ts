@@ -217,6 +217,12 @@ export class UserService implements IUserContract {
     await this.removeRelationUserOrg(params.user_id, params.org_ids);
   }
 
+  async linkUserWithOrgs(
+    params: IUserContract.LinkUserWithOrgsParams,
+  ): Promise<IUserContract.LinkUserWithOrgsOutput> {
+    await this.createRelationUserOrg(params.user_id, params.org_ids);
+  }
+
   private async createRelationUserOrg(
     user_id: string,
     org_ids: string[],

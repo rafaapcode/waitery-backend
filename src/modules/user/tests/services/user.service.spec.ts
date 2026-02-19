@@ -36,6 +36,7 @@ describe('UserService', () => {
   const userId = faker.string.uuid();
   const orgId = faker.string.uuid();
   const orgId2 = faker.string.uuid();
+  const orgId3 = faker.string.uuid();
   const ownerId = faker.string.uuid();
   const hashBcrypt =
     '$2a$12$e18NpJDNs7DmMRkomNrvBeo2GiYNNKnaALVPkeBFWu2wALkIVvf.u';
@@ -739,6 +740,25 @@ describe('UserService', () => {
     // Assert
     expect(userRepo.removeRelationWithOrg).toHaveBeenCalledTimes(1);
     expect(userRepo.removeRelationWithOrg).toHaveBeenCalledWith(
+      data.org_ids,
+      data.user_id,
+    );
+  });
+
+  it('Should link a user with organizations', async () => {
+    // Arrange
+    const data: IUserContract.LinkUserWithOrgsParams = {
+      user_id: userId,
+      org_ids: [orgId3],
+    };
+    jest.spyOn(userRepo, 'createRelationWithOrg').mockResolvedValue();
+
+    // Act
+    await userService.linkUserWithOrgs(data);
+
+    // Assert
+    expect(userRepo.createRelationWithOrg).toHaveBeenCalledTimes(1);
+    expect(userRepo.createRelationWithOrg).toHaveBeenCalledWith(
       data.org_ids,
       data.user_id,
     );

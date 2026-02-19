@@ -41,6 +41,10 @@ export interface IUserContract {
   removeUserFromOrg(
     params: IUserContract.RemoveUserFromOrgParams,
   ): Promise<IUserContract.RemoveUserFromOrgOutput>;
+
+  linkUserWithOrgs(
+    params: IUserContract.LinkUserWithOrgsParams,
+  ): Promise<IUserContract.LinkUserWithOrgsOutput>;
 }
 
 export namespace IUserContract {
@@ -124,4 +128,10 @@ export namespace IUserContract {
     org_ids: string[];
   };
   export type RemoveUserFromOrgOutput = void;
+
+  export type LinkUserWithOrgsParams = {
+    user_id: string;
+    org_ids: string[];
+  };
+  export type LinkUserWithOrgsOutput = void;
 }
