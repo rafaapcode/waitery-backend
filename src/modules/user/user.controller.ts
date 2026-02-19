@@ -19,6 +19,7 @@ import { ParseULIDPipe } from 'src/common/pipes/ParseULIDPipe';
 import { UserRole } from 'src/core/domain/entities/user';
 import { JwtPayload } from 'src/express';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { LinkUserWithOrgs } from './dto/link-user-with-orgs.dto';
 import { RemoveUserFromOrgDTO } from './dto/remove-user-from-org.dto';
 import { UpdateCurrentUserDTO } from './dto/update-current-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
@@ -28,6 +29,7 @@ import { GetAllUserUseCase } from './usecases/GetAllUserUseCase';
 import { GetMeUseCase } from './usecases/GetMeUseCase';
 import { GetOrgsOfUserUseCase } from './usecases/GetOrgsOfUserUseCase';
 import { GetUserUseCase } from './usecases/GetUserUseCase';
+import { LinkUserWithOrgsUseCase } from './usecases/LinkUserWithOrgUseCase';
 import { RemoveUserFromOrgUseCase } from './usecases/RemoveUserFromOrgUseCase';
 import { UpdateMeUseCase } from './usecases/UpdateMeUseCase';
 import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
@@ -46,6 +48,7 @@ export class UserController {
     private readonly getAllUserUseCase: GetAllUserUseCase,
     private readonly getOrgsOfUserUseCase: GetOrgsOfUserUseCase,
     private readonly removeUserFromOrgUseCase: RemoveUserFromOrgUseCase,
+    private readonly linkUserWithOrgsUseCase: LinkUserWithOrgsUseCase,
   ) {}
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
@@ -114,7 +117,7 @@ export class UserController {
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
-  @Post('orgs/:id')
+  @Post('orgs/remove/:id')
   @HttpCode(HttpStatus.OK)
   async removeUserFromOrg(
     @Body() data: RemoveUserFromOrgDTO,
@@ -126,6 +129,20 @@ export class UserController {
     });
 
     return { message: 'User removed from organization successfully!' };
+  }
+
+  @Post('orgs/add/:id')
+  @HttpCode(HttpStatus.OK)
+  async linkUserWithOrgs(
+    @Body() data: LinkUserWithOrgs,
+    @Param('id', ParseULIDPipe) userId: string,
+  ) {
+    await this.linkUserWithOrgsUseCase.execute({
+      user_id: userId,
+      org_ids: data.org_ids,
+    });
+
+    return { message: 'User linked with organizations successfully!' };
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

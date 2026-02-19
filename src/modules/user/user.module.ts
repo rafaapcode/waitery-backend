@@ -19,6 +19,7 @@ import { GetAllUserUseCase } from './usecases/GetAllUserUseCase';
 import { GetMeUseCase } from './usecases/GetMeUseCase';
 import { GetOrgsOfUserUseCase } from './usecases/GetOrgsOfUserUseCase';
 import { GetUserUseCase } from './usecases/GetUserUseCase';
+import { LinkUserWithOrgsUseCase } from './usecases/LinkUserWithOrgUseCase';
 import { RemoveUserFromOrgUseCase } from './usecases/RemoveUserFromOrgUseCase';
 import { UpdateMeUseCase } from './usecases/UpdateMeUseCase';
 import { UpdateUserUseCase } from './usecases/UpdateUserUseCase';
@@ -41,6 +42,7 @@ import { UserService } from './user.service';
     GetAllUserUseCase,
     GetOrgsOfUserUseCase,
     RemoveUserFromOrgUseCase,
+    LinkUserWithOrgsUseCase,
     {
       provide: IUSER_CONTRACT,
       useClass: UserService,
