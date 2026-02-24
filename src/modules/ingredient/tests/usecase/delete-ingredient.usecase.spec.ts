@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Ingredient } from 'generated/prisma';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -13,6 +14,7 @@ import { DeleteIngredientUseCase } from '../../usecases/DeleteIngredientUseCase'
 
 describe('Delete Ingredient UseCase', () => {
   let deleteIngredientUseCase: DeleteIngredientUseCase;
+  let observabilityService: ObservabilityService;
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
@@ -28,6 +30,7 @@ describe('Delete Ingredient UseCase', () => {
         DeleteIngredientUseCase,
         PrismaService,
         IngredientRepository,
+        ObservabilityService,
         {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
@@ -42,6 +45,8 @@ describe('Delete Ingredient UseCase', () => {
     ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     ing = await factoriesService.generateAnIngredient();
   });
@@ -52,6 +57,7 @@ describe('Delete Ingredient UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
     expect(ing).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should delete a ingredient by id', async () => {

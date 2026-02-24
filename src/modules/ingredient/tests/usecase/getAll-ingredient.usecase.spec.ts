@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { Ingredient } from 'src/core/domain/entities/ingredient';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -13,6 +14,7 @@ import { GetAllIngredientUseCase } from '../../usecases/GetAllIngredientUseCase'
 
 describe('Create Ingredient UseCase', () => {
   let getAllIngredientUseCase: GetAllIngredientUseCase;
+  let observabilityService: ObservabilityService;
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
@@ -27,6 +29,7 @@ describe('Create Ingredient UseCase', () => {
         GetAllIngredientUseCase,
         PrismaService,
         IngredientRepository,
+        ObservabilityService,
         {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
@@ -41,6 +44,8 @@ describe('Create Ingredient UseCase', () => {
     ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     await factoriesService.generateManyIngredients(6, baseIngredientName);
   });
@@ -55,6 +60,7 @@ describe('Create Ingredient UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
     expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get all ingredients', async () => {

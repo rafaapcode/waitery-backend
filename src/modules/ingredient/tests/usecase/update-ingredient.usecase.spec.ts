@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { Ingredient } from 'src/core/domain/entities/ingredient';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { IngredientService } from '../../ingredient.service';
 import { IngredientRepository } from '../../repo/ingredient.repository';
@@ -11,6 +12,7 @@ import { UpdateIngredientUseCase } from '../../usecases/UpdateIngredientUseCase'
 
 describe('Create Ingredient UseCase', () => {
   let updateIngredientUseCase: UpdateIngredientUseCase;
+  let observabilityService: ObservabilityService;
   let ingredientService: IIngredientContract;
   let ingredientRepo: IngredientRepository;
   let prismaService: PrismaService;
@@ -32,6 +34,7 @@ describe('Create Ingredient UseCase', () => {
         UpdateIngredientUseCase,
         PrismaService,
         IngredientRepository,
+        ObservabilityService,
         {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
@@ -45,6 +48,8 @@ describe('Create Ingredient UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     ingredientService = module.get<IIngredientContract>(IINGREDIENT_CONTRACT);
     ingredientRepo = module.get<IngredientRepository>(IngredientRepository);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { id } = await prismaService.ingredient.create({
       data: {
@@ -65,6 +70,7 @@ describe('Create Ingredient UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(ingredientRepo).toBeDefined();
     expect(ing_id).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should update a ingredient', async () => {

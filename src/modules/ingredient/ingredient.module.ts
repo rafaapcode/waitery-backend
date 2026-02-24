@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { IINGREDIENT_CONTRACT } from 'src/shared/constants';
 import { IngredientController } from './ingredient.controller';
 import { IngredientService } from './ingredient.service';
@@ -11,7 +12,7 @@ import { GetIngredientUseCase } from './usecases/GetIngredientUseCase';
 import { UpdateIngredientUseCase } from './usecases/UpdateIngredientUseCase';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, ObservabilityModule],
   controllers: [IngredientController],
   providers: [
     IngredientRepository,
