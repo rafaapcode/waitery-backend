@@ -9,6 +9,7 @@ import { Category, Organization } from 'generated/prisma';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { ICATEGORY_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -18,6 +19,7 @@ import { DeleteCategoryUseCase } from '../../usecases/DeleteCategoryUseCase';
 
 describe('Delete Category UseCase', () => {
   let deleteCategoryUseCAse: DeleteCategoryUseCase;
+  let observabilityService: ObservabilityService;
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
   let utilsService: IUtilsContract;
@@ -36,6 +38,7 @@ describe('Delete Category UseCase', () => {
         DeleteCategoryUseCase,
         PrismaService,
         CategoryRepository,
+        ObservabilityService,
         {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
@@ -59,6 +62,8 @@ describe('Delete Category UseCase', () => {
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     factorieService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     org = (await factorieService.generateOrganizationWithOwner()).organization;
 
@@ -79,6 +84,7 @@ describe('Delete Category UseCase', () => {
     expect(org).toBeDefined();
     expect(cat).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the category does not exists', async () => {

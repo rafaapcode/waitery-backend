@@ -22,6 +22,7 @@ import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -31,6 +32,7 @@ import { SignInUseCase } from '../../usecases/SignInUseCase';
 
 describe('SignIn UseCase', () => {
   let signInUseCase: SignInUseCase;
+  let observabilityService: ObservabilityService;
   let authService: IAuthContract;
   let jwtService: JwtService;
   let prismaService: PrismaService;
@@ -49,6 +51,7 @@ describe('SignIn UseCase', () => {
       providers: [
         SignInUseCase,
         PrismaService,
+        ObservabilityService,
         {
           provide: IAUTH_CONTRACT,
           useClass: AuthService,
@@ -72,6 +75,8 @@ describe('SignIn UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signInUseCase = module.get<SignInUseCase>(SignInUseCase);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     user = await factoriesService.generateUserInfo();
   }, 15000);
@@ -90,6 +95,7 @@ describe('SignIn UseCase', () => {
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
     expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should signIn a valid user', async () => {

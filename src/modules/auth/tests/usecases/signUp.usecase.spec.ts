@@ -6,12 +6,14 @@ import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IAUTH_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { AuthService } from '../../auth.service';
 import { SignUpUseCase } from '../../usecases/SignUpUseCase';
 
 describe('SignUp UseCase', () => {
   let signUpUseCase: SignUpUseCase;
+  let observabilityService: ObservabilityService;
   let authService: IAuthContract;
   let jwtService: JwtService;
   let prismaService: PrismaService;
@@ -29,6 +31,7 @@ describe('SignUp UseCase', () => {
       providers: [
         SignUpUseCase,
         PrismaService,
+        ObservabilityService,
         {
           provide: IAUTH_CONTRACT,
           useClass: AuthService,
@@ -55,6 +58,8 @@ describe('SignUp UseCase', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     signUpUseCase = module.get<SignUpUseCase>(SignUpUseCase);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
   });
 
   beforeEach(() => {
@@ -70,6 +75,7 @@ describe('SignUp UseCase', () => {
     expect(authService).toBeDefined();
     expect(prismaService).toBeDefined();
     expect(jwtService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should signUp a valid user', async () => {

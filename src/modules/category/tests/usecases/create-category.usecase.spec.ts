@@ -23,13 +23,14 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    ICATEGORY_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  ICATEGORY_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -39,6 +40,7 @@ import { CreateCategoryUseCase } from '../../usecases/CreateCategoryUseCase';
 
 describe('Create Category UseCase', () => {
   let createCategoryUseCase: CreateCategoryUseCase;
+  let observabilityService: ObservabilityService;
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
   let orgService: IOrganizationContract;
@@ -59,6 +61,7 @@ describe('Create Category UseCase', () => {
         PrismaService,
         CategoryRepository,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
@@ -96,6 +99,8 @@ describe('Create Category UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factorieService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     org = (await factorieService.generateOrganizationWithOwner()).organization;
   });
@@ -120,6 +125,7 @@ describe('Create Category UseCase', () => {
     expect(orgRepo).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should create a new category', async () => {

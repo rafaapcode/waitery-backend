@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infra/database/database.module';
+import { ObservabilityModule } from 'src/infra/observability/observability.module';
 import { ICATEGORY_CONTRACT } from 'src/shared/constants';
 import { OrganizationModule } from '../organization/organization.module';
 import { CategoryController } from './category.controller';
@@ -12,7 +13,7 @@ import { GetByIdCategoryUseCase } from './usecases/GetByIdCategoryUseCase';
 import { UpdateCategoryUseCase } from './usecases/UpdateCategoryUseCase';
 
 @Module({
-  imports: [DatabaseModule, OrganizationModule],
+  imports: [DatabaseModule, OrganizationModule, ObservabilityModule],
   controllers: [CategoryController],
   providers: [
     CategoryRepository,

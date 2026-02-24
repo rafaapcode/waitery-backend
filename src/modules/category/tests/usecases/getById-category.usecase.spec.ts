@@ -6,6 +6,7 @@ import { ICategoryContract } from 'src/core/application/contracts/category/ICate
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { ICATEGORY_CONTRACT, IUTILS_SERVICE } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -15,6 +16,7 @@ import { GetByIdCategoryUseCase } from '../../usecases/GetByIdCategoryUseCase';
 
 describe('Get Category by Id UseCase', () => {
   let getByIdCategoryUseCase: GetByIdCategoryUseCase;
+  let observabilityService: ObservabilityService;
   let categoryService: ICategoryContract;
   let categoryRepo: CategoryRepository;
   let prismaService: PrismaService;
@@ -33,6 +35,7 @@ describe('Get Category by Id UseCase', () => {
         GetByIdCategoryUseCase,
         PrismaService,
         CategoryRepository,
+        ObservabilityService,
         {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,
@@ -56,6 +59,8 @@ describe('Get Category by Id UseCase', () => {
     categoryRepo = module.get<CategoryRepository>(CategoryRepository);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     org = (await factoriesService.generateOrganizationWithOwner()).organization;
     cat = await factoriesService.generateCategoryInfo(org.id);
@@ -74,6 +79,7 @@ describe('Get Category by Id UseCase', () => {
     expect(org).toBeDefined();
     expect(cat).toBeDefined();
     expect(utilsService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get the category by id', async () => {
