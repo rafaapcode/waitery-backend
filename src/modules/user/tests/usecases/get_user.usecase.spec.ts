@@ -22,6 +22,7 @@ import { IUserContract } from 'src/core/application/contracts/user/IUserContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
   ISTORAGE_SERVICE,
   IUSER_CONTRACT,
@@ -35,6 +36,7 @@ import { UserService } from '../../user.service';
 
 describe('Get User UseCase', () => {
   let getUserUseCase: GetUserUseCase;
+  let observabilityService: ObservabilityService;
   let userService: IUserContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
@@ -52,6 +54,7 @@ describe('Get User UseCase', () => {
         UserRepo,
         PrismaService,
         GetUserUseCase,
+        ObservabilityService,
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,
@@ -81,6 +84,8 @@ describe('Get User UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     user = await factoriesService.generateUserInfo();
   });
@@ -97,6 +102,8 @@ describe('Get User UseCase', () => {
     expect(utilsService).toBeDefined();
     expect(user).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should return a user', async () => {

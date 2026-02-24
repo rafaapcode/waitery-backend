@@ -21,6 +21,7 @@ import { IUserContract } from 'src/core/application/contracts/user/IUserContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
   ISTORAGE_SERVICE,
   IUSER_CONTRACT,
@@ -34,6 +35,7 @@ import { UserService } from '../../user.service';
 
 describe('Delete User UseCase', () => {
   let deleteUserUseCase: DeleteUserUseCase;
+  let observabilityService: ObservabilityService;
   let userService: IUserContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
@@ -50,6 +52,7 @@ describe('Delete User UseCase', () => {
         UserRepo,
         PrismaService,
         DeleteUserUseCase,
+        ObservabilityService,
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,
@@ -79,6 +82,8 @@ describe('Delete User UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const usercreatedAdmin = await factoriesService.generateUserInfo(
       UserRole.ADMIN,
@@ -96,6 +101,8 @@ describe('Delete User UseCase', () => {
     expect(utilsService).toBeDefined();
     expect(user).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should delete a user', async () => {

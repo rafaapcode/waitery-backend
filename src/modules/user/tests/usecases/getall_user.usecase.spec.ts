@@ -21,6 +21,7 @@ import { IUserContract } from 'src/core/application/contracts/user/IUserContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
   ISTORAGE_SERVICE,
   IUSER_CONTRACT,
@@ -33,6 +34,7 @@ import { GetAllUserUseCase } from '../../usecases/GetAllUserUseCase';
 import { UserService } from '../../user.service';
 
 describe('GetAll Users UseCase', () => {
+  let observabilityService: ObservabilityService;
   let getAllUserUseCase: GetAllUserUseCase;
   let userService: IUserContract;
   let userRepo: UserRepo;
@@ -52,6 +54,7 @@ describe('GetAll Users UseCase', () => {
         UserRepo,
         PrismaService,
         GetAllUserUseCase,
+        ObservabilityService,
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,
@@ -81,6 +84,8 @@ describe('GetAll Users UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const user = await factoriesService.generateUserInfo();
 
@@ -114,6 +119,8 @@ describe('GetAll Users UseCase', () => {
     expect(user_id).toBeDefined();
     expect(org_id).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should return the first 10 users in the page 0', async () => {

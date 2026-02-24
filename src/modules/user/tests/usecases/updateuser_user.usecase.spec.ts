@@ -21,6 +21,7 @@ import { IUserContract } from 'src/core/application/contracts/user/IUserContract
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User, UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
   ISTORAGE_SERVICE,
   IUSER_CONTRACT,
@@ -34,6 +35,7 @@ import { UserService } from '../../user.service';
 
 describe('Update a user UseCase', () => {
   let updateUserUseCase: UpdateUserUseCase;
+  let observabilityService: ObservabilityService;
   let userService: IUserContract;
   let userRepo: UserRepo;
   let prismaService: PrismaService;
@@ -56,6 +58,7 @@ describe('Update a user UseCase', () => {
         UserRepo,
         PrismaService,
         UpdateUserUseCase,
+        ObservabilityService,
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,
@@ -85,6 +88,8 @@ describe('Update a user UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const user = await factoriesService.generateUserInfo(UserRole.ADMIN);
     const userOwner = await factoriesService.generateUserInfo();
@@ -105,6 +110,8 @@ describe('Update a user UseCase', () => {
     expect(utilsService).toBeDefined();
     expect(user_id).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should update a user', async () => {

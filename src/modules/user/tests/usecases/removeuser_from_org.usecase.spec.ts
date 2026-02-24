@@ -21,6 +21,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUserContract } from 'src/core/application/contracts/user/IUserContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
@@ -37,6 +38,7 @@ import { UserService } from '../../user.service';
 
 describe('Remove user from an organization UseCase', () => {
   let removeUserFromOrgUseCase: RemoveUserFromOrgUseCase;
+  let observabilityService: ObservabilityService;
   let userService: IUserContract;
   let userRepo: UserRepo;
   let organizationService: IOrganizationContract;
@@ -59,6 +61,7 @@ describe('Remove user from an organization UseCase', () => {
         PrismaService,
         RemoveUserFromOrgUseCase,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,
@@ -98,6 +101,8 @@ describe('Remove user from an organization UseCase', () => {
       IORGANIZATION_CONTRACT,
     );
     organizationRepo = module.get<OrganizationRepo>(OrganizationRepo);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const user = await factoriesService.generateUserInfo();
     const organization = await factoriesService.generateOrganizationWithOwner(
@@ -153,6 +158,7 @@ describe('Remove user from an organization UseCase', () => {
     expect(factoriesService).toBeDefined();
     expect(organizationService).toBeDefined();
     expect(organizationRepo).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the user does not exist', async () => {
