@@ -73,7 +73,14 @@ describe('Create User UseCase', () => {
         PrismaService,
         CreateUserUseCase,
         OrganizationRepo,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUTILS_SERVICE,
           useValue: {

@@ -35,7 +35,14 @@ describe('Get Category by Id UseCase', () => {
         GetByIdCategoryUseCase,
         PrismaService,
         CategoryRepository,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,

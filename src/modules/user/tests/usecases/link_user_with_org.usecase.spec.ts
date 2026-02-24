@@ -61,7 +61,14 @@ describe('Link a user with organizations UseCase', () => {
         PrismaService,
         LinkUserWithOrgsUseCase,
         OrganizationRepo,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,

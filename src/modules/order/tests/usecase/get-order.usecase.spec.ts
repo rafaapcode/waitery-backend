@@ -61,7 +61,14 @@ describe('Get Order UseCase', () => {
         GetOrderUseCase,
         PrismaService,
         OrderRepository,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,

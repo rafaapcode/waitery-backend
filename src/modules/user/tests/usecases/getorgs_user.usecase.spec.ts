@@ -52,7 +52,14 @@ describe('Get Orgs Of Users UseCase', () => {
         UserRepo,
         PrismaService,
         GetOrgsOfUserUseCase,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,

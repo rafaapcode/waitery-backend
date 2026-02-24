@@ -63,7 +63,14 @@ describe('GetAll Categories UseCase', () => {
         PrismaService,
         CategoryRepository,
         OrganizationRepo,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: ICATEGORY_CONTRACT,
           useClass: CategoryService,

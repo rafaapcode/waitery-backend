@@ -61,7 +61,14 @@ describe('Remove user from an organization UseCase', () => {
         PrismaService,
         RemoveUserFromOrgUseCase,
         OrganizationRepo,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,

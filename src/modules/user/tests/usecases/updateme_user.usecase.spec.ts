@@ -67,7 +67,14 @@ describe('Update the current user UseCase', () => {
         UserRepo,
         PrismaService,
         UpdateMeUseCase,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,

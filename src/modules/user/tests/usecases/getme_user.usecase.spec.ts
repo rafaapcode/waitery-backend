@@ -53,7 +53,14 @@ describe('Get Current User UseCase', () => {
         UserRepo,
         PrismaService,
         GetMeUseCase,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUSER_CONTRACT,
           useClass: UserService,

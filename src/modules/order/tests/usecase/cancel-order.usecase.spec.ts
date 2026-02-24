@@ -56,7 +56,14 @@ describe('Cancel Order UseCase', () => {
         CancelOrderUseCase,
         PrismaService,
         OrderRepository,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,

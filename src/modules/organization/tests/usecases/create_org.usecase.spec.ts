@@ -90,7 +90,14 @@ describe('Create Org UseCase', () => {
         UserRepo,
         OrganizationRepo,
         PrismaService,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IUTILS_SERVICE,
           useValue: {

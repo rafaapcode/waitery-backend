@@ -81,7 +81,14 @@ describe('Create Product Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,

@@ -31,7 +31,14 @@ describe('SignUp UseCase', () => {
       providers: [
         SignUpUseCase,
         PrismaService,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IAUTH_CONTRACT,
           useClass: AuthService,

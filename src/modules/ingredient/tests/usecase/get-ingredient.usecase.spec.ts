@@ -31,7 +31,14 @@ describe('Get Ingredient UseCase', () => {
         GetIngredientUseCase,
         PrismaService,
         IngredientRepository,
-        ObservabilityService,
+        {
+          provide: ObservabilityService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
         {
           provide: IINGREDIENT_CONTRACT,
           useClass: IngredientService,
