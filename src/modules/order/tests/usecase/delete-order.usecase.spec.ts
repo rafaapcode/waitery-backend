@@ -21,14 +21,15 @@ import { IOrganizationContract } from 'src/core/application/contracts/organizati
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -45,6 +46,7 @@ describe('Delete Order UseCase', () => {
   let utilsService: IUtilsContract;
   let prismaService: PrismaService;
   let storageService: IStorageGw;
+  let observabilityService: ObservabilityService;
   let order_id: string;
   let org_id: string;
   let org_id2: string;
@@ -62,6 +64,7 @@ describe('Delete Order UseCase', () => {
         PrismaService,
         OrderRepository,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -105,6 +108,8 @@ describe('Delete Order UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const orgGenerated = await factoriesService.generateOrganizationWithOwner();
 
@@ -143,6 +148,7 @@ describe('Delete Order UseCase', () => {
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the org does not exist', async () => {

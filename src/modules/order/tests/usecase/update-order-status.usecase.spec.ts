@@ -22,14 +22,15 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -39,6 +40,7 @@ import { UpdateOrderStatusUseCase } from '../../usecases/UpdateOrderStatusUseCas
 
 describe('Update Order Status UseCase', () => {
   let updateOrderUseCase: UpdateOrderStatusUseCase;
+  let observabilityService: ObservabilityService;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let orgService: IOrganizationContract;
@@ -80,6 +82,7 @@ describe('Update Order Status UseCase', () => {
         PrismaService,
         OrderRepository,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -125,6 +128,8 @@ describe('Update Order Status UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const org1 = await factoriesService.generateOrganizationWithOwner();
 
@@ -192,6 +197,7 @@ describe('Update Order Status UseCase', () => {
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should update a status of an order', async () => {

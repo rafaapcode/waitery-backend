@@ -22,6 +22,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Order } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
@@ -39,6 +40,7 @@ import { GetAllOrdersOfOrgUseCase } from '../../usecases/GetAllOrdersUseCase';
 
 describe('Get All Orders UseCase', () => {
   let getAllOrdersUseCase: GetAllOrdersOfOrgUseCase;
+  let observabilityService: ObservabilityService;
   let orderService: IOrderContract;
   let storageService: IStorageGw;
   let orderRepo: OrderRepository;
@@ -61,6 +63,7 @@ describe('Get All Orders UseCase', () => {
         PrismaService,
         OrderRepository,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -106,6 +109,8 @@ describe('Get All Orders UseCase', () => {
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { organization, owner } =
       await factoriesService.generateOrganizationWithOwner();
@@ -138,6 +143,7 @@ describe('Get All Orders UseCase', () => {
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {

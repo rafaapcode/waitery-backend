@@ -21,10 +21,11 @@ import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSC
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Order } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    ISTORAGE_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  ISTORAGE_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -34,6 +35,7 @@ import { GetOrderUseCase } from '../../usecases/GetOrderUseCase';
 
 describe('Get Order UseCase', () => {
   let getOrderUseCase: GetOrderUseCase;
+  let observabilityService: ObservabilityService;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let prismaService: PrismaService;
@@ -59,6 +61,7 @@ describe('Get Order UseCase', () => {
         GetOrderUseCase,
         PrismaService,
         OrderRepository,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -87,6 +90,8 @@ describe('Get Order UseCase', () => {
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const orgGenerated = await factoriesService.generateOrganizationWithOwner();
 
@@ -147,6 +152,7 @@ describe('Get Order UseCase', () => {
     expect(order_id).toBeDefined();
     expect(wsGateway).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should return the order', async () => {

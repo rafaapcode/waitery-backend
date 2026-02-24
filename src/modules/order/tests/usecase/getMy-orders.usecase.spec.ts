@@ -18,10 +18,11 @@ import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSC
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Order } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    ISTORAGE_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  ISTORAGE_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -31,6 +32,7 @@ import { GetMyOrderUseCase } from '../../usecases/GetMyOrdersUseCase';
 
 describe('Get My Orders UseCase', () => {
   let getMyOrdersUseCase: GetMyOrderUseCase;
+  let observabilityService: ObservabilityService;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let prismaService: PrismaService;
@@ -48,6 +50,7 @@ describe('Get My Orders UseCase', () => {
         GetMyOrderUseCase,
         PrismaService,
         OrderRepository,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -76,6 +79,8 @@ describe('Get My Orders UseCase', () => {
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const org1 = await factoriesService.generateOrganizationWithOwner();
     const org2 = await factoriesService.generateOrganizationWithOwner();
@@ -113,6 +118,7 @@ describe('Get My Orders UseCase', () => {
     expect(user_id2).toBeDefined();
     expect(wsGateway).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {

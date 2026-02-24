@@ -18,10 +18,11 @@ import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSC
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { Order } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    ISTORAGE_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  ISTORAGE_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -39,6 +40,7 @@ describe('Get Orders of a User UseCase', () => {
   let user_id2: string;
   let wsGateway: IOrderWSContract;
   let storageService: IStorageGw;
+  let observabilityService: ObservabilityService;
   let factoriesService: FactoriesService;
 
   beforeAll(async () => {
@@ -48,6 +50,7 @@ describe('Get Orders of a User UseCase', () => {
         GetOrdersOfUserUseCase,
         PrismaService,
         OrderRepository,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -78,6 +81,8 @@ describe('Get Orders of a User UseCase', () => {
     wsGateway = module.get<IOrderWSContract>(IORDER_WS_CONTRACT);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = module.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const { organization, owner } =
       await factoriesService.generateOrganizationWithOwner();
@@ -111,6 +116,7 @@ describe('Get Orders of a User UseCase', () => {
     expect(user_id2).toBeDefined();
     expect(wsGateway).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should get all orders with 25 orders in the first page if the page parameter is not providede', async () => {

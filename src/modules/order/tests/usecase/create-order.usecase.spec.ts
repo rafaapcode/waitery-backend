@@ -23,14 +23,15 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Order, OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    IORDER_CONTRACT,
-    IORDER_WS_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  IORDER_CONTRACT,
+  IORDER_WS_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -41,6 +42,7 @@ import { CreateOrderUseCase } from '../../usecases/CreateOrderUseCase';
 
 describe('Create Order UseCase', () => {
   let createOrderUseCase: CreateOrderUseCase;
+  let observabilityService: ObservabilityService;
   let orderService: IOrderContract;
   let orderRepo: OrderRepository;
   let orgService: IOrganizationContract;
@@ -72,6 +74,7 @@ describe('Create Order UseCase', () => {
         PrismaService,
         OrderRepository,
         OrganizationRepo,
+        ObservabilityService,
         {
           provide: IORDER_CONTRACT,
           useClass: OrderService,
@@ -115,6 +118,8 @@ describe('Create Order UseCase', () => {
     factoriesService = module.get<FactoriesService>(FactoriesService);
     utilsService = module.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = module.get<IStorageGw>(ISTORAGE_SERVICE);
+    observabilityService =
+      module.get<ObservabilityService>(ObservabilityService);
 
     const orgGenerated = await factoriesService.generateOrganizationWithOwner();
 
@@ -177,6 +182,7 @@ describe('Create Order UseCase', () => {
     expect(wsGateway).toBeDefined();
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should create a new order', async () => {
