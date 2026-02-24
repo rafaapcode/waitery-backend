@@ -22,6 +22,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
 import { OrganizationService } from 'src/modules/organization/organization.service';
@@ -40,6 +41,7 @@ import { GetAllProductUseCase } from '../../usecases/GetAllProductsUseCase';
 
 describe('Get All Products Usecase', () => {
   let getAllProductsUseCase: GetAllProductUseCase;
+  let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
@@ -63,6 +65,7 @@ describe('Get All Products Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -101,6 +104,8 @@ describe('Get All Products Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
@@ -152,6 +157,8 @@ describe('Get All Products Usecase', () => {
     expect(ing_ids.length).toBe(4);
     expect(user_id).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the org_id is invalid', async () => {

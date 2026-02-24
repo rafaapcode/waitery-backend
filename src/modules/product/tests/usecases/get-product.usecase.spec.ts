@@ -23,6 +23,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
@@ -40,6 +41,7 @@ import { GetProductUseCase } from '../../usecases/GetProductUseCase';
 
 describe('Get Product Usecase', () => {
   let getProductUseCase: GetProductUseCase;
+  let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
@@ -62,6 +64,7 @@ describe('Get Product Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -98,6 +101,8 @@ describe('Get Product Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
@@ -144,6 +149,8 @@ describe('Get Product Usecase', () => {
     expect(user_id).toBeDefined();
     expect(prod_id).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if organization does not exist', async () => {

@@ -26,6 +26,7 @@ import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContr
 import { createCategoryEntity } from 'src/core/domain/entities/category';
 import { createProductEntity, Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
 import { IngredientService } from 'src/modules/ingredient/ingredient.service';
@@ -33,12 +34,12 @@ import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.rep
 import { OrganizationService } from 'src/modules/organization/organization.service';
 import { OrganizationRepo } from 'src/modules/organization/repo/organization.repo';
 import {
-    ICATEGORY_CONTRACT,
-    IINGREDIENT_CONTRACT,
-    IORGANIZATION_CONTRACT,
-    IPRODUCT_CONTRACT,
-    ISTORAGE_SERVICE,
-    IUTILS_SERVICE,
+  ICATEGORY_CONTRACT,
+  IINGREDIENT_CONTRACT,
+  IORGANIZATION_CONTRACT,
+  IPRODUCT_CONTRACT,
+  ISTORAGE_SERVICE,
+  IUTILS_SERVICE,
 } from 'src/shared/constants';
 import { FactoriesModule } from 'src/test/factories/factories.module';
 import { FactoriesService } from 'src/test/factories/factories.service';
@@ -49,6 +50,7 @@ import { CreateProductUseCase } from '../../usecases/CreateProductUseCase';
 
 describe('Create Product Usecase', () => {
   let createProductUseCase: CreateProductUseCase;
+  let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let catService: ICategoryContract;
   let storageService: IStorageGw;
@@ -79,6 +81,7 @@ describe('Create Product Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -129,6 +132,8 @@ describe('Create Product Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
@@ -175,6 +180,7 @@ describe('Create Product Usecase', () => {
     expect(utilsService).toBeDefined();
     expect(storageService).toBeDefined();
     expect(ing_ids.length).toBe(4);
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should create a new product', async () => {

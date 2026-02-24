@@ -23,6 +23,7 @@ import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw'
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Product } from 'src/core/domain/entities/product';
 import { PrismaService } from 'src/infra/database/database.service';
+import { ObservabilityService } from 'src/infra/observability/observability.service';
 import { CategoryService } from 'src/modules/category/category.service';
 import { CategoryRepository } from 'src/modules/category/repo/category.repository';
 import { IngredientRepository } from 'src/modules/ingredient/repo/ingredient.repository';
@@ -43,6 +44,7 @@ import { GetProductByCategoryUseCase } from '../../usecases/GetProductByCategory
 
 describe('Get Products By Category Usecase', () => {
   let getProductByCategoryUseCase: GetProductByCategoryUseCase;
+  let observabilityService: ObservabilityService;
   let productService: IProductContract;
   let orgService: IOrganizationContract;
   let orgRepo: OrganizationRepo;
@@ -69,6 +71,7 @@ describe('Get Products By Category Usecase', () => {
         IngredientRepository,
         OrganizationRepo,
         PrismaService,
+        ObservabilityService,
         {
           provide: IPRODUCT_CONTRACT,
           useClass: ProductService,
@@ -113,6 +116,8 @@ describe('Get Products By Category Usecase', () => {
     utilsService = modules.get<IUtilsContract>(IUTILS_SERVICE);
     storageService = modules.get<IStorageGw>(ISTORAGE_SERVICE);
     factoriesService = modules.get<FactoriesService>(FactoriesService);
+    observabilityService =
+      modules.get<ObservabilityService>(ObservabilityService);
 
     const org = await factoriesService.generateOrganizationWithOwner();
 
@@ -163,6 +168,8 @@ describe('Get Products By Category Usecase', () => {
     expect(cat_id).toBeDefined();
     expect(user_id).toBeDefined();
     expect(storageService).toBeDefined();
+    expect(factoriesService).toBeDefined();
+    expect(observabilityService).toBeDefined();
   });
 
   it('Should throw an error if the org_id is invalid', async () => {
