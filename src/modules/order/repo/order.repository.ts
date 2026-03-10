@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Order, Product } from 'generated/prisma/client';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { OrderStatus } from 'src/core/domain/entities/order';
 import { PrismaService } from 'src/infra/database/database.service';
+import { Order, Product } from '../../../../generated/prisma/client';
 
 type GetProductsOfOrder = Product & {
   category: { org_id: string; name: string; icon: string };

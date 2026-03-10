@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Category } from 'generated/prisma/client';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { Category as CategoryEntity } from 'src/core/domain/entities/category';
 import { PrismaService } from 'src/infra/database/database.service';
+import { Category } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class CategoryRepository {
