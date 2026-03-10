@@ -58,5 +58,8 @@ jobs:
       - name: Run database migrations
         run: npx prisma migrate dev
 
-      - name: Run tests and generate coverage
+      - name: Run Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run tests
         run: npm run test
