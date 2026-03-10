@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Ingredient } from 'generated/prisma';
+import { Ingredient } from 'generated/prisma/client';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { PrismaService } from 'src/infra/database/database.service';
 import { ObservabilityService } from 'src/infra/observability/observability.service';

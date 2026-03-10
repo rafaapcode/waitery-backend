@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Category as CatPrisma, Organization } from 'generated/prisma';
+import { Category as CatPrisma, Organization } from 'generated/prisma/client';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { Category } from 'src/core/domain/entities/category';

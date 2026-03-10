@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { User } from 'generated/prisma';
+import { User } from 'generated/prisma/client';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { UserRole } from 'src/core/domain/entities/user';

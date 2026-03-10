@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import * as sentry from '@sentry/nestjs';
-import { Prisma } from 'generated/prisma';
+import { Prisma } from 'generated/prisma/client';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { createCategoryEntity } from 'src/core/domain/entities/category';

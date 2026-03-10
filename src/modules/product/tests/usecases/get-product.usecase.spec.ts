@@ -16,7 +16,7 @@ jest.mock('src/shared/config/env', () => ({
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Category } from 'generated/prisma';
+import { Category } from 'generated/prisma/client';
 import { IOrganizationContract } from 'src/core/application/contracts/organization/IOrganizationContract';
 import { IProductContract } from 'src/core/application/contracts/product/IProductContract';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';

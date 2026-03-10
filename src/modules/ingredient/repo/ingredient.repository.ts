@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Ingredient } from 'generated/prisma';
+import { Ingredient } from 'generated/prisma/client';
 import { IIngredientContract } from 'src/core/application/contracts/ingredient/IIngredientContract';
 import { PrismaService } from 'src/infra/database/database.service';
 

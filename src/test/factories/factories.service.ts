@@ -1,6 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
-import { Order, Organization, Prisma, Product, User } from 'generated/prisma';
+import {
+  Order,
+  Organization,
+  Prisma,
+  Product,
+  User,
+} from 'generated/prisma/client';
 import { UserRole } from 'src/core/domain/entities/user';
 import { PrismaService } from 'src/infra/database/database.service';
 

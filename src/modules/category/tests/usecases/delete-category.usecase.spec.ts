@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Category, Organization } from 'generated/prisma';
+import { Category, Organization } from 'generated/prisma/client';
 import { ICategoryContract } from 'src/core/application/contracts/category/ICategoryContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { PrismaService } from 'src/infra/database/database.service';

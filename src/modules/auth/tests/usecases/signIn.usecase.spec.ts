@@ -17,7 +17,7 @@ import { faker } from '@faker-js/faker';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { User as UserPrisma } from 'generated/prisma';
+import { User as UserPrisma } from 'generated/prisma/client';
 import { IAuthContract } from 'src/core/application/contracts/auth/IAuthContract';
 import { IUtilsContract } from 'src/core/application/contracts/utils/IUtilsContract';
 import { User } from 'src/core/domain/entities/user';

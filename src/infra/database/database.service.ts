@@ -1,5 +1,8 @@
+import 'dotenv/config';
+
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '../../../generated/prisma';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../../generated/prisma/client';
 import { orderZodSchema } from './schemas/Order';
 import { organizationZodSchema } from './schemas/Organization';
 import { productZodSchema } from './schemas/Product';
@@ -9,6 +12,13 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  constructor() {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL,
+    });
+    super({ adapter });
+  }
+
   async onModuleInit() {
     this.createCustomValidation();
     await this.$connect();

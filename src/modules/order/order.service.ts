@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { Prisma } from 'generated/prisma/client';
 import { IOrderContract } from 'src/core/application/contracts/order/IOrderContract';
 import { IOrderWSContract } from 'src/core/application/contracts/order/IOrderWSContract';
 import { createCategoryEntity } from 'src/core/domain/entities/category';

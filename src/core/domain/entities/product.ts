@@ -1,4 +1,4 @@
-import { Prisma } from 'generated/prisma';
+import { Prisma } from 'generated/prisma/client';
 import { env } from 'src/shared/config/env';
 import { ulid } from 'ulid';
 import { Category } from './category';
