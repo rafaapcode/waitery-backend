@@ -1,3 +1,7 @@
+jest.mock('undici', () => ({
+  request: jest.fn(),
+}));
+
 jest.mock('src/shared/config/env', () => ({
   env: {
     JWT_SECRET: 'test-jwt-secret-key',
@@ -14,6 +18,7 @@ jest.mock('src/shared/config/env', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { request } from 'undici';
 import { ObservabilityService } from '../observability/observability.service';
 import { StorageService } from './storage.service';
 
@@ -45,6 +50,19 @@ describe('StorageService', () => {
       size: 1024,
     } as Express.Multer.File;
 
+    // Mock request para presigned URL e upload
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        body: {
+          json: async () =>
+            Promise.resolve({ url: 'https://presigned-upload-url' }),
+        },
+      }),
+    );
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ statusCode: 200 }),
+    );
+
     // Act
     const result = await storageService.uploadFile({
       contentType: image_file.mimetype,
@@ -67,6 +85,19 @@ describe('StorageService', () => {
       size: 1024,
     } as Express.Multer.File;
 
+    // Mock request para presigned URL e upload (upload falha)
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        body: {
+          json: async () =>
+            Promise.resolve({ url: 'https://presigned-upload-url' }),
+        },
+      }),
+    );
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ statusCode: 500 }),
+    );
+
     // Act
     const result = await storageService.uploadFile({
       contentType: image_file.mimetype,
@@ -81,6 +112,19 @@ describe('StorageService', () => {
   });
 
   it('should return a success when the file is deleted', async () => {
+    // Mock request para presigned URL e deleção
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        body: {
+          json: async () =>
+            Promise.resolve({ url: 'https://presigned-delete-url' }),
+        },
+      }),
+    );
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ statusCode: 204 }),
+    );
+
     // Act
     const result = await storageService.deleteFile({
       key: 'organization/org123/test-image.png',
@@ -91,6 +135,19 @@ describe('StorageService', () => {
   });
 
   it('should not return a success when the file is not deleted', async () => {
+    // Mock request para presigned URL e deleção (deleção falha)
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        body: {
+          json: async () =>
+            Promise.resolve({ url: 'https://presigned-delete-url' }),
+        },
+      }),
+    );
+    (request as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ statusCode: 500 }),
+    );
+
     // Act
     const result = await storageService.deleteFile({
       key: 'organization/org123/test-image.png',
