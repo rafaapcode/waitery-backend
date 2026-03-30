@@ -54,6 +54,7 @@ jobs:
           echo "CEP_SERVICE_API_URL=https://service.test" >> $GITHUB_ENV
           echo "CDN_URL=https://cdn.waitery.app" >> $GITHUB_ENV
           echo "BUCKET_NAME=bucket_name" >> $GITHUB_ENV
+          echo "LAMBDA_PRESIGNED_URL=https://tests.lambda.region.amazonaws.com/generate-presigned-url" >> $GITHUB_ENV
 
       - name: Run database migrations
         run: npx prisma migrate dev

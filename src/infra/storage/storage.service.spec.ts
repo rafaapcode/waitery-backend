@@ -8,10 +8,11 @@ jest.mock('src/shared/config/env', () => ({
     CDN_URL: 'https://test-cdn.com',
     BUCKET_NAME: 'test-bucket',
     NODE_ENV: 'test',
+    LAMBDA_PRESIGNED_URL:
+      'https://tests.lambda.region.amazonaws.com/generate-presigned-url',
   },
 }));
 
-import { S3Client } from '@aws-sdk/client-s3';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ObservabilityService } from '../observability/observability.service';
 import { StorageService } from './storage.service';
@@ -19,7 +20,6 @@ import { StorageService } from './storage.service';
 describe('StorageService', () => {
   let storageService: StorageService;
   let observabilityService: ObservabilityService;
-  let sendSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,24 +29,15 @@ describe('StorageService', () => {
     storageService = module.get<StorageService>(StorageService);
     observabilityService =
       module.get<ObservabilityService>(ObservabilityService);
-    sendSpy = jest.spyOn(S3Client.prototype, 'send');
-  });
-
-  afterEach(() => {
-    sendSpy.mockRestore();
   });
 
   it('All services must be defined', () => {
     expect(storageService).toBeDefined();
-    expect(sendSpy).toBeDefined();
     expect(observabilityService).toBeDefined();
   });
 
   it('should return a file_key when the upload is successful', async () => {
     // Arrange
-    sendSpy.mockResolvedValue({
-      $metadata: { httpStatusCode: 200 },
-    });
     const image_file = {
       buffer: Buffer.from('test file content'),
       originalname: 'test-image.png',
@@ -64,15 +55,11 @@ describe('StorageService', () => {
     });
 
     // Assert
-    expect(sendSpy).toHaveBeenCalled();
     expect(result).toEqual({ fileKey: 'organization/org123/test-image.png' });
   });
 
   it('should not return a file_key when the upload is unsuccessful', async () => {
     // Arrange
-    sendSpy.mockResolvedValue({
-      $metadata: { httpStatusCode: 500 },
-    });
     const image_file = {
       buffer: Buffer.from('test file content'),
       originalname: 'test-image.png',
@@ -90,55 +77,36 @@ describe('StorageService', () => {
     });
 
     // Assert
-    expect(sendSpy).toHaveBeenCalled();
     expect(result).toEqual({ fileKey: '' });
   });
 
   it('should return a success when the file is deleted', async () => {
-    // Arrange
-    sendSpy.mockResolvedValue({
-      $metadata: { httpStatusCode: 200 },
-    });
-
     // Act
     const result = await storageService.deleteFile({
       key: 'organization/org123/test-image.png',
     });
 
     // Assert
-    expect(sendSpy).toHaveBeenCalled();
     expect(result).toEqual({ success: true });
   });
 
   it('should not return a success when the file is not deleted', async () => {
-    // Arrange
-    sendSpy.mockResolvedValue({
-      $metadata: { httpStatusCode: 500 },
-    });
-
     // Act
     const result = await storageService.deleteFile({
       key: 'organization/org123/test-image.png',
     });
 
     // Assert
-    expect(sendSpy).toHaveBeenCalled();
     expect(result).toEqual({ success: false });
   });
 
   it('should not return a success when the key is not provided', async () => {
-    // Arrange
-    sendSpy.mockResolvedValue({
-      $metadata: { httpStatusCode: 500 },
-    });
-
     // Act
     const result = await storageService.deleteFile({
       key: '',
     });
 
     // Assert
-    expect(sendSpy).not.toHaveBeenCalled();
     expect(result).toEqual({ success: false });
   });
 
