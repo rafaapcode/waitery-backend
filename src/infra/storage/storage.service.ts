@@ -1,19 +1,12 @@
-import {
-  DeleteObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { env } from 'src/shared/config/env';
+import { request } from 'undici';
 import { ObservabilityService } from '../observability/observability.service';
 
 @Injectable()
 export class StorageService implements IStorageGw {
-  private client: S3Client;
-  constructor(private readonly observabilityService: ObservabilityService) {
-    this.client = new S3Client({ region: 'us-east-1' });
-  }
+  constructor(private readonly observabilityService: ObservabilityService) {}
 
   async deleteFile(
     filePath: IStorageGw.DeleteFileParams,
@@ -27,20 +20,56 @@ export class StorageService implements IStorageGw {
       return { success: false };
     }
 
-    const command = new DeleteObjectCommand({
-      Bucket: env.BUCKET_NAME,
-      Key: filePath.key,
-    });
+    let presignedUrl: string | null = null;
+    try {
+      const lambdaPayload = {
+        key: filePath.key,
+        type: 'delete',
+      };
 
-    const res = await this.client.send(command);
-
-    const status = res.$metadata.httpStatusCode;
-
-    if (status !== 200) {
+      const lambdaRes = await request(env.LAMBDA_PRESIGNED_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lambdaPayload),
+      });
+      const lambdaJson = (await lambdaRes.body.json()) as { url: string };
+      presignedUrl = lambdaJson.url;
+      if (!presignedUrl) {
+        this.observabilityService.error(
+          'StorageService',
+          'Presigned URL not returned from Lambda (delete).',
+          'No stack found',
+        );
+        return { success: false };
+      }
+    } catch (err) {
       this.observabilityService.error(
         'StorageService',
-        `Error deleting file from S3. Status: ${status}`,
-        'No stack found',
+        `Error requesting presigned URL for delete: ${(err as Error).message}`,
+        (err as Error).stack || 'No stack found',
+      );
+      return { success: false };
+    }
+
+    try {
+      const deleteRes = await request(presignedUrl, {
+        method: 'DELETE',
+      });
+      if (deleteRes.statusCode < 200 || deleteRes.statusCode >= 300) {
+        this.observabilityService.error(
+          'StorageService',
+          `Error deleting file from S3 via presigned URL. Status: ${deleteRes.statusCode}`,
+          'No stack found',
+        );
+        return { success: false };
+      }
+    } catch (err) {
+      this.observabilityService.error(
+        'StorageService',
+        `Error deleting file from S3 via presigned URL: ${(err as Error).message}`,
+        (err as Error).stack || 'No stack found',
       );
       return { success: false };
     }
@@ -66,24 +95,66 @@ export class StorageService implements IStorageGw {
       orgId: file.orgId,
       ...(file.productId && { productId: file.productId }),
     };
-    const command = new PutObjectCommand({
-      Bucket: env.BUCKET_NAME,
-      Key: file.key,
-      Body: file.fileBuffer,
-      ContentType: file.contentType,
-      Metadata: body_req,
-      ContentLength: file.size,
-    });
 
-    const res = await this.client.send(command);
+    let presignedUrl: string | null = null;
 
-    const status = res.$metadata.httpStatusCode;
-
-    if (status !== 200) {
+    try {
+      const lambdaPayload = {
+        key: file.key,
+        type: 'upload',
+        metadata: body_req,
+        contentLength: file.size,
+        contentType: file.contentType,
+      };
+      const lambdaRes = await request(env.LAMBDA_PRESIGNED_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lambdaPayload),
+      });
+      const lambdaJson = (await lambdaRes.body.json()) as { url: string };
+      presignedUrl = lambdaJson.url;
+      if (!presignedUrl) {
+        this.observabilityService.error(
+          'StorageService',
+          'Presigned URL not returned from Lambda.',
+          'No stack found',
+        );
+        return { fileKey: '' };
+      }
+    } catch (err) {
       this.observabilityService.error(
         'StorageService',
-        `Error uploading file to S3. Status: ${status}`,
-        'No stack found',
+        `Error requesting presigned URL: ${(err as Error).message}`,
+        (err as Error).stack || 'No stack found',
+      );
+      return { fileKey: '' };
+    }
+
+    try {
+      const uploadRes = await request(presignedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.contentType,
+          'Content-Length': file.size.toString(),
+        },
+        body: file.fileBuffer,
+      });
+
+      if (uploadRes.statusCode < 200 || uploadRes.statusCode >= 300) {
+        this.observabilityService.error(
+          'StorageService',
+          `Error uploading file to S3 via presigned URL. Status: ${uploadRes.statusCode}`,
+          'No stack found',
+        );
+        return { fileKey: '' };
+      }
+    } catch (err) {
+      this.observabilityService.error(
+        'StorageService',
+        `Error uploading file to S3 via presigned URL: ${(err as Error).message}`,
+        (err as Error).stack || 'No stack found',
       );
       return { fileKey: '' };
     }

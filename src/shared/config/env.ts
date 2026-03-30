@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumberString,
   IsString,
+  IsUrl,
   MinLength,
   validateSync,
 } from 'class-validator';
@@ -45,6 +46,11 @@ class Env {
   @IsString()
   @IsNotEmpty()
   NODE_ENV: 'DEV' | 'PROD';
+
+  @IsString()
+  @IsNotEmpty()
+  @IsUrl()
+  LAMBDA_PRESIGNED_URL: string;
 }
 
 export const env = plainToInstance(Env, {
@@ -57,6 +63,7 @@ export const env = plainToInstance(Env, {
   NODE_ENV: process.env.NODE_ENV ?? 'DEV',
   BUCKET_NAME: process.env.BUCKET_NAME,
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+  LAMBDA_PRESIGNED_URL: process.env.LAMBDA_PRESIGNED_URL,
 });
 
 const errors = validateSync(env);
