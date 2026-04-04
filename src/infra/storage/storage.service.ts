@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IStorageGw } from 'src/core/application/contracts/storageGw/IStorageGw';
 import { env } from 'src/shared/config/env';
-import { request } from 'undici';
+import { Agent, request } from 'undici';
 import { ObservabilityService } from '../observability/observability.service';
 
 @Injectable()
@@ -103,8 +103,8 @@ export class StorageService implements IStorageGw {
         key: file.key,
         type: 'upload',
         metadata: body_req,
-        contentLength: file.size,
         contentType: file.contentType,
+        contentLength: file.fileBuffer.length.toString(),
       };
       const lambdaRes = await request(env.LAMBDA_PRESIGNED_URL, {
         method: 'POST',
@@ -137,11 +137,13 @@ export class StorageService implements IStorageGw {
         method: 'PUT',
         headers: {
           'Content-Type': file.contentType,
-          'Content-Length': file.size.toString(),
         },
         body: file.fileBuffer,
+        dispatcher: new Agent({
+          keepAliveTimeout: 10,
+          keepAliveMaxTimeout: 10,
+        }),
       });
-
       if (uploadRes.statusCode < 200 || uploadRes.statusCode >= 300) {
         this.observabilityService.error(
           'StorageService',
