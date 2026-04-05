@@ -8,6 +8,7 @@ export class WsGateway implements OnModuleInit, IOrderWSContract {
   @WebSocketServer() private readonly server: Server;
 
   onModuleInit() {
+    console.log('WebSocket server initialized');
     this.server.on('connection', (socket) => {
       console.log('User connected', socket.id);
     });
