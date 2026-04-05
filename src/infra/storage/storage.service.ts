@@ -153,6 +153,7 @@ export class StorageService implements IStorageGw {
         return { fileKey: '' };
       }
     } catch (err) {
+      console.log('caiu aqui deu eruim', err);
       this.observabilityService.error(
         'StorageService',
         `Error uploading file to S3 via presigned URL: ${(err as Error).message}`,

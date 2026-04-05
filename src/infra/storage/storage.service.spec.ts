@@ -1,5 +1,6 @@
 jest.mock('undici', () => ({
   request: jest.fn(),
+  Agent: jest.fn().mockImplementation(() => ({})),
 }));
 
 jest.mock('src/shared/config/env', () => ({
