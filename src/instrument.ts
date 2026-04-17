@@ -1,7 +1,10 @@
+import 'dotenv/config';
+
 import * as Sentry from '@sentry/nestjs';
+import { env } from './shared/config/env';
 
 Sentry.init({
-  dsn: 'https://797c86925da90cc1d1b9d0baa6e8e3b6@o4508241868161024.ingest.us.sentry.io/4509417942417408',
+  dsn: env.SENTRY_DSN,
   enableLogs: true,
   integrations: [
     Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),

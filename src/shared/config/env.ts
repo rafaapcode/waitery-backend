@@ -51,6 +51,11 @@ class Env {
   @IsNotEmpty()
   @IsUrl()
   LAMBDA_PRESIGNED_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsUrl()
+  SENTRY_DSN: string;
 }
 
 export const env = plainToInstance(Env, {
@@ -64,6 +69,7 @@ export const env = plainToInstance(Env, {
   BUCKET_NAME: process.env.BUCKET_NAME,
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
   LAMBDA_PRESIGNED_URL: process.env.LAMBDA_PRESIGNED_URL,
+  SENTRY_DSN: process.env.SENTRY_DSN,
 });
 
 const errors = validateSync(env);
