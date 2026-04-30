@@ -67,13 +67,14 @@ npx prisma generate                           # Regenerate Prisma client
 | `DATABASE_URL` | PostgreSQL connection string (app DB, port 5432) |
 | `DATABASE_URL_TEST` | PostgreSQL connection string (test DB, port 5433) |
 | `NODE_ENV` | `DEV`, `PROD`, or `test` |
-| `JWT_SECRET` | Secret for access tokens |
-| `JWT_REFRESH_SECRET` | Secret for refresh tokens |
-| `AWS_ACCESS_KEY_ID` | AWS credentials for S3 uploads |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials for S3 uploads |
-| `AWS_BUCKET_NAME` | S3 bucket name |
-| `LAMBDA_URL` | Lambda endpoint that returns presigned upload URLs |
+| `PORT` | HTTP port (numeric string) |
+| `JWT_SECRET` | HS256 secret for access tokens (min 10 chars) |
+| `REFRESH_JWT_SECRET` | Secret for refresh tokens (min 10 chars) |
+| `BUCKET_NAME` | S3 bucket name |
+| `CDN_URL` | Public CDN base URL for serving uploaded files |
+| `LAMBDA_PRESIGNED_URL` | Lambda endpoint that returns S3 presigned upload URLs |
 | `GOOGLE_MAPS_API_KEY` | Google Maps Geocoding API key |
+| `CEP_SERVICE_API_URL` | Brazilian postal code (CEP) lookup service URL |
 | `SENTRY_DSN` | Sentry DSN for error tracking |
 
 > **Note**: `src/shared/config/env.ts` validates all env vars on startup and **crashes the process** if any are missing or invalid.
@@ -91,13 +92,19 @@ src/
 │       ├── repo/                # Repository interface implementation
 │       ├── dto/                 # Request/response DTOs with class-validator
 │       └── tests/               # Unit and integration tests
+├── common/
+│   ├── guards/                  # Global AuthGuard (JWT + user-agent/IP binding)
+│   ├── pipes/                   # ParseULIDPipe, ParseDATEPipe
+│   ├── decorators/              # @IsPublic, @GetMe, @GetOrgId, @Roles
+│   └── filters/                 # Global exception filter (Sentry forwarding)
 ├── infra/
 │   ├── database/                # Prisma service + Zod validation middleware
 │   ├── storage/                 # S3 upload/delete/get via undici
 │   └── observability/           # Sentry wrapper
-└── shared/
-    ├── config/env.ts            # Env validation (throws on invalid config)
-    └── constants.ts             # DI token strings
+├── shared/
+│   ├── config/env.ts            # Env validation (throws on invalid config)
+│   └── constants.ts             # DI token strings
+└── utils.service.ts             # Geolocation, CEP lookup, bcrypt hashing
 ```
 
 ## Roles
@@ -108,3 +115,12 @@ src/
 | `ADMIN` | Manages menu and staff |
 | `WAITER` | Creates and manages table orders |
 | `CLIENT` | Views menu and places orders |
+
+## Order Status Flow
+
+```
+WAITING → IN_PRODUCTION → DONE
+                       ↘ CANCELED
+```
+
+Status transitions are triggered via `PATCH /order/:id/status`. Each update broadcasts a Socket.io event to `order-org-{orgId}` so connected clients receive real-time updates.
