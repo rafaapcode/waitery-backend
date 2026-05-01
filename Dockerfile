@@ -10,9 +10,8 @@ COPY . .
 
 RUN npx prisma generate
 
-ARG SENTRY_AUTH_TOKEN
-RUN SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN npm run build
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
