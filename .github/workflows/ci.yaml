@@ -70,12 +70,9 @@ jobs:
           docker login -u ${{ secrets.GHCR_USERNAME }} --password ${{ secrets.GHCR_SECRET }} ghcr.io
           docker build \
             --build-arg DATABASE_URL=${{ env.DATABASE_URL }} \
-            --build-arg PORT=${{ env.PORT }} \
-            --build-arg CEP_SERVICE_API_URL=${{ env.CEP_SERVICE_API_URL }} \
-            --build-arg CDN_URL=${{ env.CDN_URL }} \
-            --build-arg BUCKET_NAME=${{ env.BUCKET_NAME }} \
-            --build-arg LAMBDA_PRESIGNED_URL=${{ env.LAMBDA_PRESIGNED_URL }} \
-            --build-arg NODE_ENV=${{ env.NODE_ENV }} \
             -t ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest \
             .
           docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest
+
+      - name: Deploying the Service
+        run: curl "http://100.27.205.197:3000/api/deploy/158e5381a26672a19cad2cb237fa696f19e308e5a6481c08"
