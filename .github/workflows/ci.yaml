@@ -68,5 +68,14 @@ jobs:
       - name: Build and Publish Docker Image
         run: |
           docker login -u ${{ secrets.GHCR_USERNAME }} --password ${{ secrets.GHCR_SECRET }} ghcr.io
-          docker build --build-arg DATABASE_URL=${{ env.DATABASE_URL }} -t ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest .
+          docker build \
+            --build-arg DATABASE_URL=${{ env.DATABASE_URL }} \
+            --build-arg PORT=${{ env.PORT }} \
+            --build-arg CEP_SERVICE_API_URL=${{ env.CEP_SERVICE_API_URL }} \
+            --build-arg CDN_URL=${{ env.CDN_URL }} \
+            --build-arg BUCKET_NAME=${{ env.BUCKET_NAME }} \
+            --build-arg LAMBDA_PRESIGNED_URL=${{ env.LAMBDA_PRESIGNED_URL }} \
+            --build-arg NODE_ENV=${{ env.NODE_ENV }} \
+            -t ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest \
+            .
           docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest
