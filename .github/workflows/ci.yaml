@@ -64,3 +64,10 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+      - name: Build and Publish Docker Image
+        uses: actions/checkout@v4
+        run: |
+          docker login -u ${{ secrets.GHCR_USERNAME }} --password ${{ secrets.GHCR_SECRET }} ghcr.io
+          docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest .
+          docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/waitery:latest
