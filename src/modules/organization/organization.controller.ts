@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
@@ -46,7 +48,7 @@ export class OrganizationController {
     @GetMe() me: JwtPayload,
     @Body() data: string,
   ) {
-    const parsedData = plainToInstance(CreateOrganizationDTO, data);
+    const parsedData = await this.parseAndValidate(CreateOrganizationDTO, data);
     const org = await this.createOrgUseCase.execute({
       data: parsedData,
       owner_id: me.id,
@@ -93,7 +95,7 @@ export class OrganizationController {
     @Body() data: string,
     @GetMe() me: JwtPayload,
   ) {
-    const parsedData = plainToInstance(UpdateOrganizationDTO, data);
+    const parsedData = await this.parseAndValidate(UpdateOrganizationDTO, data);
     const org = await this.updateOrgUseCase.execute({
       id: org_id,
       owner_id: me.id,
@@ -101,5 +103,22 @@ export class OrganizationController {
       image_file: file,
     });
     return { org: org.fromEntity() };
+  }
+
+  private async parseAndValidate<T>(cls: new () => T, data: any): Promise<T> {
+    let obj = data;
+    if (typeof data === 'string') {
+      try {
+        obj = JSON.parse(data);
+      } catch (e) {
+        throw new BadRequestException('Invalid JSON format in request body');
+      }
+    }
+    const parsed = plainToInstance(cls, obj);
+    const errors = await validate(parsed as object);
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+    return parsed;
   }
 }

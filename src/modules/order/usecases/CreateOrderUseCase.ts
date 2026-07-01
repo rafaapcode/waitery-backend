@@ -92,7 +92,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       this.observabilityService.error(
         className,
         `Erro ao criar pedido para organização '${data?.org_id}'.`,
-        '',
+        error as Error,
       );
       throw error;
     }

@@ -12,15 +12,27 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  private readonly client: any;
+
   constructor() {
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
     });
     super({ adapter });
+
+    this.client = this.createCustomValidation();
+
+    return new Proxy(this, {
+      get: (target, prop, receiver) => {
+        if (target.client && prop in target.client) {
+          return Reflect.get(target.client, prop, receiver);
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+    }) as any;
   }
 
   async onModuleInit() {
-    this.createCustomValidation();
     await this.$connect();
   }
 
@@ -29,7 +41,7 @@ export class PrismaService
   }
 
   private createCustomValidation() {
-    this.$extends({
+    return this.$extends({
       query: {
         order: {
           create({ args, query }) {

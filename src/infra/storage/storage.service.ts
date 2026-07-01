@@ -6,7 +6,14 @@ import { ObservabilityService } from '../observability/observability.service';
 
 @Injectable()
 export class StorageService implements IStorageGw {
-  constructor(private readonly observabilityService: ObservabilityService) {}
+  private readonly agent: Agent;
+
+  constructor(private readonly observabilityService: ObservabilityService) {
+    this.agent = new Agent({
+      keepAliveTimeout: 10,
+      keepAliveMaxTimeout: 10,
+    });
+  }
 
   async deleteFile(
     filePath: IStorageGw.DeleteFileParams,
@@ -139,10 +146,7 @@ export class StorageService implements IStorageGw {
           'Content-Type': file.contentType,
         },
         body: file.fileBuffer,
-        dispatcher: new Agent({
-          keepAliveTimeout: 10,
-          keepAliveMaxTimeout: 10,
-        }),
+        dispatcher: this.agent,
       });
       if (uploadRes.statusCode < 200 || uploadRes.statusCode >= 300) {
         this.observabilityService.error(

@@ -83,7 +83,7 @@ export class OrderController {
     @GetOrgId() org_id: string,
   ) {
     await this.deleteOrderUseCase.execute(order_id, org_id);
-    return { message: 'Delete cancelled with success!' };
+    return { message: 'Order deleted successfully!' };
   }
 
   @Get('get-all/today')

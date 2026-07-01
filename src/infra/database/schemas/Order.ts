@@ -16,7 +16,7 @@ export const orderZodSchema = z.object({
   total_price: z.number().int(),
   quantity: z.number().int(),
   table: z.string(),
-  created_at: z.coerce.date(),
+  created_at: z.coerce.date().optional(),
   deleted_at: z.coerce.date().nullable().optional(),
   products: z.any(),
 }) satisfies z.Schema<Prisma.OrderUncheckedCreateInput>;

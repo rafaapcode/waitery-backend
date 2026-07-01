@@ -70,7 +70,7 @@ export class UpdateOrderStatusUseCase implements IUpdateOrderStatusUseCase {
       this.observabilityService.error(
         className,
         `Erro ao atualizar status do pedido '${order_id}' para organização '${org_id}'.`,
-        '',
+        error as Error,
       );
       throw error;
     }

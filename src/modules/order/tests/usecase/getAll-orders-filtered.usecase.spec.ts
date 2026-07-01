@@ -12,6 +12,8 @@ jest.mock('src/shared/config/env', () => ({
   },
 }));
 
+jest.setTimeout(30000);
+
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';

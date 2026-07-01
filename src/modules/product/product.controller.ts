@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { GetMe } from 'src/common/decorators/GetMe';
 import { GetOrgId } from 'src/common/decorators/GetOrgId';
 import { Roles } from 'src/common/decorators/Role';
@@ -47,12 +49,12 @@ export class ProductController {
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post()
   @UseInterceptors(FileInterceptor('image'))
-  create(
+  async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() data: string,
     @GetOrgId() org_id: string,
   ) {
-    const parsedData = plainToInstance(CreateProductDto, data);
+    const parsedData = await this.parseAndValidate(CreateProductDto, data);
     return this.createProductUseCase.execute(parsedData, org_id, file);
   }
 
@@ -65,7 +67,7 @@ export class ProductController {
     @Body() data: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const parsedData = plainToInstance(UpdateProductDto, data);
+    const parsedData = await this.parseAndValidate(UpdateProductDto, data);
     await this.updateProductUseCase.execute(
       org_id,
       product_id,
@@ -73,6 +75,23 @@ export class ProductController {
       file,
     );
     return { message: 'Product updated successfully' };
+  }
+
+  private async parseAndValidate<T>(cls: new () => T, data: any): Promise<T> {
+    let obj = data;
+    if (typeof data === 'string') {
+      try {
+        obj = JSON.parse(data);
+      } catch (e) {
+        throw new BadRequestException('Invalid JSON format in request body');
+      }
+    }
+    const parsed = plainToInstance(cls, obj);
+    const errors = await validate(parsed as object);
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+    return parsed;
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

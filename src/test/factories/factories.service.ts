@@ -305,10 +305,9 @@ export class FactoriesService {
       data: {
         quantity: faker.number.int({ min: 1, max: 10 }),
         table: `Mesa ${faker.number.int({ min: 1, max: 50 })}`,
-        total_price: faker.number.float({
+        total_price: faker.number.int({
           min: 50,
           max: 1000,
-          fractionDigits: 2,
         }),
         org_id,
         user_id,
